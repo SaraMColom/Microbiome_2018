@@ -5,10 +5,10 @@ Data and code used to produce the results and figures of our microbiome project,
 This repository contains the data and code used to produce the results figures for a paper currently in preparation by Sara Colom and Regina Baucom PhD (University of Michigan, Ann Arbor, USA):
 
 ## R script
-    * Genus_Level_MicrobiomeAnalysis.RMD : R mardkown file with analysis for data aggregated at the Genus level.
-    * Files with 'Preliminary' in the prefix consist of preliminary data assesment, prior to aggregating data at Genus level.
-    * RandomForest_Microbe_Fitness.RMD preliminary analysis of using random forest to predict plant fitness with microbiome variables.
-    * SimilarityTestsMicrobiome.R preliminary assesment of analysis between microbiome similarity between competitors and focal plant fitness.
+* Genus_Level_MicrobiomeAnalysis.RMD : R mardkown file with analysis for data aggregated at the Genus level.
+* Files with 'Preliminary' in the prefix consist of preliminary data assesment, prior to aggregating data at Genus level.
+* RandomForest_Microbe_Fitness.RMD preliminary analysis of using random forest to predict plant fitness with microbiome variables.
+* SimilarityTestsMicrobiome.R preliminary assesment of analysis between microbiome similarity between competitors and focal plant fitness.
 
 ## RawData folder
 Input data for Mothur.
@@ -18,12 +18,12 @@ Input data for Mothur.
 Cleaned up data used for preliminary and final data analysis.
 
 ### Microbiome_Output
-    * Files with the 'stability' _prefix_  consist of Mothur output on experimental samples.
-        * Files with 'tax; suffix are taxonomy Files
-         *Files with 'dist' suffix are distance measurements
-         *Files with 'shared' suffix includes OTU counts
-    *MetaDataTest.csv: Meta Data on samples
-    
+* Files with the 'stability' _prefix_  consist of Mothur output on experimental samples.
+    * Files with 'tax; suffix are taxonomy Files
+        *Files with 'dist' suffix are distance measurements
+        *Files with 'shared' suffix includes OTU counts
+* MetaDataTest.csv: Meta Data on samples
+
 ### Mock_Output
 Mothur output of 'mock' samples supplied by sequencing core, these were not integrated into our study.
 
@@ -34,7 +34,7 @@ Preliminary and final figures.
 Detailed pipeline of study.
 
 ## MothurBatchFile
-    *stability.batch Mothur Batch script
+* stability.batch Mothur Batch script
 
 ## CreatingSILVA_Database
 Silva File creation data and instructions. Note it has subsfolders (e.g., Rscript, RawData, CleanData) for organizational purposes, similar to above. 
