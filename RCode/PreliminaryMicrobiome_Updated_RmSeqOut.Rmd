@@ -1,0 +1,1191 @@
+---
+title: "Preliminary_Microbiome_analysis"
+author: "Sara Colom"
+date: "11/13/2019"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: tango
+    code_folding: hide
+    self_contained: yes  
+---
+
+## Sample sizes
+
+### Table sample number by species and treatment
+
+
+| Species          | Treatment       | N      |
+|--------------    |-------------    |----    |
+| I. purpurea      | Alone           | 27     |
+| I. purpurea      | Competition     | 78     |
+| I. hederacea     | Competition     | 78     |
+
+
+### Table number of maternal line per species
+
+| Species          | Number of ML     |
+|--------------    |--------------    |
+| I. purpurea      |      10          |
+| I. hederacea     |       5          |
+
+
+
+```{r setup,warning=F,comment=F,message=F}
+#knitr::opts_chunk$set(root.dir = ("/Volumes/GoogleDrive/My #Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+
+ #                                   knitr::opts_knit$set(root.dir = ("/Volumes/GoogleDrive/My #Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+
+              knitr::opts_chunk$set(root.dir = ( "G:/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+
+knitr::opts_knit$set(root.dir = ( "G:/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+
+
+```
+
+### Load Libraries
+```{r load_libs, include=T,warning=F,comment=F,message=F}
+library(phyloseq)
+library(ggplot2)
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(DESeq2)
+library(pegas)
+library(pgirmess)
+library(multcomp)
+library(multcompView)
+library(ggpubr)
+library(RColorBrewer)
+
+
+source("~/Google Drive File Stream/My Drive/IDM_Experiments-master/miSeq.R")
+
+```
+
+## Sequence data analysis
+```{r Import Data,warning=F,comment=F,message=F}
+### loading mothur output with FWDB+silva taxonomy and sample metadata. 
+### Experiments run in 
+setwd("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output")
+sharedfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.shared"
+taxfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.0.03.cons.taxonomy"
+
+mothurdata <- import_mothur(mothur_shared_file = sharedfile,mothur_constaxonomy_file = taxfile)
+
+sampledata= read.csv('~/Google Drive File Stream/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/MetaDataTest.csv')
+
+SAMPLE=sampledata
+row.names(SAMPLE)=SAMPLE$Sample_ID
+
+SAMPLE=subset(SAMPLE,SAMPLE$TRT=="Alone"|SAMPLE$TRT=="Inter")
+SAMPLE=sample_data(SAMPLE)
+
+### create phyloseq object
+physeq.all = merge_phyloseq(mothurdata, SAMPLE) # Modified version worked
+
+
+### We need to change the taxonomy names: when using the fwdb taxonomy we need to add different headers after removing the last column, which contains no information except for 1 Verrucomicrobia taxon
+
+#   tax_table(physeq.all) <- tax_table(physeq.all)[,-7] # this removes the final column
+#   colnames(tax_table(physeq.all))<-c("Kingdom","Phylum","Class","Order","Family","Genus")
+
+#   tax_table(physeq.all) <-cbind(tax_table(physeq.all),row.names(tax_table(physeq.all)))
+
+### removing non-bacterial reads (was already done in mothur, but just to be safe after merging taxonomies)
+#   physeq.all <- subset_taxa(physeq.all, Kingdom == "Bacteria")
+```
+
+```{r Proteobacteria phylum change to class,warning=F,comment=F,message=F}
+
+setwd("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output")
+
+### ADD THE PROTEOBACTERIA CLASSES TO THE PHYLA NAME FIELD IN PHYLOSEQ OBJECT TAXONOMY 
+
+#phy <- data.frame(tax_table(physeq.all))
+#Phylum <- as.character(phy$Phylum)
+#Class <- as.character(phy$Class)
+#for  (i in 1:length(Phylum)){ 
+#  if (Phylum[i] == "Proteobacteria"){
+#    if (Class[i] == "unclassified"){
+#      Phylum[i] <- Phylum[i]       
+#    } else {
+#      Phylum[i] <- Class[i]
+#    }
+#  } 
+#}
+
+phy=read.csv("phy.csv")
+
+Phylum<-as.character(phy$Phylum)
+Class=as.character(phy$Class)
+phy$Phylum=Phylum
+t <- tax_table(as.matrix(phy))
+
+#write.csv(phy,"phy.csv",row.names=F)
+```
+
+
+```{r read in phylum data, include=FALSE,warning=F,comment=F,message=F}
+# phy=read.csv("phy.csv")
+
+# tax_table(physeq.all) <- t
+
+SAMPLE$Species=ifelse(grepl("Ip",SAMPLE$ML),"Ip","Ihed")
+physeq.all2 = merge_phyloseq(physeq.all, SAMPLE) 
+```
+
+## Sequence depth and pruning
+
+```{r data scaling}
+physeq=(physeq.all2)
+physeq <- prune_taxa(taxa_sums(physeq) > 0, physeq) # Remove taxa with no counts
+
+#check number of reads in each sample, differences in count are in part due differet numbers of chlorophyl reads depending on time of experiment
+
+# Make a data frame with a column for the read counts of each sample
+sample_sum_df <- data.frame(sum = sample_sums(physeq))
+
+# Histogram of sample read counts
+ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "#fb9a99", binwidth = 2500) +
+  ggtitle("Distribution of sample sequencing depth") + 
+  xlab("Read counts") +
+  theme(axis.title.y = element_blank())+
+  theme_classic()
+
+
+# Scales reads to smallest library size 
+source("https://raw.githubusercontent.com/michberr/MicrobeMiseq/master/R/miseqR.R")
+#physeq.scale <- scale_reads(physeq, min(sample_sums(physeq)))
+
+##### Normalization #######
+
+# Scales reads by 
+# 1) taking proportions,
+# 2) multiplying by a given library size of n
+# 3) rounding down
+physeq1=prune_samples(sample_sums(physeq) >20000, physeq)
+sample_sum_df1 <- data.frame(sum = sample_sums(physeq1))
+
+# Histogram of sample read counts
+ggplot(sample_sum_df1, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "#fb9a99", binwidth = 2500) +
+  ggtitle("Distribution of sample sequencing depth after pruning") + 
+  xlab("Read counts") +
+  theme(axis.title.y = element_blank())+
+  theme_classic()
+
+
+n=min(sample_sums(physeq1))
+  physeq.scale <-
+    transform_sample_counts(physeq1, function(x) {
+      (n * x/sum(x))
+    })
+physeq.scale <- prune_taxa(taxa_sums(physeq.scale) > 0, physeq.scale)
+
+
+dev.off()
+```
+
+```{r PCoA Treatment and Species comparisoin Bray Curtis Estimate,warning=F,comment=F,message=F}
+# Betadiv pcoa Bray-Curtis DNA only 
+physeq.pcoa <-
+  ordinate(
+    physeq = physeq.scale,
+    method = "PCoA",
+    distance = "bray"
+  )
+
+physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
+physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
+SampData=data.frame(sample_data(physeq))
+colnames(SampData)[1]="Duplicates"
+
+SampData=subset(SampData,SampData$TRT=="Inter"|SampData$TRT=="Alone")
+
+physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors,SampData,by="Duplicates"))
+bray_values <- physeq.pcoa$values
+bray_rel_eigens <- bray_values$Relative_eig
+bray_rel_eigen1 <- bray_rel_eigens[1]
+bray_rel_eigen1_percent <- round(bray_rel_eigen1 * 100, digits = 1)
+bray_rel_eigen2 <- bray_rel_eigens[2]
+bray_rel_eigen2_percent <- round(bray_rel_eigen2 * 100, digits = 1)
+bray_rel_eigen3 <- bray_rel_eigens[3]
+bray_rel_eigen3_percent <- round(bray_rel_eigen3 * 100, digits = 1)
+bray_rel_eigen4 <- bray_rel_eigens[4]
+bray_rel_eigen4_percent <- round(bray_rel_eigen4 * 100, digits = 1)
+bray_axis1 <- paste("PCoA1:",bray_rel_eigen1_percent,"%")
+bray_axis2 <- paste("PCoA2:",bray_rel_eigen2_percent,"%")
+bray_axis3 <- paste("PCoA3:",bray_rel_eigen3_percent,"%")
+bray_axis4 <- paste("PCoA4:",bray_rel_eigen4_percent,"%")
+PCoA_title <- paste("Bray-Curtis,",ntaxa(physeq.scale),"OTUs")
+
+
+pcoa_exp_trt <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = TRT,fill = TRT)) +
+  xlab(bray_axis1) + ylab(bray_axis2) + ggtitle(PCoA_title) +
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = c("#fb9a99","#1f78b4"))+
+  scale_color_manual(values = c("#fb9a99","#1f78b4"))+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =TRT))
+
+
+pcoa_exp_trtA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = TRT,fill = TRT)) +
+  xlab(bray_axis3) + ylab(bray_axis4) + ggtitle(PCoA_title) +
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = c("#fb9a99","#1f78b4"))+
+  scale_color_manual(values = c("#fb9a99","#1f78b4"))+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =TRT))
+
+
+pcoa_exp_sp <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = Species,fill = Species)) +
+  xlab(bray_axis1) + ylab(bray_axis2) + ggtitle(PCoA_title) +
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = c("#fb9a99","#1f78b4"))+
+  scale_color_manual(values = c("#fb9a99","#1f78b4"))+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =Species))
+
+
+pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill = Species)) +
+  xlab(bray_axis3) + ylab(bray_axis4) + ggtitle(PCoA_title) +
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = c("#fb9a99","#1f78b4"))+
+  scale_color_manual(values = c("#fb9a99","#1f78b4"))+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =Species))
+
+dev.off()
+A=ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T)
+B=ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T)
+
+ggarrange(A,B,nrow=2)
+
+```
+
+
+
+```{r adonis experimental data when all data combined,warning=F,comment=F,message=F}
+## All experiment, add variable treatment, then species
+sampledf <- data.frame(sample_data(physeq.scale))
+
+sampledf=subset(sampledf,sampledf$TRT=="Alone"|sampledf$TRT=="Inter")
+
+## Subsample by species 
+physeq.purp=subset_samples(physeq.scale, Species == "Ip")
+
+
+# Calculate bray curtis for experimental samples only
+physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray")
+physeq.bray2 <- phyloseq::distance(physeq = physeq.purp, method = "bray")
+
+# Adonis test for treatment, across species
+adonis(physeq.bray ~ TRT, data = sampledf)
+b = betadisper(physeq.bray,sampledf$TRT)
+
+p <- permutest(b)
+p$tab
+
+# Adonis test for treatment, WITHIN species
+adonis(physeq.bray2 ~ TRT, data = sampledf%>%filter(Species=="Ip")) # No treatment effect on bray distances
+
+b = betadisper(physeq.bray,sampledf$TRT)
+p <- permutest(b)
+p$tab
+
+# Adonis test for species
+adonis(physeq.bray ~ Species, data = sampledf)
+b = betadisper(d=physeq.bray,group=as.factor(sampledf$TRT))
+p <- permutest(b)
+p$tab
+
+
+sampledf$Block=as.factor(sampledf$Block)
+
+# Nested adonis
+adonis(physeq.bray ~ TRT + Species + Block, data = sampledf) # Species effect taking into account block as a fixed effect
+```
+
+
+## Alpha diversity
+
+```{r alpha diversity,warning=F,comment=F,message=F}
+physeq1=prune_samples(sample_sums(physeq) >2000, physeq)
+hist(sample_sums(physeq1))
+# Remove sample with 20 reads, this looks WAAAY off
+# Rarify first
+ps.rarefied=rarefy_even_depth(physeq1,rngseed=1,sample.size=0.9*min(sample_sums(physeq1)),replace=F)
+
+plot_richness(ps.rarefied,x="TRT",measures=c("Observed","Shannon"))+
+  geom_boxplot()+
+  theme_classic()
+
+
+plot_richness(ps.rarefied,x="Species",measures=c("Observed","Shannon"))+
+  geom_boxplot()+
+  theme_classic()
+```
+
+
+## Test differences in abundance
+```{r Test for significant differences in abundance,warning=F,comment=F,message=F}
+
+sample_data(physeq1)$TRT<-as.factor(sample_data(physeq1)$TRT)
+sample_data(physeq1)$Species<-as.factor(sample_data(physeq1)$Species)
+
+# Conver phyloseq object to DESeq data set and run DESeq2
+
+#   ds=phyloseq_to_deseq2(physeq1,~TRT)
+#   ds=DESeq(ds)
+
+#Extract the result table from the ds object usind the DESeq2 function results and filter the OTUs using a False Discovery Rate (FDR) cutoff of 0.01. In this example we return the significantly differentially abundant OTU between the treatment
+
+### Function below commented out for efficiency. Saved output as a csv file, and re-open it.
+
+#    alpha=0.01
+#    res=results(ds,contrast=c("TRT","Alone","Inter"),alpha=alpha)
+    
+#    res=res[order(res$padj,na.last=NA),]
+#    res_sig=res[(res$padj<alpha),]
+#    res_sig # No significant treatment differences
+
+
+#    ds2=phyloseq_to_deseq2(physeq1,~Species)
+#    ds2=DESeq(ds2)
+#    alpha=0.01
+#    res2=results(ds2,contrast=c("Species","Ip","Ihed"),alpha=alpha)
+#    
+
+# Write out to csv files and open them.
+
+#   write.csv(data.frame(res),"Results_Alpha_BetweenTrt.csv",row.names = T)
+#   write.csv(data.frame(res2),"Results_Alpha_BetweenSpecies.csv",row.names = T)
+
+resm=read.csv("Results_Alpha_BetweenTrt.csv",row.names = 1)
+res2m=read.csv("Results_Alpha_BetweenSpecies.csv",row.names=1)
+str(res2m)
+
+alpha=0.01
+res2m=res2m[order(res2m$padj,na.last=NA),]
+res2m_sig=res2m[(res2m$padj<alpha),]
+
+library(kableExtra)
+kable(res2m_sig) # significant species differences in alpha diversity
+
+
+
+
+#The result table reports base means across samples, log2 fold changes, standard errors, test statistics, p-values and adjusted p-values.
+
+
+res2m_sig = cbind(as(res2m_sig, "data.frame"), as(tax_table(physeq1)[rownames(res2m_sig), ], "matrix"))
+
+colnames(res2m_sig)[7:12]<-c("Kingdom","Phylum","Class","Order","Family","Genus")
+
+ggplot(res2m_sig, aes(x=Phylum, y=log2FoldChange, color=Genus)) +
+    geom_jitter(size=3, width = 0.2) +
+    theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5))+
+  theme_bw()+
+  scale_color_brewer(palette = "Paired")
+```
+
+
+
+
+```{r Richness and Evenness,warning=F,comment=F,message=F}
+# Initialize matrices to store richness and evenness estimates
+nsamp = nsamples(physeq1)
+trials = 100
+
+
+
+### I commented out the subsampling to save time. The matrices produced were saved and then reoponed from their tab delmited formats into corresponding matrices.
+
+# It is always important to set a seed when you subsample so your result is replicable 
+#set.seed(3)
+
+#   for (i in 1:100) {
+  ## Subsample
+  #   r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = #TRUE)
+  ## Calculate richness
+  #   rich <- as.numeric(as.matrix(estimate_richness(r, measures = "Observed")))
+  #   richness[ ,i] <- rich
+  ## Calculate evenness
+  #   even <- as.numeric(as.matrix(estimate_richness(r, measures = "InvSimpson")))
+  #   evenness[ ,i] <- even
+  #      r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
+  #      sim <- as.numeric(as.matrix(estimate_richness(r, measures = "Simpson")))
+  #      simpson[,i] <- sim
+#   }
+
+
+
+
+library(MASS)
+#   write.matrix(evenness,"Evenness.txt",sep = "\t")
+#   write.matrix(richness,"Richness.txt",sep = "\t")
+#   write.matrix(simpson,"Simpson.txt",sep = "\t")
+
+
+evenness=as.matrix(read.table("Evenness.txt",sep="\t"))
+row.names(evenness)=sample_names(physeq1)
+
+richness=as.matrix(read.table("Richness.txt",sep="\t"))
+row.names(richness)=sample_names(physeq1)
+
+simpson=as.matrix(read.table("Simpson.txt",sep="\t"))
+row.names(simpson)=sample_names(physeq1)
+```
+
+```{r}
+# Create a new dataframe to hold the means and standard deviations of richness estimates
+Sample_ID <- row.names(richness)
+mean <- apply(richness, 1, mean)
+sd <- apply(richness, 1, sd)
+measure <- rep("Richness", nsamp)
+rich_stats <- data.frame(Sample_ID, mean, sd, measure)
+
+# Create a new dataframe to hold the means and standard deviations of evenness estimates
+Sample_ID <- row.names(evenness)
+mean <- apply(evenness, 1, mean)
+sd <- apply(evenness, 1, sd)
+measure <- rep("Inverse Simpson", nsamp)
+even_stats <- data.frame(Sample_ID, mean, sd, measure)
+
+Sample_ID <- row.names(simpson)
+mean <- apply(simpson, 1, mean)
+sd <- apply(simpson, 1, sd)
+measure <- rep("Simpson", nsamp)
+simp_stats <- data.frame(Sample_ID, mean, sd, measure)
+
+
+alpha <- rbind(rich_stats, even_stats,simp_stats)
+
+s <- data.frame(sample_data(physeq1))
+alphadiv <- merge(alpha, s, by = "Sample_ID") 
+
+# DO VIOLIN PLOT HERE!!!
+
+
+p=ggplot(alphadiv%>%filter(measure=="Richness"), aes(x=Species, y=mean)) +
+  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+  theme_classic()+
+  scale_color_brewer(palette = "Paired")+
+  scale_fill_brewer(palette = "Paired")+
+  ggtitle("Mean Species Richness")
+
+
+q=ggplot(alphadiv%>%filter(measure=="Inverse Simpson"), aes(x=Species, y=mean)) +
+  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+  theme_classic()+
+  scale_color_brewer(palette = "Paired")+
+  scale_fill_brewer(palette = "Paired")+
+  ggtitle("Mean Species Inverse Simpson")+
+  ylab("")
+
+
+t=ggplot(alphadiv%>%filter(measure=="Simpson"), aes(x=Species, y=mean)) +
+  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+  theme_classic()+
+  scale_color_brewer(palette = "Paired")+
+  scale_fill_brewer(palette = "Paired")+
+  ggtitle("Mean Simpson")+
+  ylab("")
+
+
+ggarrange(p,q,t,common.legend=T,ncol=3)
+
+
+
+      ### Treatment
+
+pT=ggplot(alphadiv%>%filter(measure=="Richness"), aes(x=TRT, y=mean)) +
+  geom_violin(trim=FALSE,aes(fill=TRT),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=TRT,fill=TRT))+
+  theme_classic()+
+  scale_color_manual(values=c("#B2DF8A","#fee090"))+
+  scale_fill_manual(values=c("#B2DF8A","#fee090"))+
+  ggtitle("Mean Treatment Richness")
+
+
+qT=ggplot(alphadiv%>%filter(measure!="Richness"), aes(x=TRT, y=mean)) +
+  geom_violin(trim=FALSE,aes(fill=TRT),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=TRT,fill=TRT))+
+  theme_classic()+
+  scale_color_manual(values = c("#B2DF8A","#fee090"))+
+  scale_fill_manual(values = c("#B2DF8A","#fee090"))+
+  ggtitle("Mean Treatment Inverse Simpson")+
+  ylab(" ")
+
+ggarrange(pT,qT,common.legend=T)
+
+```
+
+## Test for differences
+
+
+```{r ANOVAS on alpha diversities,warning=F,comment=F,message=F}
+# first check for normality. To test for normalcy statistically, we can run the Shapiro-Wilk test of normality.
+
+shapiro.test((alphadiv%>%filter(measure=="Richness"))$mean) # Not normal
+shapiro.test((alphadiv%>%filter(measure=="Inverse Simpson"))$mean) # Normal
+shapiro.test((alphadiv%>%filter(measure=="Simpson"))$mean) # Normal
+
+histogram((alphadiv%>%filter(measure=="Richness"))$mean,xlab="Richness") # Note richness though, not normal, looks close to normal.
+
+histogram((alphadiv%>%filter(measure=="Inverse Simpson"))$mean,xlab="Inverse-Simpson")
+histogram((alphadiv%>%filter(measure=="Simpson"))$mean,xlab="Simpson")
+
+
+#   Run the ANOVA and save it as an object
+aov.Richness = aov(mean~TRT+Species+Block,data=(alphadiv%>%filter(measure=="Richness")))
+aov.simpsonInv = aov(mean~TRT+Species+Block,data=(alphadiv%>%filter(measure=="Inverse Simpson")))
+aov.simpson = aov(mean~TRT+Species+Block,data=(alphadiv%>%filter(measure=="Simpson")))
+#Call for the summary of that ANOVA, which will include P-values
+summary(aov.Richness)
+summary(aov.simpsonInv)
+summary(aov.simpson)
+
+# No significant differences
+```
+
+
+## Plot at phylum level
+
+```{r BarPlot on Phylum,warning=F,comment=F,message=F}
+
+# melt to long format (for ggploting) 
+# prune out phyla below 2% in each sample
+
+physeq1_phylum <- physeq1 %>%
+  tax_glom(taxrank = "Rank2") %>%                     # agglomerate at phylum level
+  transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
+  psmelt() %>%                                         # Melt to long format
+  filter(Abundance > 0.02)
+physeq1_phylum=physeq1_phylum[order(physeq1_phylum$Rank2),] 
+
+#colnames(physeq1_phylum)[13]="Phylum"
+
+# Sort data frame alphabetically by phylum
+# Set colors for plotting
+phylum_colors <- c(
+  "#CBD588", "#5F7FC7", "orange","#DA5724", "#508578", "#CD9BCD",
+   "#AD6F3B", "#673770","#D14285", "#652926", "#C84248", 
+  "#8569D5", "#5E738F","#D1A33D", "#8A7C64", "#599861"
+)
+
+
+colnames(physeq1_phylum)[which(names(physeq1_phylum)%in%"Rank2")]="Phylum"
+# Plot 
+ggplot(physeq1_phylum, aes(x = Species, y = Abundance, fill = Phylum)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = phylum_colors)+
+  theme(axis.title.x = element_blank()) + 
+  ylab("Relative Abundance (Phyla > 2%) \n") +
+  ggtitle("Phylum Composition  \n Bacterial Communities by Sampling per Species") +
+  theme_classic()+
+  ylab("Relative Abundance")
+
+```
+
+
+## Continous data (root traits, leaf number)
+Here, I correlate leaf number to OTUs with at least 5% relative abundance in at least one sample in our data set.
+
+```{r Analyzing leaf data,warning=F,comment=F,message=F}
+LeafData<-read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/Leaf_Number_SizeProxy_Field2018_7232018.csv")[c("Position","ML","Leaf.Number")]
+
+LeafData$Sample_ID=paste(LeafData$Position,ifelse(grepl("Ihed",LeafData$ML),"H","P"),sep="")
+length(which(LeafData$Sample_ID %in% alphadiv$Sample_ID))
+
+
+alphadiv2=merge(alphadiv,LeafData)
+dim(alphadiv2) #ok
+alphadiv2$Leaf.Number=as.numeric(as.character(alphadiv2$Leaf.Number))
+
+Model1=glm(Leaf.Number~mean+Species+TRT+Block,alphadiv2%>%filter(measure=="Richness"),family=gaussian()) 
+summary(Model1)
+
+Model2=glm(Leaf.Number~mean+Species+TRT+Block,alphadiv2%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(Model2) # Almost significant inverson simpson effect
+
+
+Model3=glm(Leaf.Number~mean+Species+TRT+Block,alphadiv2%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(Model3) # 
+# Correlation test:
+
+cor.test((alphadiv2%>%filter(measure=="Richness"))$mean,(alphadiv2%>%filter(measure=="Richness"))$Leaf.Number)
+
+cor.test((alphadiv2%>%filter(measure!="Inverse Simpson"))$mean,(alphadiv2%>%filter(measure!="Inverse Simpson"))$Leaf.Number)
+
+
+cor.test((alphadiv2%>%filter(measure!="Simpson"))$mean,(alphadiv2%>%filter(measure!="Simpson"))$Leaf.Number)
+
+## Effect of pcoa beta diversity metric
+
+physeq.pcoa.df$Sample_ID=physeq.pcoa.df$Duplicates
+physeq.pcoa.df2=data.frame(merge(physeq.pcoa.df,LeafData))
+physeq.pcoa.df2$Leaf.Number=as.numeric(as.character(physeq.pcoa.df2$Leaf.Number))
+
+summary(glm(Leaf.Number~Axis.1+Species+TRT+Block,physeq.pcoa.df2,family=gaussian()))
+summary(glm(Leaf.Number~Axis.2+Species+TRT+Block,physeq.pcoa.df2,family=gaussian()))
+summary(glm(Leaf.Number~Axis.3+Species+TRT+Block,physeq.pcoa.df2,family=gaussian()))
+summary(glm(Leaf.Number~Axis.4+Species+TRT+Block,physeq.pcoa.df2,family=gaussian()))
+```
+
+
+```{r Alpha, more estimates,warning=F,comment=F,message=F}
+
+## Additional estimates of alpha diversity
+ # Specify a few:
+AlphaExtra=estimate_richness(physeq1, measures=c("Observed", "InvSimpson", "Shannon", "Chao1"))
+```
+
+
+## Preliminary test with roots
+
+```{r Preliminary exam on root linear model}
+RootData=read.csv("~/Google Drive File Stream/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/RootTraits_PCs.csv")
+
+RootAlphaObs=merge(alphadiv,RootData[c("Sample_ID","PC1","PC2","PC3","PC4")])
+
+SimpPC1=glm(PC1~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC1)
+
+SimpInvPC1=glm(PC1~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC1)
+
+RichPC1=glm(PC1~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC1)
+
+
+
+SimpPC2=glm(PC2~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC2)
+
+SimpInvPC2=glm(PC2~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC2) # marginal effect of Evenness on root architecture SUPER SMALL EFFECT
+
+RichPC2=glm(PC2~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC2) # Significant mean Richness Effect on root architecture, SUPER small effect size
+
+### PC3
+SimpPC3=glm(PC3~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC3) # Marginal effect of species Simpson
+
+SimpInvPC3=glm(PC3~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC3) # marginal effect of Evenness on root architecture SUPER SMALL EFFECT
+
+RichPC3=glm(PC3~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC3)
+
+### PC4
+SimpPC4=glm(PC4~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC4) # Significant Simpson effect
+
+SimpInvPC4=glm(PC4~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC4)  # Marginal evenness effect
+
+RichPC4=glm(PC4~mean+Species+TRT+Block,RootAlphaObs%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC4)
+```
+
+## Within species (root traits and alphadiv)
+
+
+```{r Preliminary exam on roots within species}
+
+library(multcomp)
+
+#summary(glht(SimpInvPC1, mcp(rank="Tukey")))
+
+#################################################################
+##################### SUBSET for I.purpurea #####################
+#################################################################
+
+RootAlphaPurp=droplevels(RootAlphaObs%>%filter(Species=="Ip"))
+
+SimpPC1=glm(PC1~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC1)
+
+SimpInvPC1=glm(PC1~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC1)
+
+RichPC1=glm(PC1~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC1)
+
+SimpPC2=glm(PC2~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC2)
+
+SimpInvPC2=glm(PC2~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC2) # marginal effect of Evenness on root architecture SUPER SMALL EFFECT
+
+RichPC2=glm(PC2~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC2) # Marginal mean Richness Effect on root architecture, SUPER small effect size
+
+### PC3
+SimpPC3=glm(PC3~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC3) # Marginal effect of species Simpson
+
+SimpInvPC3=glm(PC3~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC3) # marginal effect of Evenness on root architecture SUPER SMALL EFFECT
+
+RichPC3=glm(PC3~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC3)
+
+### PC4
+SimpPC4=glm(PC4~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Simpson"),family=gaussian()) 
+summary(SimpPC4) # Significant Simpson effect within Species!
+
+SimpInvPC4=glm(PC4~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Inverse Simpson"),family=gaussian()) 
+summary(SimpInvPC4)  # Marginal evenness effect
+
+RichPC4=glm(PC4~mean+TRT+Block,RootAlphaPurp%>%filter(measure=="Richness"),family=gaussian()) 
+summary(RichPC4)
+```
+
+
+## General linear mixed models
+```{r Preliminary exam on roots maternal line variation}
+library(lmerTest)
+
+### Simpson
+SimpLMM=lmer(mean~Species+TRT+Block+(1|ML)+(1|Combos),alphadiv%>%filter(measure=="Simpson")) 
+anova(SimpLMM)
+ranova(SimpLMM)
+
+### Inverse Simpson
+SimpInvLMM=lmer(mean~Species+TRT+Block+(1|ML)+(1|Combos),alphadiv%>%filter(measure=="Inverse Simpson")) 
+anova(SimpInvLMM)
+ranova(SimpInvLMM)
+
+### Inverse Simpson
+RichLMM=lmer(mean~Species+TRT+Block+(1|ML)+(1|Combos),alphadiv%>%filter(measure=="Richness")) 
+anova(RichLMM)
+ranova(RichLMM)
+
+# Bray curtis metric now
+
+
+Ax1LMM=lmer(Axis.1~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax1LMM)
+ranova(Ax1LMM)
+
+
+Ax2LMM=lmer(Axis.2~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax2LMM) # Significant species diffeences in axis 2
+ranova(Ax2LMM)
+
+
+Ax3LMM=lmer(Axis.3~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax3LMM) 
+ranova(Ax3LMM)
+
+Ax4LMM=lmer(Axis.4~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax4LMM) # Marginal species differences
+ranova(Ax4LMM)
+```
+
+
+```{r Read in fitness data}
+Fitness=read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/FitPA4.csv")
+
+# Calculate relative fitness
+  # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
+MeanSeedNumber=Fitness%>%
+  group_by(Species,Trt)%>%
+  summarise("MeanSeedNumber"=mean(SeedNumber))
+
+Ipurp.Fit=Fitness%>%
+  filter(Species=="Ip")
+
+Ipurp.Alpha=alphadiv%>%
+  filter(Species=="Ip")
+
+FitnessPurp=merge(Ipurp.Fit,MeanSeedNumber)
+FitnessPurp$RelativeFit=FitnessPurp$SeedNumber/FitnessPurp$MeanSeedNumber
+FitnessPurp$Block=as.factor(FitnessPurp$Block)
+
+ggplot(FitnessPurp,aes(Trt,RelativeFit,fill=Block))+
+  geom_boxplot()+
+  scale_fill_brewer("Paired")+
+  theme_classic()+
+  ylab("Relative Fitness")+
+  ggtitle("Relative Fitness by Treatment and Block")
+
+```
+
+```{r phenotypic selection}
+
+####  ####  ####  ####  ####  ####   ####
+#  Examine selection on microbiome first
+####  ####  ####  ####  ####  ####   ####
+FitnessPurp$TRT=FitnessPurp$Trt
+FitnessPurp$Combos=as.character(FitnessPurp$Combos)
+FitnessPurp[which(FitnessPurp$Trt=="Alone"),]$Combos="none"
+FitnessPurp$Combos=as.factor(FitnessPurp$Combos)
+
+BrayFit=merge(physeq.pcoa.df,FitnessPurp)
+
+FitAlpha=merge(FitnessPurp,alphadiv)
+dim(FitAlpha)
+
+Alone=FitAlpha%>%
+  filter(TRT=="Alone")
+
+Comp=FitAlpha%>%
+  filter(TRT!="Alone")
+
+# Combine with root data
+library(dplyr)
+
+RootAveraged=RootData%>%
+  group_by(Species,ML,Combos,Trt,Block)%>%
+  summarise("PC1"=mean(PC1,na.rm=T),"PC2"=mean(PC2,na.rm=T),"PC3"=mean(PC3,na.rm=T),"PC4"=mean(PC4,na.rm=T))
+
+
+RootFitAlpha=merge(FitAlpha,RootAveraged)
+head(RootFitAlpha)
+
+Alone=RootFitAlpha%>%
+  filter(TRT=="Alone")
+
+Comp=RootFitAlpha%>%
+  filter(TRT!="Alone")
+
+
+# Subset bray and fintess by treatment
+Alone2=BrayFit%>%
+  filter(TRT=="Alone")
+
+Comp2=BrayFit%>%
+  filter(TRT!="Alone")
+
+# Combina root, fitness/bray estimates
+RootFitBray=merge(BrayFit,RootAveraged)
+
+```
+
+### Selection on richness
+```{r selection on richness within Alone}
+Alone.richness_sel=lm(RelativeFit~mean,Alone%>%filter(measure=="Richness"))
+
+summary(Alone.richness_sel) # No evidence of indirect selection
+```
+
+```{r selection on richness within competition}
+Comp.richness_sel=lm(RelativeFit~mean,Comp%>%filter(measure=="Richness"))
+
+summary(Comp.richness_sel) # No evidence of indirect selection
+```
+
+
+### Selection on evenness
+
+```{r selection on evenness within Alone}
+Alone.evenness_sel=lm(RelativeFit~mean,Alone%>%filter(measure=="Inverse Simpson"))
+
+summary(Alone.evenness_sel) # No evidence of indirect selection
+```
+
+```{r selection on evenness within competition}
+Comp.evenness_sel=lm(RelativeFit~mean,Comp%>%filter(measure=="Inverse Simpson"))
+
+summary(Comp.evenness_sel) # No evidence of indirect selection
+```
+
+
+### Selection on Simpson index
+
+```{r selection on simpson within Alone}
+Alone.simpson_sel=lm(RelativeFit~mean,Alone%>%filter(measure=="Simpson"))
+
+summary(Alone.simpson_sel) # No evidence of indirect selection
+```
+
+```{r selection on simpson within competition}
+Comp.simpson_sel=lm(RelativeFit~mean,Comp%>%filter(measure=="Simpson"))
+
+summary(Comp.simpson_sel) # No evidence of indirect selection
+```
+
+### Selection on Bray curtis estimates
+
+
+### Axis 1
+```{r Axis 1 Bray selection on richness within Alone2}
+Alone2_sel=lm(RelativeFit~Axis.1,Alone2)
+summary(Alone2_sel) # No evidence of indirect selection
+```
+
+```{r Axis 1 Bray selection on richness within Comp2etition}
+Comp2_sel=lm(RelativeFit~Axis.1,Comp2)
+summary(Comp2_sel) # Evidence of indirect selection
+```
+
+### Axis 2
+```{r Axis 2 Bray selection on richness within Alone2}
+Alone2_sel=lm(RelativeFit~Axis.2,Alone2)
+summary(Alone2_sel) # No evidence of indirect selection
+```
+
+```{r Axis 2 Bray selection on richness within Comp2etition}
+Comp2_sel=lm(RelativeFit~Axis.2,Comp2)
+summary(Comp2_sel) # No evidence of indirect selection
+```
+
+
+### Axis 3
+```{r Axis 3 Bray selection on richness within Alone2}
+Alone2_sel=lm(RelativeFit~Axis.3,Alone2)
+summary(Alone2_sel) # No evidence of indirect selection
+```
+
+```{r Axis 3 Bray selection on richness within Comp2etition}
+Comp2_sel=lm(RelativeFit~Axis.3,Comp2)
+summary(Comp2_sel) # No evidence of indirect selection
+```
+
+### Axis 4
+```{r Axis 4 Bray selection on richness within Alone2}
+Alone2_sel=lm(RelativeFit~Axis.4,Alone2)
+summary(Alone2_sel) # Evidence of selection on Axis 4
+```
+
+```{r Axis 4 Bray selection on richness within Comp2etition}
+Comp2_sel=lm(RelativeFit~Axis.4,Comp2)
+summary(Comp2_sel) # No evidence of indirect selection
+```
+
+
+## Correlative selection root phenotype and microbe variables
+
+
+### Selection on richness
+```{r cor selection on richness within Alone}
+PC1.Alone.richness_sel=lm(RelativeFit~PC1*mean,Alone%>%filter(measure=="Richness"))
+summary(PC1.Alone.richness_sel) # No evidence of indirect selection
+
+PC1.Comp.richness_sel=lm(RelativeFit~PC1*mean,Comp%>%filter(measure=="Richness"))
+summary(PC1.Comp.richness_sel) 
+
+
+PC2.Alone.richness_sel=lm(RelativeFit~PC2*mean,Alone%>%filter(measure=="Richness"))
+summary(PC2.Alone.richness_sel) # No evidence of indirect selection
+
+PC2.Comp.richness_sel=lm(RelativeFit~PC2*mean,Comp%>%filter(measure=="Richness"))
+summary(PC2.Comp.richness_sel) 
+
+PC3.Alone.richness_sel=lm(RelativeFit~PC3*mean,Alone%>%filter(measure=="Richness"))
+summary(PC3.Alone.richness_sel) # No evidence of indirect selection
+
+PC3.Comp.richness_sel=lm(RelativeFit~PC3*mean,Comp%>%filter(measure=="Richness"))
+summary(PC3.Comp.richness_sel) 
+
+PC4.Alone.richness_sel=lm(RelativeFit~PC4*mean,Alone%>%filter(measure=="Richness"))
+summary(PC4.Alone.richness_sel) # No evidence of indirect selection
+
+PC4.Comp.richness_sel=lm(RelativeFit~PC4*mean,Comp%>%filter(measure=="Richness"))
+summary(PC4.Comp.richness_sel) 
+```
+
+
+
+
+### Selection on evenness
+```{r cor selection on evenness within Alone}
+PC1.Alone.evenness_sel=lm(RelativeFit~PC1*mean,Alone%>%filter(measure=="Inverse Simpson"))
+summary(PC1.Alone.evenness_sel) # No evidence of indirect selection
+
+PC1.Comp.evenness_sel=lm(RelativeFit~PC1*mean,Comp%>%filter(measure=="Inverse Simpson"))
+summary(PC1.Comp.evenness_sel) 
+
+
+PC2.Alone.evenness_sel=lm(RelativeFit~PC2*mean,Alone%>%filter(measure=="Inverse Simpson"))
+summary(PC2.Alone.evenness_sel) # No evidence of indirect selection
+
+PC2.Comp.evenness_sel=lm(RelativeFit~PC2*mean,Comp%>%filter(measure=="Inverse Simpson"))
+summary(PC2.Comp.evenness_sel) 
+
+PC3.Alone.evenness_sel=lm(RelativeFit~PC3*mean,Alone%>%filter(measure=="Inverse Simpson"))
+summary(PC3.Alone.evenness_sel) # No evidence of indirect selection
+
+PC3.Comp.evenness_sel=lm(RelativeFit~PC3*mean,Comp%>%filter(measure=="Inverse Simpson"))
+summary(PC3.Comp.evenness_sel) 
+
+PC4.Alone.evenness_sel=lm(RelativeFit~PC4*mean,Alone%>%filter(measure=="Inverse Simpson"))
+summary(PC4.Alone.evenness_sel) # No evidence of indirect selection
+
+PC4.Comp.evenness_sel=lm(RelativeFit~PC4*mean,Comp%>%filter(measure=="Inverse Simpson"))
+summary(PC4.Comp.evenness_sel)  # Selecion on root morphology only
+```
+
+
+```{r cor selection on Simpson within Alone}
+PC1.Alone.Simpson_sel=lm(RelativeFit~PC1*mean,Alone%>%filter(measure=="Simpson"))
+summary(PC1.Alone.Simpson_sel) # No evidence of indirect selection
+
+PC1.Comp.Simpson_sel=lm(RelativeFit~PC1*mean,Comp%>%filter(measure=="Simpson"))
+summary(PC1.Comp.Simpson_sel) 
+
+
+PC2.Alone.Simpson_sel=lm(RelativeFit~PC2*mean,Alone%>%filter(measure=="Simpson"))
+summary(PC2.Alone.Simpson_sel) # No evidence of indirect selection
+
+PC2.Comp.Simpson_sel=lm(RelativeFit~PC2*mean,Comp%>%filter(measure=="Simpson"))
+summary(PC2.Comp.Simpson_sel) 
+
+PC3.Alone.Simpson_sel=lm(RelativeFit~PC3*mean,Alone%>%filter(measure=="Simpson"))
+summary(PC3.Alone.Simpson_sel) # No evidence of indirect selection
+
+PC3.Comp.Simpson_sel=lm(RelativeFit~PC3*mean,Comp%>%filter(measure=="Simpson"))
+summary(PC3.Comp.Simpson_sel) 
+
+PC4.Alone.Simpson_sel=lm(RelativeFit~PC4*mean,Alone%>%filter(measure=="Simpson"))
+summary(PC4.Alone.Simpson_sel) # No evidence of indirect selection
+
+PC4.Comp.Simpson_sel=lm(RelativeFit~PC4*mean,Comp%>%filter(measure=="Simpson"))
+summary(PC4.Comp.Simpson_sel) 
+```
+
+### Correlative Selection on Bray curtis
+```{r Axis 1 cor Bray curtis selection }
+Alone2B=RootFitBray%>%filter(Trt=="Alone")
+Comp2B=RootFitBray%>%filter(Trt=="Inter")
+
+
+PC1.Alone=lm(RelativeFit~PC1*Axis.1,Alone2B)
+summary(PC1.Alone) # No evidence of indirect selection
+
+PC1.Comp=lm(RelativeFit~PC1*Axis.1,Comp2B)
+summary(PC1.Comp) # Marginal selection on axis 1
+
+PC2.Alone=lm(RelativeFit~PC2*Axis.1,Alone2B)
+summary(PC2.Alone) # No evidence of indirect selection
+
+PC2.Comp=lm(RelativeFit~PC2*Axis.1,Comp2B)
+summary(PC2.Comp) # Significant effect of Axis.1 
+
+PC3.Alone=lm(RelativeFit~PC3*Axis.1,Alone2B)
+summary(PC3.Alone) #Marginal effect of axis 1
+
+PC3.Comp=lm(RelativeFit~PC3*Axis.1,Comp2B)
+summary(PC3.Comp) # significant effect of axis 1
+
+PC4.Alone=lm(RelativeFit~PC4*Axis.1,Alone2B)
+summary(PC4.Alone) # No evidence of indirect selection
+
+PC4.Comp=lm(RelativeFit~PC4*Axis.1,Comp2B)
+summary(PC4.Comp) # Significant effect of axis 1
+```
+
+```{r Axis 2 cor Bray curtis selection }
+PC1.Alone=lm(RelativeFit~PC1*Axis.2,Alone2B)
+summary(PC1.Alone) # No evidence of indirect selection
+
+PC1.Comp=lm(RelativeFit~PC1*Axis.2,Comp2B)
+summary(PC1.Comp)
+
+PC2.Alone=lm(RelativeFit~PC2*Axis.2,Alone2B)
+summary(PC2.Alone) # No evidence of indirect selection
+
+PC2.Comp=lm(RelativeFit~PC2*Axis.2,Comp2B)
+summary(PC2.Comp) # Marginal effect of root architecture by Axis.2 interaction
+
+PC3.Alone=lm(RelativeFit~PC3*Axis.2,Alone2B)
+summary(PC3.Alone) 
+
+PC3.Comp=lm(RelativeFit~PC3*Axis.2,Comp2B)
+summary(PC3.Comp) 
+
+PC4.Alone=lm(RelativeFit~PC4*Axis.2,Alone2B)
+summary(PC4.Alone) # No evidence of indirect selection
+
+PC4.Comp=lm(RelativeFit~PC4*Axis.2,Comp2B)
+summary(PC4.Comp) 
+```
+
+```{r Axis 3 cor Bray curtis selection }
+PC1.Alone=lm(RelativeFit~PC1*Axis.3,Alone2B)
+summary(PC1.Alone) # No evidence of indirect selection
+
+PC1.Comp=lm(RelativeFit~PC1*Axis.3,Comp2B)
+summary(PC1.Comp)
+
+PC2.Alone=lm(RelativeFit~PC2*Axis.3,Alone2B)
+summary(PC2.Alone) # No evidence of indirect selection
+
+PC2.Comp=lm(RelativeFit~PC2*Axis.3,Comp2B)
+summary(PC2.Comp) # Marginal effect of root architecture by Axis.3 interaction
+
+PC3.Alone=lm(RelativeFit~PC3*Axis.3,Alone2B)
+summary(PC3.Alone) 
+
+PC3.Comp=lm(RelativeFit~PC3*Axis.3,Comp2B)
+summary(PC3.Comp) 
+
+PC4.Alone=lm(RelativeFit~PC4*Axis.3,Alone2B)
+summary(PC4.Alone) # No evidence of indirect selection
+
+PC4.Comp=lm(RelativeFit~PC4*Axis.3,Comp2B)
+summary(PC4.Comp) # Marginal effect of Axis 3 on fitness
+```
+
+```{r Axis 4 cor Bray curtis selection }
+PC1.Alone=lm(RelativeFit~PC1*Axis.4,Alone2B)
+summary(PC1.Alone) # No evidence of indirect selection
+
+PC1.Comp=lm(RelativeFit~PC1*Axis.4,Comp2B)
+summary(PC1.Comp)
+
+PC2.Alone=lm(RelativeFit~PC2*Axis.4,Alone2B)
+summary(PC2.Alone) # SIGNIFICANT effect of Axis.4 on relative fitness
+
+PC2.Comp=lm(RelativeFit~PC2*Axis.4,Comp2B)
+summary(PC2.Comp) 
+
+PC3.Alone=lm(RelativeFit~PC3*Axis.4,Alone2B)
+summary(PC3.Alone) 
+
+PC3.Comp=lm(RelativeFit~PC3*Axis.4,Comp2B)
+summary(PC3.Comp) 
+
+PC4.Alone=lm(RelativeFit~PC4*Axis.4,Alone2B)
+summary(PC4.Alone) # Significant effect of Axis.4 on fitness 
+
+PC4.Comp=lm(RelativeFit~PC4*Axis.4,Comp2B)
+summary(PC4.Comp) 
+```
+
+## ANCOVAs
+```{r Test for evidence of treatment impacting selection}
+
+
+
+```
+
+```{r Selection plots}
+ggplot((FitAlpha[which(FitAlpha$measure=="Richness"),]))+
+         geom_point(aes(mean,RelativeFit,color=TRT))+
+        theme_classic()
+
+ggplot((FitAlpha[which(FitAlpha$measure=="Inverse Simpson"),]))+
+         geom_point(aes(mean,RelativeFit,color=TRT))+
+        theme_classic()
+
+ggplot((FitAlpha[which(FitAlpha$measure=="Simpson"),]))+
+         geom_point(aes(mean,RelativeFit,color=TRT))+
+        theme_classic()
+
+```
+

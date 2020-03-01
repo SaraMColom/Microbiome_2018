@@ -1,0 +1,267 @@
+---
+title: "Preliminary_Microbiome_analysis"
+author: "Sara Colom"
+date: "11/13/2019"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: tango
+    code_folding: hide
+    self_contained: yes  
+---
+
+## Sample sizes
+
+### Table sample number by species and treatment
+
+
+| Species          | Treatment       | N      |
+|--------------    |-------------    |----    |
+| I. purpurea      | Alone           | 27     |
+| I. purpurea      | Competition     | 78     |
+| I. hederacea     | Competition     | 78     |
+
+
+### Table number of maternal line per species
+
+| Species          | Number of ML     |
+|--------------    |--------------    |
+| I. purpurea      |      10          |
+| I. hederacea     |       5          |
+
+
+
+```{r setup,warning=F,comment=F,message=F}
+knitr::opts_chunk$set(root.dir = ("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+               
+knitr::opts_knit$set(root.dir = ("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+
+source("~/Google Drive File Stream/My Drive/Chapter3MicrobiomeMothur/DataCode/Rscript/Source_RF_ZackularEtAl.R")
+```
+
+### Load Libraries
+```{r load_libs, include=T,warning=F,comment=F,message=F}
+library(phyloseq)
+library(ggplot2)
+library(randomForest)
+library(rfUtilities)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(scales)
+library(ggpubr)
+library(RColorBrewer)
+library(plotly)
+library(ggthemes)
+
+
+source("~/Google Drive File Stream/My Drive/IDM_Experiments-master/miSeq.R")
+
+# Aesthetics
+Tx<-theme(axis.text.y = element_text(size=20),
+      axis.title.y = element_text(size=20))+
+    theme(axis.text.x = element_text(vjust = 1, hjust=1,angle=0,size=20),
+          axis.title.x = element_text(angle=0,size=20),
+          plot.title=element_text(size=25,hjust=0))
+
+
+GoldGrey=c("#F1CE63","#79706E")
+GreenBlue=c("#59A14F","#4E79A7")
+
+```
+
+## Sequence data analysis
+```{r Import Data,warning=F,comment=F,message=F}
+### loading mothur output with FWDB+silva taxonomy and sample metadata. 
+### Experiments run in 
+setwd("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output")
+sharedfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.shared"
+taxfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.0.03.cons.taxonomy"
+
+mothurdata <- import_mothur(mothur_shared_file = sharedfile,mothur_constaxonomy_file = taxfile)
+
+sampledata= read.csv('~/Google Drive File Stream/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/MetaDataTest.csv')
+
+SAMPLE=sampledata
+row.names(SAMPLE)=SAMPLE$Sample_ID
+
+SAMPLE=subset(SAMPLE,SAMPLE$TRT=="Alone"|SAMPLE$TRT=="Inter")
+SAMPLE=sample_data(SAMPLE)
+
+# Read in leaf number (size proxy)
+LeafData<-read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/Leaf_Number_SizeProxy_Field2018_7232018.csv")[c("Position","ML","Leaf.Number")]
+
+
+
+
+# Read in fitness data
+Fitness=read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/FitPA4.csv")
+
+
+### create phyloseq object
+physeq.all = merge_phyloseq(mothurdata, SAMPLE) # Modified version worked
+
+
+### We need to change the taxonomy names: when using the fwdb taxonomy we need to add different headers after removing the last column, which contains no information except for 1 Verrucomicrobia taxon
+
+#   tax_table(physeq.all) <- tax_table(physeq.all)[,-7] # this removes the final column
+#   colnames(tax_table(physeq.all))<-c("Kingdom","Phylum","Class","Order","Family","Genus")
+
+#   tax_table(physeq.all) <-cbind(tax_table(physeq.all),row.names(tax_table(physeq.all)))
+
+### removing non-bacterial reads (was already done in mothur, but just to be safe after merging taxonomies)
+#   physeq.all <- subset_taxa(physeq.all, Kingdom == "Bacteria")
+```
+
+```{r Proteobacteria phylum change to class,warning=F,comment=F,message=F}
+
+setwd("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output")
+
+### ADD THE PROTEOBACTERIA CLASSES TO THE PHYLA NAME FIELD IN PHYLOSEQ OBJECT TAXONOMY 
+
+#phy <- data.frame(tax_table(physeq.all))
+#Phylum <- as.character(phy$Phylum)
+#Class <- as.character(phy$Class)
+#for  (i in 1:length(Phylum)){ 
+#  if (Phylum[i] == "Proteobacteria"){
+#    if (Class[i] == "unclassified"){
+#      Phylum[i] <- Phylum[i]       
+#    } else {
+#      Phylum[i] <- Class[i]
+#    }
+#  } 
+#}
+
+phy=read.csv("phy.csv")
+
+Phylum<-as.character(phy$Phylum)
+Class=as.character(phy$Class)
+phy$Phylum=Phylum
+t <- tax_table(as.matrix(phy))
+
+#write.csv(phy,"phy.csv",row.names=F)
+```
+
+
+```{r read in phylum data, include=FALSE,warning=F,comment=F,message=F}
+# phy=read.csv("phy.csv")
+
+# tax_table(physeq.all) <- t
+
+SAMPLE$Species=ifelse(grepl("Ip",SAMPLE$ML),"Ip","Ihed")
+physeq.all2 = merge_phyloseq(physeq.all, SAMPLE) 
+```
+
+## Sequence depth and pruning
+
+```{r data scaling}
+physeq=(physeq.all2)
+physeq <- prune_taxa(taxa_sums(physeq) > 0, physeq) # Remove taxa with no counts
+
+#check number of reads in each sample, differences in count are in part due differet numbers of chlorophyl reads depending on time of experiment
+
+# Make a data frame with a column for the read counts of each sample
+sample_sum_df <- data.frame(sum = sample_sums(physeq))
+
+# Histogram of sample read counts
+ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
+  ggtitle("Distribution of sample sequencing depth") + 
+  xlab("Read counts") +
+  theme(axis.title.y = element_blank())+
+  theme_classic()
+
+
+# Scales reads to smallest library size 
+source("https://raw.githubusercontent.com/michberr/MicrobeMiseq/master/R/miseqR.R")
+#physeq.scale <- scale_reads(physeq, min(sample_sums(physeq)))
+
+##### Normalization #######
+
+# Scales reads by 
+# 1) taking proportions,
+# 2) multiplying by a given library size of n
+# 3) rounding down
+physeq1=prune_samples(sample_sums(physeq) >20000, physeq)
+sample_sum_df1 <- data.frame(sum = sample_sums(physeq1))
+
+# Histogram of sample read counts
+ggplot(sample_sum_df1, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
+  ggtitle("Distribution of sample sequencing depth after pruning") + 
+  xlab("Read counts") +
+  theme(axis.title.y = element_blank())+
+  theme_classic()
+
+
+n=min(sample_sums(physeq1))
+  physeq.scale <-
+    transform_sample_counts(physeq1, function(x) {
+      (n * x/sum(x))
+    })
+physeq.scale <- prune_taxa(taxa_sums(physeq.scale) > 0, physeq.scale)
+
+
+dev.off()
+```
+
+
+# Calculate the relative abundances
+
+```{r Relative abundance}
+OTU_count=t(otu_table(physeq1)) # count table where rows are the samples and columns are th OTUS
+SeqNum=sample_sums(physeq1)
+  
+  
+rabund=OTU_count/SeqNum
+```
+
+# Calculate relative fitness
+```{r Calculate relative fitness}
+# Calculate relative fitness
+  # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
+MeanSeedNumber=Fitness%>%
+  group_by(Species,Trt)%>%
+  summarise("MeanSeedNumber"=mean(SeedNumber))
+
+Ipurp.Fit=Fitness%>%
+  filter(Species=="Ip")
+
+Ipurp.Alpha=alphadiv%>%
+  filter(Species=="Ip")
+
+FitnessPurp=merge(Ipurp.Fit,MeanSeedNumber)
+FitnessPurp$RelativeFit=FitnessPurp$SeedNumber/FitnessPurp$MeanSeedNumber
+FitnessPurp$Block=as.factor(FitnessPurp$Block)
+
+```
+
+# Random Forest Predict Leaf Number and Fitness
+
+## Prepare data set and Random Forest model
+```{r random forest leaf number}
+LeafData$Sample_ID=paste(LeafData$Position,ifelse(grepl("Ihed",LeafData$ML),"H","P"),sep="")
+length(which(LeafData$Sample_ID %in% sampledata$Sample_ID))
+
+LeafSample=merge(sampledata,LeafData)
+
+rabund_LeafNum <- data.frame(rabund)  
+rabund_LeafNum$Leaf.Number <- LeafSample$Leaf.Number
+
+RF_LN_regress <- randomForest( x=rabund_LeafNum[,1:(ncol(rabund_LeafNum)-1)] , y=rabund_LeafNum[ , ncol(rabund_LeafNum)] , ntree=501, importance=TRUE, proximities=TRUE )  
+
+```
+
+
+# Random Forest Classify Species
+
+# Random Forest Classify Treatment
+
+
+```{Classification Species}
+
+rabund_species <- data.frame(rabund)  
+rabund_species$species <- sampledata$Species  
+
+```

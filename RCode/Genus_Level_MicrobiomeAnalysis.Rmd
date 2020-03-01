@@ -1,0 +1,2408 @@
+---
+title: "RhizMicrobiome_GenusLevel"
+author: "Sara Colom"
+date: "2/8/2020"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: tango
+    code_folding: hide
+    self_contained: yes 
+---
+
+
+## Sample sizes
+
+### Table sample number by species and treatment
+
+
+| Species          | Treatment       | N      |
+|--------------    |-------------    |----    |
+| I. purpurea      | Alone           | 27     |
+| I. purpurea      | Competition     | 78     |
+| I. hederacea     | Competition     | 78     |
+
+
+### Table number of maternal line per species
+
+| Species          | Number of ML     |
+|--------------    |--------------    |
+| I. purpurea      |      10          |
+| I. hederacea     |       5          |
+
+
+
+```{r setup,warning=F,comment=F,message=F}
+knitr::opts_chunk$set(root.dir = ("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+               
+knitr::opts_knit$set(root.dir = ("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
+```
+
+### Load Libraries
+```{r load_libs, include=T,warning=F,comment=F,message=F}
+library(phyloseq)
+library(ggplot2)
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(DESeq2)
+library(pegas)
+library(pgirmess)
+library(multcomp)
+library(multcompView)
+library(ggpubr)
+library(RColorBrewer)
+library(plotly)
+library(ggthemes)
+library(corrplot)
+library(Hmisc)
+library(Matrix)
+library(igraph)
+library('igraph')
+library('network')
+library('networkD3')
+library('intergraph')
+# library("micro")
+
+source("~/Google Drive File Stream/My Drive/IDM_Experiments-master/miSeq.R")
+
+# Aesthetics
+Tx<-theme(axis.text.y = element_text(size=20),
+          axis.title.y = element_text(size=20))+
+          theme(axis.text.x = element_text(vjust = 1, hjust=1,angle=0,size=20),
+          axis.title.x = element_text(angle=0,size=20),
+          plot.title=element_text(size=25,hjust=0))
+
+
+GoldGrey=c("#F1CE63","#79706E")
+GreenBlue=c("#59A14F","#4E79A7")
+
+```
+
+
+
+## Sequence data analysis
+```{r Import Data,warning=F,comment=F,message=F}
+### loading mothur output with FWDB+silva taxonomy and sample metadata. 
+### Experiments run in 
+setwd("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output")
+sharedfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.shared"
+taxfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.0.03.cons.taxonomy"
+
+mothurdata <- import_mothur(mothur_shared_file = sharedfile,mothur_constaxonomy_file = taxfile)
+
+sampledata= read.csv('~/Google Drive File Stream/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/MetaDataTest.csv')
+
+SAMPLE=sampledata
+row.names(SAMPLE)=SAMPLE$Sample_ID
+
+SAMPLE=subset(SAMPLE,SAMPLE$TRT=="Alone"|SAMPLE$TRT=="Inter")
+SAMPLE=sample_data(SAMPLE)
+
+### create phyloseq object
+physeq.all = merge_phyloseq(mothurdata, SAMPLE) # Modified version worked
+
+
+### We need to change the taxonomy names: when using the fwdb taxonomy we need to add different headers after removing the last column, which contains no information except for 1 Verrucomicrobia taxon
+
+#   tax_table(physeq.all) <- tax_table(physeq.all)[,-7] # this removes the final column
+colnames(tax_table(physeq.all))<-c("Kingdom","Phylum","Class","Order","Family","Genus")
+
+
+#   tax_table(physeq.all) <-cbind(tax_table(physeq.all),row.names(tax_table(physeq.all)))
+
+### removing non-bacterial reads (was already done in mothur, but just to be safe after merging taxonomies)
+#   physeq.all <- subset_taxa(physeq.all, Kingdom == "Bacteria")
+
+```
+
+```{r, aggregate data by genus}
+
+## Aggregate at the genus level, then saving ea componant externally to reload and save time.
+
+        # physeq_genus <- physeq.all %>%
+         #tax_glom(taxrank = "Genus") 
+
+        # otu=data.frame(otu_table(physeq_genus))
+        
+        # meta=data.frame(sample_data(physeq_genus))
+        # tax=data.frame(tax_table(physeq_genus))
+        
+        # write.csv(x = otu,file = "otu_table.csv",row.names = TRUE)
+        # write.csv(x = tax,file = "tax_table.csv")# 
+        # write.csv(x = meta,file = "sample_table.csv",row.names = F)
+
+otu=read.csv("otu_table.csv",row.names = 1)
+colnames(otu)=gsub('X',"",colnames(otu))
+
+otu=otu_table(otu,taxa_are_rows = TRUE)
+
+
+tax=read.csv('tax_table.csv',row.names=1)
+taxRows=row.names(tax)
+taxCols=colnames(tax)
+tax=tax_table(as.matrix(tax))
+
+#row.names(tax)=taxRows
+#colnames(tax)=taxCols
+
+
+meta=read.csv('sample_table.csv')
+row.names(meta)=meta$Sample_ID
+meta=sample_data(meta)
+   
+physeq_genus=merge_phyloseq(otu,tax,meta)
+
+```
+
+
+
+```{r Proteobacteria phylum change to class,warning=F,comment=F,message=F}
+
+setwd("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output")
+
+### ADD THE PROTEOBACTERIA CLASSES TO THE PHYLA NAME FIELD IN PHYLOSEQ OBJECT TAXONOMY 
+
+phy <- data.frame(tax_table(physeq_genus))
+Phylum <- as.character(phy$Phylum)
+Class <- as.character(phy$Class)
+for  (i in 1:length(Phylum)){ 
+  if (Phylum[i] == "Proteobacteria"){
+    if (Class[i] == "unclassified"){
+      Phylum[i] <- Phylum[i]       
+    } else {
+      Phylum[i] <- Class[i]
+    }
+  } 
+}
+
+
+Phylum<-as.character(phy$Phylum)
+Class=as.character(phy$Class)
+phy$Phylum=Phylum
+t <- tax_table(as.matrix(phy))
+
+```
+
+
+```{r read in phylum data, include=FALSE,warning=F,comment=F,message=F}
+SAMPLE=sample_data(physeq_genus)
+SAMPLE$Species=ifelse(grepl("Ip",SAMPLE$ML),"Ip","Ihed")
+physeq.all2 = merge_phyloseq(physeq_genus, SAMPLE) 
+```
+
+## Sequence depth and pruning
+
+```{r data scaling}
+physeq=(physeq.all2)
+physeq <- prune_taxa(taxa_sums(physeq) > 0, physeq) # Remove taxa with no counts
+
+#check number of reads in each sample, differences in count are in part due differet numbers of chlorophyl reads depending on time of experiment
+
+# Make a data frame with a column for the read counts of each sample
+sample_sum_df <- data.frame(sum = sample_sums(physeq))
+
+# Histogram of sample read counts
+ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
+  ggtitle("Distribution of sample sequencing depth") + 
+  xlab("Read counts") +
+  theme(axis.title.y = element_blank())+
+  theme_classic()
+
+
+# Scales reads to smallest library size 
+source("https://raw.githubusercontent.com/michberr/MicrobeMiseq/master/R/miseqR.R")
+#physeq.scale <- scale_reads(physeq, min(sample_sums(physeq)))
+
+##### Normalization #######
+
+# Scales reads by 
+# 1) taking proportions,
+# 2) multiplying by a given library size of n
+# 3) rounding down
+physeq1=prune_samples(sample_sums(physeq) >20000, physeq)
+sample_sum_df1 <- data.frame(sum = sample_sums(physeq1))
+
+# Histogram of sample read counts
+ggplot(sample_sum_df1, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
+  ggtitle("Distribution of sample sequencing depth after pruning") + 
+  xlab("Read counts") +
+  theme(axis.title.y = element_blank())+
+  theme_classic()
+
+
+n=min(sample_sums(physeq1))
+  physeq.scale <-
+    transform_sample_counts(physeq1, function(x) {
+      (n * x/sum(x))
+    })
+physeq.scale <- prune_taxa(taxa_sums(physeq.scale) > 0, physeq.scale)
+
+
+physeq1
+
+```
+
+```{r PCoA Treatment and Species comparisoin Bray Curtis Estimate,warning=F,comment=F,message=F}
+# Betadiv pcoa Bray-Curtis DNA only 
+physeq.pcoa <-
+  ordinate(
+    physeq = physeq.scale,
+    method = "PCoA",
+    distance = "bray"
+  )
+
+physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
+physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
+SampData=data.frame(sample_data(physeq))
+colnames(SampData)[1]="Duplicates"
+
+SampData=subset(SampData,SampData$TRT=="Inter"|SampData$TRT=="Alone")
+
+physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors,SampData,by="Duplicates"))
+bray_values <- physeq.pcoa$values
+bray_rel_eigens <- bray_values$Relative_eig
+bray_rel_eigen1 <- bray_rel_eigens[1]
+bray_rel_eigen1_percent <- round(bray_rel_eigen1 * 100, digits = 1)
+bray_rel_eigen2 <- bray_rel_eigens[2]
+bray_rel_eigen2_percent <- round(bray_rel_eigen2 * 100, digits = 1)
+bray_rel_eigen3 <- bray_rel_eigens[3]
+bray_rel_eigen3_percent <- round(bray_rel_eigen3 * 100, digits = 1)
+bray_rel_eigen4 <- bray_rel_eigens[4]
+bray_rel_eigen4_percent <- round(bray_rel_eigen4 * 100, digits = 1)
+bray_rel_eigen5 <- bray_rel_eigens[5]
+bray_rel_eigen5_percent <- round(bray_rel_eigen5 * 100, digits = 1)
+bray_axis1 <- paste("PCoA 1:",bray_rel_eigen1_percent,"%")
+bray_axis2 <- paste("PCoA 2:",bray_rel_eigen2_percent,"%")
+bray_axis3 <- paste("PCoA 3:",bray_rel_eigen3_percent,"%")
+bray_axis4 <- paste("PCoA 4:",bray_rel_eigen4_percent,"%")
+PCoA_title <- paste("Bray-Curtis,",ntaxa(physeq.scale),"OTUs")
+
+
+pcoa_exp_trt <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = TRT,fill = TRT)) +
+  xlab(bray_axis1) + 
+  ylab(bray_axis2) +
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GoldGrey)+
+  scale_color_manual(values = GoldGrey)+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =TRT))+
+  Tx
+
+
+pcoa_exp_trtA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = TRT,fill = TRT)) +
+  xlab(bray_axis3) + 
+  ylab(bray_axis4) + 
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GoldGrey)+
+  scale_color_manual(values = GoldGrey)+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =TRT))+
+  Tx
+
+
+pcoa_exp_sp <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = Species,fill = Species)) +
+  xlab("") + 
+  ylab(bray_axis2) +
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GreenBlue)+
+  scale_color_manual(values = GreenBlue)+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =Species))+
+  Tx
+
+
+pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill = Species)) +
+  xlab("") + 
+  ylab(bray_axis4) +
+  geom_point(alpha=0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GreenBlue)+
+  scale_color_manual(values = GreenBlue)+
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =Species))+
+  Tx
+
+dev.off()
+A=ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T,labels=c("C","D"),font.label = list(size = 22, color = "black", face =
+  "plain"),hjust = -6,vjust=-0.5)
+B=ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T,labels=c("A","B"),font.label = list(size = 22, color = "black", face =
+  "plain"),hjust = -6,vjust=-0.5)
+
+MainFig=ggarrange(B,A,nrow=2)
+
+annotate_figure(MainFig,
+                top = text_grob(PCoA_title, face = "plain", size = 25,lineheight = 2)
+)
+
+```
+
+
+
+```{r 3D graphic,warning=F,comment=F,message=F}
+
+physeq.pcoa.df$TrtSp=paste(physeq.pcoa.df$TRT,physeq.pcoa.df$Species,sep="")
+
+p <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.3, color = ~TrtSp) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis2),
+                     zaxis = list(title = bray_axis3)))
+
+
+p1 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis2),
+                     zaxis = list(title = bray_axis4)))
+
+p3 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis3),
+                     zaxis = list(title = bray_axis4)))
+
+```
+
+```{r adonis experimental data when all data combined,warning=F,comment=F,message=F}
+## All experiment, add variable treatment, then species
+sampledf <- data.frame(sample_data(physeq.scale))
+
+sampledf=subset(sampledf,sampledf$TRT=="Alone"|sampledf$TRT=="Inter")
+
+## Subsample by species 
+physeq.purp=subset_samples(physeq.scale, Species == "Ip")
+
+## Subsample within competition
+physeq.comp=subset_samples(physeq.scale, TRT=="Inter")
+
+# Calculate bray curtis for experimental samples only
+physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray") # acrosss species and treatment
+physeq.bray2 <- phyloseq::distance(physeq = physeq.purp, method = "bray") # within Ipurp
+physeq.bray3 <- phyloseq::distance(physeq = physeq.comp, method = "bray") # within competition
+
+
+# Adonis test for treatment, across species
+adonis(physeq.bray ~ TRT, data = sampledf)
+b = betadisper(physeq.bray,sampledf$TRT)
+
+p <- permutest(b)
+p$tab
+
+# Adonis test for treatment, WITHIN species
+adonis(physeq.bray2 ~ TRT+Block, data = sampledf%>%filter(Species=="Ip")) # No treatment effect on bray distances
+
+b = betadisper(physeq.bray,sampledf$TRT)
+p <- permutest(b)
+p$tab
+
+# Adonis test for species 
+set.seed(7L)
+adonis(physeq.bray3 ~ Species+Block, data = sampledf%>%filter(TRT=="Inter"))
+b = betadisper(physeq.bray3,( sampledf%>%filter(TRT=="Inter"))$Species)
+p <- permutest(b)
+p$tab
+
+
+sampledf$Block=as.factor(sampledf$Block)
+
+# Nested adonis
+adonis(physeq.bray ~ TRT + Species + Block, data = sampledf) # Species effect taking into account block as a fixed effect
+```
+
+
+```{r AMOVA}
+
+# # # # # # # # # # # # # # # # # # # # # 
+#             ACROSS SAMPLES
+amova(physeq.bray ~ TRT, data = sampledf) # Across all samples
+amova(physeq.bray ~ Species, data = sampledf) # Across all samples
+
+# # # # # # # # # # # # # # # # # # # # # 
+# Subsample for within I. purpurea only
+# # # # # # # # # # # # # # # # # # # # # 
+
+physeq.Purp <- subset_samples(physeq.scale, Species == "Ip")
+sampledf.Purp<- data.frame(sample_data(physeq.Purp))
+# Calculate bray curtis for summer samples only
+physeq.Purp.bray <- phyloseq::distance(physeq = physeq.Purp, method = "bray")
+amova(physeq.Purp.bray ~ TRT, data = sampledf.Purp) # Across all samples
+
+
+# # # # # # # # # # # # # # # # # # # # # 
+# Subsample for within competition
+# # # # # # # # # # # # # # # # # # # # # 
+
+physeq.Comp <- subset_samples(physeq.scale, TRT=="Inter")
+sampledf.Comp<- data.frame(sample_data(physeq.Comp))
+# Calculate bray curtis for summer samples only
+physeq.Comp.bray <- phyloseq::distance(physeq = physeq.Comp, method = "bray")
+amova(physeq.Comp.bray ~ Species, data = sampledf.Comp) # marginal species differences
+
+```
+
+
+## Alpha diversity
+
+```{r alpha diversity,warning=F,comment=F,message=F}
+hist(sample_sums(physeq1))
+# Remove sample with less than 20K reads, this looks WAAAY off
+# Rarify first
+ps.rarefied=rarefy_even_depth(physeq1,rngseed=1,sample.size=min(sample_sums(physeq1)),replace=F)
+
+plot_richness(ps.rarefied,x="TRT",measures=c("Observed","Shannon"))+
+  geom_boxplot()+
+  theme_classic()
+
+```
+
+
+## Alpha Diversity
+
+#### Note: Measures of alpha-diversity 
+
+_*Inverse Simpson*_ it is an indication of the richness in a community with uniform evenness that would have the same level of diversity. So while measures such as the Shannon index are somewhat abstract, the inverse of the Simpson index has some biological interpretation. Other advantages of the Simpson-based metrics are that they do not tend to be as affected by sampling effort as the Shannon index.
+   
+- _*Species richness*_ is simply a count of species, and it does not take into account the abundances of the species or their relative abundance distributions.
+   
+- _*Simpson's Diversity Index*_ is a measure of diversity which takes into account the number of species present, as well as the relative abundance of each species. As species richness and evenness increase,so diversity increases.
+
+
+
+```{r Richness and Inverse Simpson,warning=F,comment=F,message=F}
+# Initialize matrices to store richness and Inverse Simpson estimates
+
+richness <- matrix(nrow = 173, ncol = trials)
+row.names(richness) <- sample_names(physeq1)
+
+evenness <- matrix(nrow = 173, ncol = trials)
+row.names(evenness) <- sample_names(physeq1)
+
+simpson <- matrix(nrow = 173, ncol = trials)
+row.names( simpson) <- sample_names(physeq1)
+
+InvSimp <- matrix(nrow = 173, ncol = trials)
+row.names(InvSimp) <- sample_names(physeq1)
+
+shannon <- matrix(nrow = 173, ncol = trials)
+row.names(shannon) <- sample_names(physeq1)
+
+
+### I commented out the subsampling to save time. The matrices produced were saved and then reoponed from their tab delmited formats into corresponding matrices.
+
+set.seed(3)
+
+r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
+         
+ ## Calculate richness
+rich <- as.numeric(as.matrix(estimate_richness(r, measures = "Observed")))
+
+## Calculate Inverse Simpson
+
+simp <- as.numeric(as.matrix(estimate_richness(r, measures = "InvSimpson")))
+
+sim<- as.numeric(as.matrix(estimate_richness(r, measures = "Simpson")))
+
+s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
+shan <- as.numeric(as.matrix(estimate_richness(r, measures = "Shannon")))
+
+InvSimp=simp
+
+```
+
+
+
+
+
+```{r}
+# Create a new dataframe to hold the means and standard deviations of richness estimates
+length(rich)
+
+Sample_ID <- sample_names(physeq1)
+Block <-sample_data(physeq1)$Block
+Species <-sample_data(physeq1)$Species
+TRT <-sample_data(physeq1)$TRT
+Combos <-sample_data(physeq1)$Combos
+ML <-sample_data(physeq1)$ML
+
+alpha=data.frame(Sample_ID,ML,Block,TRT,Species,Combos,rich,InvSimp,sim,shan)
+
+alpha$even=alpha$shan/alpha$rich
+
+# DO VIOLIN PLOT HERE!!!
+
+
+p=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=rich)) +
+  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+  theme_classic()+
+  scale_color_brewer(palette = "Paired")+
+  scale_fill_brewer(palette = "Paired")+
+  ggtitle("Mean Species Richness")
+
+
+q=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=InvSimp)) +
+  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+  theme_classic()+
+  scale_color_brewer(palette = "Paired")+
+  scale_fill_brewer(palette = "Paired")+
+  ggtitle("Mean Species Inverse Simpson")+
+  ylab("")
+
+
+t=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=sim)) +
+  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+  theme_classic()+
+  scale_color_brewer(palette = "Paired")+
+  scale_fill_brewer(palette = "Paired")+
+  ggtitle("Mean Simpson")+
+  ylab("")
+
+v=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=even)) +
+  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+  theme_classic()+
+  scale_color_brewer(palette = "Paired")+
+  scale_fill_brewer(palette = "Paired")+
+  ggtitle("Mean Evenness")+
+  ylab("")
+
+
+
+ggarrange(p,q,t,v,common.legend=T,ncol=2,nrow=2)
+
+
+
+      ### Treatment
+
+pT=ggplot(alpha%>%filter(Species=="Ip"), aes(x=TRT, y=rich)) +
+  geom_violin(trim=FALSE,aes(fill=TRT),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=TRT,fill=TRT))+
+  theme_classic()+
+  scale_color_manual(values=c("#B2DF8A","#fee090"))+
+  scale_fill_manual(values=c("#B2DF8A","#fee090"))+
+  ggtitle("Mean Treatment Richness")
+
+
+qT=ggplot(alpha%>%filter(Species=="Ip"), aes(x=TRT, y=InvSimp)) +
+  geom_violin(trim=FALSE,aes(fill=TRT),alpha=0.3)+ 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=TRT,fill=TRT))+
+  theme_classic()+
+  scale_color_manual(values = c("#B2DF8A","#fee090"))+
+  scale_fill_manual(values = c("#B2DF8A","#fee090"))+
+  ggtitle("Mean Treatment Inverse Simpson")+
+  ylab(" ")
+
+ggarrange(pT,qT,common.legend=T)
+
+```
+
+## Test for differences
+
+
+```{r ANOVAS on alpha diversities,warning=F,comment=F,message=F}
+# first check for normality. To test for normalcy statistically, we can run the Shapiro-Wilk test of normality.
+
+shapiro.test(alpha$rich) # Not normal
+shapiro.test(alpha$even) # Normal
+shapiro.test(alpha$sim) # Normal
+
+histogram(alpha$rich,xlab="Richness") # Note richness though, not normal, looks close to normal.
+
+histogram(alpha$InvSimp,xlab="Inverse-Simpson")
+histogram(alpha$sim,xlab="Simpson")
+
+
+#   Run the ANOVA and save it as an object
+
+# Test for species within competition
+aov.Richness = aov(rich~Species+Block,alpha%>%filter(TRT=="Inter"))
+aov.simpsonInv = aov(InvSimp~Species+Block,alpha%>%filter(TRT=="Inter"))
+aov.simpson = aov(sim~Species+Block,alpha%>%filter(TRT=="Inter"))
+aov.evenness = aov(even~Species+Block,alpha%>%filter(TRT=="Inter"))
+aov.shannon = aov(shan~Species+Block,alpha%>%filter(TRT=="Inter"))
+
+
+#Call for the summary of that ANOVA, which will include P-values
+summary(aov.Richness)
+summary(aov.simpsonInv)
+summary(aov.simpson)
+summary(aov.evenness)
+summary(aov.shannon)
+
+# No significant differences
+
+
+# Test for treatment within I. purpurea
+aov.Richness = aov(rich~TRT+Block,alpha%>%filter(Species=="Ip"))
+aov.simpsonInv = aov(InvSimp~TRT+Block,alpha%>%filter(Species=="Ip"))
+aov.simpson = aov(sim~TRT+Block,alpha%>%filter(Species=="Ip"))
+aov.evenness = aov(even~TRT+Block,alpha%>%filter(Species=="Ip"))
+aov.shannon = aov(shan~TRT+Block,alpha%>%filter(Species=="Ip"))
+
+
+#Call for the summary of that ANOVA, which will include P-values
+summary(aov.Richness)
+summary(aov.simpsonInv)
+summary(aov.simpson)
+summary(aov.evenness)
+summary(aov.shannon)
+
+# No significant differences
+```
+
+
+## Plot at phylum level
+
+```{r BarPlot on Phylum,warning=F,comment=F,message=F}
+
+# melt to long format (for ggploting) 
+# prune out phyla below 2% in each sample
+
+physeq1_phylum <- physeq1 %>%
+  tax_glom(taxrank = "Phylum") %>%                     # agglomerate at phylum level
+  transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
+  psmelt() %>%                                         # Melt to long format
+  filter(Abundance > 0.02)
+physeq1_phylum=physeq1_phylum[order(physeq1_phylum$Phylum),] 
+
+#colnames(physeq1_phylum)[13]="Phylum"
+
+# Sort data frame alphabetically by phylum
+# Set colors for plotting
+phylum_colors <- c(
+  "#CBD588", "#5F7FC7", "orange","#DA5724", "#508578", "#CD9BCD",
+   "#AD6F3B", "#673770","#D14285", "#652926", "#C84248", 
+  "#8569D5", "#5E738F","#D1A33D", "#8A7C64", "#599861"
+)
+
+
+#colnames(physeq1_phylum)[which(names(physeq1_phylum)%in%"Rank2")]="Phylum"
+
+# Plot 
+ggplot(physeq1_phylum, aes(x = Species, y = Abundance, fill = Phylum)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = phylum_colors)+
+  theme(axis.title.x = element_blank()) + 
+  ylab("Relative Abundance (Phyla > 2%) \n") +
+  ggtitle("Phylum Composition  \n Bacterial Communities by Sampling per Species") +
+  theme_classic()+
+  ylab("Relative Abundance")
+
+```
+
+
+
+
+
+## Continous data (root traits, leaf number)
+Here, I correlate leaf number to OTUs with at least 5% relative abundance in at least one sample in our data set.
+
+```{r Analyzing leaf data,warning=F,comment=F,message=F}
+LeafData<-read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/Leaf_Number_SizeProxy_Field2018_7232018.csv")[c("Position","ML","Leaf.Number")]
+
+LeafData$Sample_ID=paste(LeafData$Position,ifelse(grepl("Ihed",LeafData$ML),"H","P"),sep="")
+length(which(LeafData$Sample_ID %in% alpha$Sample_ID))
+
+
+alphadiv2=merge(alpha,LeafData)
+dim(alphadiv2) #ok
+alphadiv2$Leaf.Number=as.numeric(as.character(alphadiv2$Leaf.Number))
+
+Model1=glm(Leaf.Number~rich+Species+TRT+Block,alphadiv2,family=gaussian())  # Richness
+summary(Model1)
+
+Model2=glm(Leaf.Number~InvSimp+Species+TRT+Block,alphadiv2,family=gaussian())  # Inverse Simpson
+summary(Model2) # Almost significant inverson simpson effect
+
+Model3=glm(Leaf.Number~sim+Species+TRT+Block,alphadiv2,family=gaussian()) # Simpson
+summary(Model3) # 
+
+Model4=glm(Leaf.Number~shan+Species+TRT+Block,alphadiv2,family=gaussian()) # Simpson
+summary(Model4) # 
+
+# Correlation test:
+
+alphadiv2Alone=alphadiv2%>%filter(TRT=="Alone")
+
+cor.test(alphadiv2Alone$rich,alphadiv2Alone$Leaf.Number)
+cor.test(alphadiv2Alone$sim,alphadiv2Alone$Leaf.Number)
+cor.test(alphadiv2Alone$InvSimp,alphadiv2Alone$Leaf.Number)
+cor.test(alphadiv2Alone$shan,alphadiv2Alone$Leaf.Number)
+cor.test(alphadiv2Alone$even,alphadiv2Alone$Leaf.Number)
+
+alphadiv2Comp=alphadiv2%>%filter(TRT=="Inter")
+
+cor.test(alphadiv2Comp$rich,alphadiv2Comp$Leaf.Number)
+cor.test(alphadiv2Comp$sim,alphadiv2Comp$Leaf.Number)
+cor.test(alphadiv2Comp$InvSimp,alphadiv2Comp$Leaf.Number)
+cor.test(alphadiv2Comp$shan,alphadiv2Comp$Leaf.Number)
+cor.test(alphadiv2Comp$even,alphadiv2Comp$Leaf.Number)
+
+
+## Effect of pcoa beta diversity metric
+
+physeq.pcoa.df$Sample_ID=physeq.pcoa.df$Duplicates
+physeq.pcoa.df2=data.frame(merge(physeq.pcoa.df,LeafData))
+physeq.pcoa.df2$Leaf.Number=as.numeric(as.character(physeq.pcoa.df2$Leaf.Number))
+
+summary(glm(Leaf.Number~Axis.1+Species+TRT+Block,physeq.pcoa.df2,family=gaussian())) # Axis 1 has marginal effect on leaf number
+summary(glm(Leaf.Number~Axis.2+Species+TRT+Block,physeq.pcoa.df2,family=gaussian())) # Axis 2 has a marginal effect on leaf number.
+summary(glm(Leaf.Number~Axis.3+Species+TRT+Block,physeq.pcoa.df2,family=gaussian()))
+summary(glm(Leaf.Number~Axis.4+Species+TRT+Block,physeq.pcoa.df2,family=gaussian()))
+```
+
+
+```{r Alpha, more estimates,warning=F,comment=F,message=F}
+
+## Additional estimates of alpha diversity
+ # Specify a few:
+AlphaExtra=estimate_richness(physeq1, measures=c("Observed", "InvSimpson", "Shannon", "Chao1"))
+```
+
+
+## Preliminary test with roots
+
+```{r Preliminary exam on root linear model}
+RootData=read.csv("~/Google Drive File Stream/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/RootTraits_PCs.csv")
+
+RootAlphaObs=merge(alpha,RootData[c("Sample_ID","PC1","PC2","PC3","PC4")])
+
+SimpPC1=lm(sim~PC1+Species+TRT+Block,RootAlphaObs) 
+summary(SimpPC1)
+
+SimpInvPC1=lm(InvSimp~PC1+Species+TRT+Block,RootAlphaObs) 
+summary(SimpInvPC1)
+
+RichPC1=lm(rich~PC1+Species+TRT+Block,RootAlphaObs) 
+summary(RichPC1)# Significant coefficient
+
+# Adjust p-value for multiple comparisons (1 for each PC used to test)
+p.adjust((summary(RichPC1)$coefficients[2,4]), method = "bonferroni", n = 4) # still significant, corrected p-value:
+# 0.01158722
+
+EvenPC1=lm(even~PC1+Species+TRT+Block,RootAlphaObs) 
+summary(EvenPC1)# Significant coefficient
+
+    # Adjust p-value for multiple comparisons (1 for each PC used to test)
+    p.adjust((summary(EvenPC1)$coefficients[2,4]), method = "bonferroni", n = 4) # still significant, corrected p-value:
+    # 0.02191386
+
+SimpPC2=lm(sim~PC2+Species+TRT+Block,RootAlphaObs) 
+summary(SimpPC2) 
+
+SimpInvPC2=lm(InvSimp~PC2+Species+TRT+Block,RootAlphaObs)
+summary(SimpInvPC2) 
+
+RichPC2=lm(rich~PC2+Species+TRT+Block,RootAlphaObs) 
+summary(RichPC2) # Significant coefficient
+
+    # Adjust p-value for multiple comparisons (1 for each PC used to test)
+    p.adjust((summary(RichPC2)$coefficients[2,4]), method = "bonferroni", n = 4) # still significant, corrected p-value:
+    # 0.04698757
+
+
+EvenPC2=lm(even~PC2+Species+TRT+Block,RootAlphaObs) 
+summary(EvenPC2) # Significant coefficient
+
+    # Adjust p-value for multiple comparisons (1 for each PC used to test)
+    p.adjust((summary(EvenPC2)$coefficients[2,4]), method = "bonferroni", n = 4) # Not significant, corrected p-value:
+    # 0.1492003
+
+### PC3
+SimpPC3=lm(sim~PC3+Species+TRT+Block,RootAlphaObs) 
+summary(SimpPC3) 
+
+SimpInvPC3=lm(InvSimp~PC3+Species+TRT+Block,RootAlphaObs) 
+summary(SimpInvPC3) 
+
+RichPC3=lm(rich~PC3+Species+TRT+Block,RootAlphaObs) 
+summary(RichPC3)
+
+EvenPC3=lm(even~PC3+Species+TRT+Block,RootAlphaObs) 
+summary(EvenPC3)
+
+### PC4
+SimpPC4=lm(sim~PC4+Species+TRT+Block,RootAlphaObs) 
+summary(SimpPC4) # Significant coefficient
+
+    # Adjust p-value for multiple comparisons (1 for each PC used to test)
+    p.adjust((summary(SimpPC4)$coefficients[2,4]), method = "bonferroni", n = 4) # still significant, corrected p-value:
+    # 0.00834712
+
+SimpInvPC4=lm(InvSimp~PC4+Species+TRT+Block,RootAlphaObs) 
+summary(SimpInvPC4)  # Significant coefficient
+  
+  # Adjust p-value for multiple comparisons (1 for each PC used to test)
+      p.adjust((summary(SimpInvPC4)$coefficients[2,4]), method = "bonferroni", n = 4) # marginally significant, corrected p-value:
+      # 0.07073862
+
+RichPC4=lm(rich~PC4+Species+TRT+Block,RootAlphaObs) 
+summary(RichPC4)
+
+EvenPC4=lm(even~PC4+Species+TRT+Block,RootAlphaObs) 
+summary(EvenPC4)
+```
+
+## Within species (root traits and alphadiv)
+
+
+```{r Preliminary exam on roots within species}
+
+library(multcomp)
+
+#summary(glht(SimpInvPC1, mcp(rank="Tukey")))
+
+#################################################################
+##################### SUBSET for I.purpurea #####################
+#################################################################
+
+RootAlphaPurp=droplevels(RootAlphaObs%>%filter(Species=="Ip"))
+
+
+SimpPC1=lm(sim~PC1+TRT+Block,RootAlphaPurp) 
+summary(SimpPC1)
+
+SimpInvPC1=lm(InvSimp~PC1+TRT+Block,RootAlphaPurp) 
+summary(SimpInvPC1)
+
+RichPC1=lm(rich~PC1+TRT+Block,RootAlphaPurp) 
+summary(RichPC1)
+
+EvenPC1=lm(even~PC1+TRT+Block,RootAlphaPurp) 
+summary(EvenPC1)
+
+SimpPC2=lm(sim~PC2+TRT+Block,RootAlphaPurp) 
+summary(SimpPC2) # NS
+
+SimpInvPC2=lm(InvSimp~PC2+TRT+Block,RootAlphaPurp) 
+summary(SimpInvPC2) # NS
+
+RichPC2=lm(rich~PC2+TRT+Block,RootAlphaPurp) 
+summary(RichPC2) # Significant coefficient SUPER small effect size
+
+anova(lm(rich~PC2*TRT+Block,RootAlphaPurp)) # Treatment by PC2 interaction not significant
+
+EvenPC2=lm(even~PC2+TRT+Block,RootAlphaPurp) 
+summary(EvenPC2) # Significant mean Evenness effect--should Check this out it is suspect
+
+### PC3
+SimpPC3=lm(sim~PC2+TRT+Block,RootAlphaPurp) 
+summary(SimpPC3) # NS
+
+SimpInvPC3=lm(InvSimp~PC3+TRT+Block,RootAlphaPurp) 
+summary(SimpInvPC3) # NS
+
+RichPC3=lm(rich~PC3+TRT+Block,RootAlphaPurp) 
+summary(RichPC3)
+
+EvenPC3=lm(even~PC3+TRT+Block,RootAlphaPurp) 
+summary(EvenPC3)
+
+### PC4
+SimpPC4=lm(sim~PC4+TRT+Block,RootAlphaPurp) 
+summary(SimpPC4) # Significant
+
+SimpInvPC4=lm(InvSimp~PC4+TRT+Block,RootAlphaPurp) 
+summary(SimpInvPC4)  # Marginal InvSimp significant
+
+RichPC4=lm(rich~PC4+TRT+Block,RootAlphaPurp) 
+summary(RichPC4)
+
+EvenPC4=lm(even~PC4+TRT+Block,RootAlphaPurp) 
+summary(EvenPC4)
+```
+
+## Plotting significant linear associations
+```{r n}
+# Richness and root topology
+P1.rich=ggplot()+
+  geom_point(data=RootAlphaPurp,aes(PC1,rich),alpha=0.5)+
+  geom_smooth(data=RootAlphaPurp,method="lm",aes(PC1,rich),fullrange=TRUE)+
+  theme_classic()+
+  ylab("Richness")+
+  xlab("Root topology PC1")+
+  Tx+ 
+  annotate("text", x = 1, y = 500, label = "paste(italic(R) ^ 2, \" = 0.18\")", parse = TRUE,hjust=0,size=5)+ 
+  annotate("text", x = 1, y = 490, label = "paste(italic(B), \" = -2.18 +/-0.71\")", parse = TRUE,hjust=0,size=5)+
+  annotate("text", x = 1, y = 480, label = "paste(italic(P), \" < 0.01\")", parse = TRUE,hjust=0,size=5)
+
+# Evenness and root topology
+P1.even=ggplot()+
+  geom_point(data=RootAlphaPurp,aes(PC1,even),alpha=0.5)+
+  geom_smooth(data=RootAlphaPurp,method="lm",aes(PC1,even),fullrange=TRUE)+
+  theme_classic()+
+  ylab("Evenness")+
+  xlab("Root topology PC1")+
+  Tx+ 
+  annotate("text", x = -4.5, y = .0114, label = "paste(italic(R) ^ 2, \" = 0.12\")", parse = TRUE,hjust=0,size=5)+ 
+  annotate("text", x = -4.5, y = .0112, label = "paste(italic(B), \" = -2.92E-5 +/-1.03E-5\")", parse = TRUE,hjust=0,size=5)+
+  annotate("text", x = -4.5, y =.011, label = "paste(italic(P), \" < 0.01\")", parse = TRUE,hjust=0,size=5)
+
+# Richness and root architecture
+P2.rich=ggplot()+
+  geom_point(data=RootAlphaPurp,aes(PC2,rich),alpha=0.5)+
+  geom_smooth(data=RootAlphaPurp,method="lm",aes(PC2,rich),fullrange=TRUE)+
+  theme_classic()+
+  ylab("Richness")+
+  xlab("Root architecture PC2")+
+  Tx+ 
+  annotate("text", x = -1, y = 500, label = "paste(italic(R) ^ 2, \" = 0.15\")", parse = TRUE,hjust=0,size=5)+ 
+  annotate("text", x = -1, y = 490, label = "paste(italic(B), \" = -4.65 +/-1.81\")", parse = TRUE,hjust=0,size=5)+
+  annotate("text", x = -1, y = 480, label = "paste(italic(P), \" = 0.01\")", parse = TRUE,hjust=0,size=5)
+
+# Evenness and root architecture
+P2.even=ggplot()+
+  geom_point(data=RootAlphaPurp,aes(PC2,even),alpha=0.5)+
+  geom_smooth(data=RootAlphaPurp,method="lm",aes(PC2,even),fullrange=TRUE)+
+  theme_classic()+
+  ylab("Evenness")+
+  xlab("Root architecture PC2")+
+  Tx+ 
+  annotate("text", x = -4.5, y = .0114, label = "paste(italic(R) ^ 2, \" = 0.12\")", parse = TRUE,hjust=0,size=5)+ 
+  annotate("text", x = -4.5, y = .0112, label = "paste(italic(B), \" = -7.29E-5 +/-3.28E-5\")", parse = TRUE,hjust=0,size=5)+
+  annotate("text", x = -4.5, y =.011, label = "paste(italic(P), \" = 0.04\")", parse = TRUE,hjust=0,size=5)
+
+
+# Root morphology on species diversity Simpson metric
+
+P4.Sim<-ggplot()+
+  geom_point(data=RootAlphaPurp,aes(PC4,sim),alpha=0.5)+
+  geom_smooth(data=RootAlphaPurp,method="lm",aes(PC4,sim),fullrange=TRUE)+
+  theme_classic()+
+  ylab("Simpson")+
+  xlab("Root morphology (PC4)")+
+  Tx+
+  annotate("text", x = -5, y = .988, label = "paste(italic(R) ^ 2, \" = 0.18\")", parse = TRUE,hjust=0,size=5)+ 
+  annotate("text", x = -5, y = .985, label = "paste(italic(B), \" = 2.22E-4 +/-6.99E-4\")", parse = TRUE,hjust=0,size=5)+
+  annotate("text", x =-5, y = .982, label = "paste(italic(P), \" < 0.01\")", parse = TRUE,hjust=0,size=5)
+
+
+P4.simIn=ggplot()+
+  geom_point(data=RootAlphaPurp,aes(PC4,InvSimp),alpha=0.5)+
+  geom_smooth(data=RootAlphaPurp,method="lm",aes(PC4,InvSimp),fullrange=TRUE)+
+  theme_classic()+
+  ylab("Inverse Simpson")+
+  xlab("Root morphology (PC4)")+
+  Tx+
+  annotate("text", x = -5, y = 60, label = "paste(italic(R) ^ 2, \" = 0.12\")", parse = TRUE,hjust=0,size=5)+ 
+  annotate("text", x = -5, y = 57, label = "paste(italic(B), \" = 2.08 +/-1.05\")", parse = TRUE,hjust=0,size=5)+
+  annotate("text", x =-5, y = 54, label = "paste(italic(P), \" = 0.02\")", parse = TRUE,hjust=0,size=5)
+```
+
+
+## Linear mixed models
+
+```{r}
+library(lmerTest)
+
+### Simpson
+SimpLMM=lmer(sim~TRT+Block+(1|ML),alpha%>%filter(Species=="Ip")) 
+anova(SimpLMM)
+ranova(SimpLMM)
+
+### Inverse Simpson
+SimpInvLMM=lmer(InvSimp~TRT+Block+(1|ML),alpha%>%filter(Species=="Ip")) 
+anova(SimpInvLMM)
+ranova(SimpInvLMM)
+
+### Inverse Simpson
+RichLMM=lmer(rich~TRT+Block+(1|ML),alpha%>%filter(Species=="Ip")) 
+anova(RichLMM)
+ranova(RichLMM)
+
+# Bray curtis metric now
+
+
+Ax1LMM=lmer(Axis.1~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax1LMM)
+ranova(Ax1LMM)
+
+
+Ax2LMM=lmer(Axis.2~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax2LMM) # Significant species diffeences in axis 2
+ranova(Ax2LMM)
+
+
+Ax3LMM=lmer(Axis.3~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax3LMM) 
+ranova(Ax3LMM)
+
+Ax4LMM=lmer(Axis.4~Species+TRT+Block+(1|ML),physeq.pcoa.df)
+anova(Ax4LMM) # Marginal species differences
+ranova(Ax4LMM)
+```
+
+
+```{r Read in fitness data}
+Fitness=read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/FitPA4.csv")
+
+# Calculate relative fitness
+  # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
+MeanSeedNumber=Fitness%>%
+  group_by(Species,Trt)%>%
+  summarise("MeanSeedNumber"=mean(SeedNumber))
+
+Ipurp.Fit=Fitness%>%
+  filter(Species=="Ip")
+
+Ipurp.Alpha=alpha%>%
+  filter(Species=="Ip")
+
+FitnessPurp=merge(Ipurp.Fit,MeanSeedNumber,by=c("Trt","Species"))
+FitnessPurp$RelativeFit=FitnessPurp$SeedNumber/FitnessPurp$MeanSeedNumber
+FitnessPurp$Block=as.factor(FitnessPurp$Block)
+
+FitnessPurp2=merge(FitnessPurp,LeafData)
+str(FitnessPurp2)
+FitnessPurp2$Leaf.Number=as.numeric(as.character(FitnessPurp2$Leaf.Number))
+
+SN1<-lm(SeedNumber~Trt+Block+Leaf.Number+Block:Trt,FitnessPurp2)
+anova(SN1) # Treatment is significant effect on plant seed number; Significant Treatment by Block effect
+
+SN1<-lm(RelativeFit~Trt+Block+Leaf.Number+Block:Trt,FitnessPurp2)
+anova(SN1)
+
+ggplot(FitnessPurp,aes(Trt,RelativeFit,fill=Block))+
+  geom_boxplot()+
+  scale_fill_brewer("Paired")+
+  theme_classic()+
+  ylab("Relative Fitness")+
+  ggtitle("Relative Fitness by Treatment and Block")
+
+# Average fitness by block, maternal line and treatment
+FitAveraged=FitnessPurp%>%
+              group_by(ML,TRT,Block)%>%
+              summarise("RelativeFitness"=mean(RelativeFit,rm.na=T))
+
+dim(FitAveraged)
+head(FitAveraged)
+
+```
+
+
+```{r phenotypic selection}
+
+####  ####  ####  ####  ####  ####   ####
+#  Examine selection on microbiome first
+####  ####  ####  ####  ####  ####   ####
+FitnessPurp$TRT=FitnessPurp$Trt
+FitnessPurp$Combos=as.character(FitnessPurp$Combos)
+FitnessPurp[which(FitnessPurp$Trt=="Alone"),]$Combos="none"
+FitnessPurp$Combos=as.factor(FitnessPurp$Combos)
+
+BrayFit=merge(physeq.pcoa.df,FitAveraged)
+
+FitAlpha=merge(FitAveraged,alpha)
+dim(FitAlpha)
+
+ggplot(FitAlpha,aes(TRT,RelativeFitness))+
+  geom_boxplot()+
+  scale_fill_brewer("Paired")+
+  theme_classic()+
+  ylab("Relative Fitness")+
+  ggtitle("Relative Fitness by Treatment and Block")+
+  facet_grid(~Block)
+
+
+# Combine with root data
+library(dplyr)
+
+RootAveraged=RootData%>%
+  group_by(Species,ML,Combos,Trt,Block)%>%
+  summarise("PC1"=mean(PC1,na.rm=T),"PC2"=mean(PC2,na.rm=T),"PC3"=mean(PC3,na.rm=T),"PC4"=mean(PC4,na.rm=T))
+
+
+RootFitAlpha=merge(FitAlpha,RootAveraged)
+head(RootFitAlpha)
+
+RootFitLeafAlpha=merge(RootFitAlpha,LeafData[c("Sample_ID","Leaf.Number")],by="Sample_ID")
+RootFitLeafAlpha$Leaf.Number=as.numeric(as.character(RootFitLeafAlpha$Leaf.Number))
+
+
+# Combina root, fitness/bray estimates
+RootFitBray=merge(BrayFit,RootAveraged)
+
+
+# Plot boxplots of averaged root traits
+PC2_Box=ggplot(RootAveraged,aes(x="",y=PC2))+
+  geom_boxplot()+
+  #geom_jitter()+
+  xlab("Root Architecture")+
+  theme_classic()+
+  Tx+ 
+  coord_flip()
+
+# Plot boxplots of averaged root traits
+PC1_Box=ggplot(RootAveraged,aes(x="",y=PC1))+
+  geom_boxplot()+
+  #geom_jitter()+
+  xlab("Root Topology")+
+  theme_classic()+
+  Tx+ 
+  coord_flip()
+
+# Plot boxplots of averaged root traits
+PC4_Box=ggplot(RootAveraged,aes(x="",y=PC4))+
+  geom_boxplot()+
+  #geom_jitter()+
+  xlab("Root Morphology")+
+  theme_classic()+
+  Tx+ 
+  coord_flip()
+
+#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
+AB=cowplot::plot_grid(P1.rich,P1.even,align = "hv", ncol = 2,labels =c("A","B"), label_size =22 ,hjust=-11,vjust=1)
+
+CD=cowplot::plot_grid(P2.rich,P2.even,align = "hv", ncol = 2,labels =c("C","D"), label_size =22 ,hjust=-11,vjust=1)
+
+AB_PC4=cowplot::plot_grid(P4.Sim,P4.simIn,align = "hv", ncol = 2,labels =c("A","B"), label_size =22 ,hjust=-11,vjust=1)
+
+Top=ggdraw() +
+  draw_plot(P1.rich, x = 0, y = .5, width = .5, height = .5) +
+  draw_plot(P1.even, x = .5, y = .5, width = .5, height = .5) +
+  draw_plot(PC1_Box, x = 0, y = 0, width = 1, height = 0.5) +
+  draw_plot_label(label = c("A", "B", "C"), size = 15,
+                  x = c(0, 0.5, 0), y = c(1, 1, 0.5))
+
+Bottom=ggdraw() +
+  draw_plot(P2.rich, x = 0, y = .5, width = .5, height = .5) +
+  draw_plot(P2.even, x = .5, y = .5, width = .5, height = .5) +
+  draw_plot(PC2_Box, x = 0, y = 0, width = 1, height = 0.5) +
+  draw_plot_label(label = c("D", "E", "F"), size = 15,
+                  x = c(0, 0.5, 0), y = c(1, 1, 0.5))
+
+ggarrange(Top,Bottom,nrow=2)
+```
+
+
+## Selection on microbe variables
+
+
+### Selection on richness
+```{r cor selection on richness within Alone}
+richness_sel=lm(RelativeFitness~TRT*Block+rich,RootFitAlpha)
+summary(richness_sel) # No evidence of indirect selection
+anova(richness_sel)
+
+```
+
+
+### Selection on Inverse Simpson
+```{r cor selection on Inverse Simpson within Alone}
+Invn_sel=lm(RelativeFitness~TRT*Block+InvSimp+Block,RootFitAlpha)
+summary(Invn_sel) # No evidence of indirect selection
+
+```
+
+## Selection on Simpson
+```{r cor selection on Simpson }
+sim_sel=lm(RelativeFitness~TRT*Block+sim,RootFitAlpha)
+summary(sim_sel) # NS
+```
+
+## Selection on Evenness
+```{r cor selection on Evenness}
+even_sel=lm(RelativeFitness~TRT*Block+even,RootFitAlpha)
+summary(even_sel) # NS
+```
+
+
+
+# MANTEL test to examine how microbiome disimilarity is correlated root phenotype distance
+```{r,include=F,render=F}
+# Here I use observed values of root traits 
+
+# Load matrix Bray distances of OTU abundance
+OTU_table=t(otu_table(physeq1)) # Write out OTU table
+
+
+# Pull out Root traits of interest and save these to the Sampled data frame
+SampledRoots=merge(RootAlphaObs,sampledf)
+
+
+OTU_table=OTU_table[row.names(OTU_table)%in%SampledRoots$Sample_ID,]
+
+
+    OTU=OTU_table
+    Roots=SampledRoots
+
+  # Calculate root architecture distances with euclidean distance 
+
+    PC2=Roots$PC2 # isolate PC2, i.e. root architecture
+    PC2.dist=dist(PC2)
+
+  # Calculate Bray distance matrix for OTU table
+
+    Bray=vegdist(OTU,method="bray")
+
+
+    
+# OTU Bray vs Root architecture
+
+    OTU_pc2 = mantel(Bray, PC2.dist, method = "spearman", permutations = 9999, na.rm = TRUE)
+
+    # Marginally significant--very low r value
+    # Mantel statistic r: 0.03795 
+    # Significance: 0.1166 
+    
+# Reapat for root topology, size and morphology
+
+  PC1=Roots$PC1 # isolate 
+  PC1.dist=dist(PC1)
+  PC3=Roots$PC3 # isolate 
+  PC3.dist=dist(PC3)
+  PC4=Roots$PC1 # isolate 
+  PC4.dist=dist(PC4)
+
+# Examine overall distances in root system; i.e. use all PCs in distance calculation
+
+    PCall=Roots[grep("PC",names(Roots))]
+    PC.dist=dist(PCall)
+
+    OTU_pc = mantel(Bray, PC.dist, method = "spearman", permutations = 9999, na.rm = TRUE)
+
+###             examine mantel test using observed values of roots ###
+
+OTU_pc1 = mantel(Bray,PC1.dist, method = "spearman", permutations = 9999, na.rm = TRUE)
+OTU_pc2 = mantel(Bray,PC2.dist, method = "spearman", permutations = 9999, na.rm = TRUE)
+OTU_pc3 = mantel(Bray,PC3.dist, method = "spearman", permutations = 9999, na.rm = TRUE)
+OTU_pc4 = mantel(Bray,PC4.dist, method = "spearman", permutations = 9999, na.rm = TRUE)
+
+  # Repeat but standardize for Block
+  
+  Standardize=function(x,data){
+  StandData=residuals(lm(x~Block,data))
+  return(StandData)
+  }
+  
+  PC1_resid=Standardize(x=PC1,data=Roots)
+  PC2_resid=Standardize(x=PC2,data=Roots)
+  PC3_resid=Standardize(x=PC1,data=Roots)
+  PC4_resid=Standardize(x=PC1,data=Roots)
+  
+  
+    PC1.distR=dist(PC1_resid)
+    PC2.distR=dist(PC2_resid)
+    PC3.distR=dist(PC3_resid)
+    PC4.distR=dist(PC4_resid)
+  
+  
+  
+  OTU_pc1_st = mantel(Bray,PC1.distR, method = "spearman", permutations = 9999, na.rm = TRUE)
+  OTU_pc2_st = mantel(Bray,PC2.distR, method = "spearman", permutations = 9999, na.rm = TRUE)
+  OTU_pc3_st = mantel(Bray,PC3.distR, method = "spearman", permutations = 9999, na.rm = TRUE)
+  OTU_pc4_st = mantel(Bray,PC4.distR, method = "spearman", permutations = 9999, na.rm = TRUE)
+  
+
+```
+
+
+
+
+### MANTEL between Bray Curtis and Relative Fitnesses
+```{r}
+#  Here we use the Family mean values of root traits---this would indicate evidence for 'phenotypic selection' 
+
+  # Load matrix Bray distances of OTU abundance
+  OTU_table=t(otu_table(physeq1)) # Write out OTU table
+  
+  # Pull out Root traits of interest and save these to the Sampled data frame
+  SampledFit=merge(FitAveraged,sampledf,by=c("TRT","ML","Block"))
+
+  # Subset per treatment
+  
+SampledFitComp=SampledFit%>%filter(TRT=="Inter")
+OTU_table_Comp=OTU_table[row.names(OTU_table)%in%SampledFitComp$Sample_ID,]
+
+SampledFitAlone=SampledFit%>%filter(TRT!="Inter")
+OTU_table_Alone=OTU_table[row.names(OTU_table)%in%SampledFitAlone$Sample_ID,]
+
+    OTU_Comp=OTU_table_Comp
+    Fit_Comp=SampledFitComp
+  
+    OTU_Alone=OTU_table_Alone
+    Fit_Alone=SampledFitAlone
+    # Calculate fitness distances w euclidean distance 
+
+    Fit.distComp=dist(Fit_Comp$RelativeFitness)
+    Fit.distAlone=dist(Fit_Alone$RelativeFitness)
+
+    # Calculate Bray distance matrix for OTU table
+    BrayComp=vegdist(OTU_Comp,method="bray")
+    BrayAlone=vegdist(OTU_Alone,method="bray")
+
+
+    # OTU Bray vs Fitness per treatment
+
+    OTU_Fit_Comp = mantel(BrayComp, Fit.distComp, method = "spearman", permutations = 9999, na.rm = TRUE)
+    OTU_Fit_Alone = mantel(BrayAlone, Fit.distAlone, method = "spearman", permutations = 9999, na.rm = TRUE)
+    
+    
+# Run partial mantel test and control for plant size--i.e., plant size distance matrix
+    
+    # First  average combined fitness and leaf data 
+    Fit2Average=FitnessPurp2%>%
+      filter(Species=="Ip")%>%
+      group_by(ML,Block,Trt)%>%
+      summarise("RelativeFitAv"=mean(RelativeFit,rm.na=T),"LeafAv"=mean(Leaf.Number,rm.na=T))
+    Fit2Average$TRT=Fit2Average$Trt
+  
+    # Pull out Root traits of interest and save these to the Sampled data frame
+  SampledFit=merge(Fit2Average,sampledf,by=c("TRT","ML","Block"))
+
+# Subset per treatment
+  
+  SampledFitComp=SampledFit%>%filter(TRT=="Inter")
+  OTU_table_Comp=OTU_table[row.names(OTU_table)%in%SampledFitComp$Sample_ID,]
+  
+  SampledFitAlone=SampledFit%>%filter(TRT!="Inter")
+  OTU_table_Alone=OTU_table[row.names(OTU_table)%in%SampledFitAlone$Sample_ID,]
+
+    OTU_Comp=OTU_table_Comp
+    Fit_Comp=SampledFitComp
+  
+    Fit_Alone=SampledFitAlone
+    
+    OTU_Alone=OTU_table_Alone
+
+     # Remove NAS
+    Remove=which(Fit_Alone$LeafAv%in%NA)
+    
+    # Calculate fitness distances w euclidean distance 
+
+    Fit.distComp=dist(Fit_Comp$RelativeFitAv)
+    Fit.distAlone=dist(Fit_Alone[-Remove,"RelativeFitAv"])
+    
+    # Calculate size distances w euclidean distance 
+
+    Leaf.distComp=dist(Fit_Comp$LeafAv)
+    Leaf.distAlone=dist(Fit_Alone[-Remove,"LeafAv"])
+
+
+    # Calculate Bray distance matrix for OTU table
+    BrayComp=vegdist(OTU_Comp,method="bray")
+    BrayAlone=vegdist(OTU_Alone[-Remove,],method="bray")
+
+
+    # OTU Bray vs Fitness per treatment
+
+    OTU_Fit_Comp_Par = mantel.partial(BrayComp, Fit.distComp, Leaf.distComp, method = "spearman", permutations = 9999, na.rm = TRUE)
+    
+    OTU_Fit_Alone_Par = mantel.partial(BrayAlone, Fit.distAlone,Leaf.distAlone, method = "spearman", permutations = 9999, na.rm = TRUE)
+```
+
+
+
+
+
+
+
+# Weighted network analysis
+```{r,WGNC compare between species}
+
+# Filter for counts that are greater than 10 
+filter <- phyloseq::genefilter_sample(physeq1, filterfun_sample(function(x) x >= 10))#,A = 0.2*nsamples(physeq1))
+
+phy_filtered <- prune_taxa(filter, physeq1)
+OTU_count=t(otu_table(phy_filtered))
+
+
+
+
+# Load the WGCNA package
+library(WGCNA)
+
+
+## Subset data by species and treatment
+Comp=SAMPLE[which(SAMPLE$TRT%in%"Inter"),]
+CompPurp=Comp[which(Comp$Species%in%"Ip"),]
+CompHed=Comp[which(Comp$Species%in%"Ihed"),]
+AloneIp=SAMPLE[which(SAMPLE$TRT%in%"Alone"),]
+
+table(CompPurp$Species)
+table(CompHed$Species)
+table(AloneIp$Species)
+
+
+OTU_CompPurp=OTU_count[which(row.names(OTU_count)%in%CompPurp$Sample_ID),]
+OTU_CompHed=OTU_count[which(row.names(OTU_count)%in%CompHed$Sample_ID),]
+OTU_AloneIp=OTU_count[which(row.names(OTU_count)%in%AloneIp$Sample_ID),]
+
+# Check for 'good' OTU's
+testPurp=goodSamplesGenes(OTU_CompPurp)
+testHed=goodSamplesGenes(OTU_CompHed)
+testPurp.alone=goodSamplesGenes(OTU_AloneIp)
+
+A=which(testPurp$goodGenes==FALSE) # One 'bad' OTU
+B=which(testHed$goodGenes==FALSE) # Three 'bad' OTU's
+C=which(testPurp.alone$goodGenes==FALSE) # Nine'bad' OTU's
+
+# Remove the 'bad' OTUs equally in each subset data
+OTU_CompPurp=OTU_CompPurp[,-c(A,B,C)]
+OTU_CompHed=OTU_CompHed[,-c(A,B,C)]
+OTU_AlonePurp=OTU_AloneIp[,-c(A,B,C)]
+
+# Choose a set of soft-thresholding powers
+powers = c(c(1:10), seq(from = 12, to=20, by=2))
+# Call the network topology analysis function
+sft = pickSoftThreshold(OTU_CompPurp, powerVector = powers, verbose = 5)
+
+# Plot the results:
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2));
+cex1 = 0.9;
+# Scale-free topology fit index as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"));
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red");
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+
+# Mean connectivity as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+
+# Lets pick 8 for the soft threwshold power 
+
+
+# Repeat for I. hederacea
+
+# Choose a set of soft-thresholding powers
+powers = c(c(1:10), seq(from = 12, to=20, by=2))
+# Call the network topology analysis function
+sft = pickSoftThreshold(OTU_CompHed, powerVector = powers, verbose = 5)
+
+# Plot the results:
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2));
+cex1 = 0.9;
+# Scale-free topology fit index as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"));
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red");
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+
+# Mean connectivity as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+
+# stick with 8 which is just at threshold value
+
+# Repeat for I. purpurea alone
+
+# Choose a set of soft-thresholding powers
+powers = c(c(1:10), seq(from = 12, to=20, by=2))
+# Call the network topology analysis function
+sft = pickSoftThreshold(OTU_AlonePurp, powerVector = powers, verbose = 5)
+
+# Plot the results:
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2));
+cex1 = 0.9;
+# Scale-free topology fit index as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"));
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red");
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+
+# Mean connectivity as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+
+# 8 is also just above the threshold!
+```
+
+
+```{r, next step--run adjacency matrices for ea species}
+# Work with I. purpurea and I. hederacea within competition only
+softPower = 8;
+adjacency_P = adjacency(OTU_CompPurp, power = softPower); # I. purpurea
+adjacency_H = adjacency(OTU_CompHed, power = softPower); # I. hederacea
+
+# Turn adjacency into topological overlap
+TOM_P = TOMsimilarity(adjacency_P);
+dissTOM_P = 1-TOM_P
+
+TOM_H = TOMsimilarity(adjacency_H);
+dissTOM_H = 1-TOM_H
+
+# Hierarchical clustering:
+TreeP = hclust(as.dist(dissTOM_P), method = "average");
+TreeH = hclust(as.dist(dissTOM_H), method = "average");
+
+colorh1=as.character(cutreeStaticColor(TreeP,cutHeight=.97,minSize=30))
+table(colorh1)
+
+colorh2=as.character(cutreeStaticColor(TreeH,cutHeight=.97,minSize=30))
+table(colorh2)
+
+
+dynamicColors_P = labels2colors(colorh1)
+dynamicColors_H = labels2colors(colorh2)
+
+# Calculate eigengenes
+MEList_P = moduleEigengenes(OTU_CompPurp, colors = dynamicColors_P)
+MEs_P = MEList_P$eigengenes
+MEList_H = moduleEigengenes(OTU_CompHed, colors = dynamicColors_H)
+MEs_H = MEList_H$eigengenes
+
+# Calculate dissimilarity of module eigengenes
+MEDiss_P = 1-cor(MEs_P);
+MEDiss_H = 1-cor(MEs_H);
+
+# Set figure layout
+layout(matrix(c(1:4), 2,2), heights = c(0.8, 0.2));
+
+# Plot the dendrograms and module colors !!! 
+
+plotDendroAndColors(TreeP,cbind(colorh1, colorh2),c("I. purpurea", "I. hederacea"),main="I. purpurea", dendroLabels=FALSE,setLayout = FALSE, abHeight = 0.97,marAll = c(0.3, 4.5, 2, 0.2))
+
+plotDendroAndColors(TreeH,cbind(colorh1, colorh2),c("I. purpurea", "I. hederacea"),main="I. hederacea", dendroLabels=FALSE,setLayout = FALSE, abHeight = 0.97)
+
+# If plotting into a file, close it.dev.off();
+
+# Save the results
+
+colorhALL=as.character(colorh1)
+colorh2ALL=as.character(colorh2)
+
+# Give the module colors more descriptive names
+colorPurp = colorhALL;colorHed = colorh2ALL;
+
+
+# Save module colors (assignments) and the indicator
+save(colorPurp, colorHed, file = "PurpHed-SpeciesAnalysis-colorPurp-colorHed.RData")
+
+```
+
+
+## Preservation analysis (Species)
+
+```{r Preservation analysis between species}
+
+OTU_CompPurp=as(OTU_CompPurp, "matrix")
+OTU_CompHed=as(OTU_CompHed, "matrix")
+
+# Object that will contain the expression data
+
+SpData=list(Ipurp = list(data = OTU_CompPurp), Ihed = list(data = OTU_CompHed));
+
+# Set labels
+setLabels=c("Ip","Ihed")
+names(SpData)=setLabels
+
+# Number of data sets that we work
+nSets = 2;
+
+# Display the dimensions of the expression data (if you are confused by this construct, ignore it):
+lapply(SpData, lapply, dim)
+
+
+# Load module labels
+x = load("PurpHed-SpeciesAnalysis-colorPurp-colorHed.RData")
+
+# Create an object (list) holding the module labels for each set:
+colorList=list(colorPurp,colorHed)
+
+# Components of the list must be named so that the names can be matched to the names of SpData
+names(colorList)=setLabels;
+names(colorList)
+
+                      
+
+                                      ##################################
+                               #  Calculation of module preservation statistics
+                                      ##################################
+# Note:
+
+# The number of permutations drive the computation time
+# of the module preservation function. Use at least 200 permutations
+# Permutations are needed to calculate Zsummary and other permutation test statistics
+# set random seed of permutation test analysis
+
+# Setseed
+set.seed(1)
+
+system.time( {mp = modulePreservation(SpData, colorList,referenceNetworks = c(1:2),loadPermutedStatistics = FALSE,nPermutations = 200,verbose = 3)} );
+
+# Save the results of the module preservation analysis. 
+ save(mp, file = "PurpHed-PurpSpecific-modulePreservation.RData");
+ load("PurpHed-PurpSpecific-modulePreservation.RData", .GlobalEnv)
+
+```
+
+
+
+
+
+
+```{r,WGNCA within species II}
+# Work with I. purpurea and I. hederacea within competition only
+softPower = 8;
+adj_PurpAlone = adjacency(OTU_AlonePurp, power = softPower);
+adj_PurpComp = adjacency(OTU_CompPurp, power = softPower);
+
+# Turn adjacency into topological overlap
+TOM_Comp = TOMsimilarity(adj_PurpComp);
+dissTOM_Comp = 1-TOM_Comp
+
+TOM_Alone = TOMsimilarity(adj_PurpAlone);
+dissTOM_Alone = 1-TOM_Alone
+
+# Call the hierarchical clustering function
+Tree_Comp = hclust(as.dist(dissTOM_Comp), method = "average");
+Tree_Alone = hclust(as.dist(dissTOM_Alone), method = "average");
+
+colorh1b=as.character(cutreeStaticColor(Tree_Comp,cutHeight=.97,minSize=30))
+table(colorh1b)
+
+colorh2b=as.character(cutreeStaticColor(Tree_Alone,cutHeight=.97,minSize=30))
+table(colorh2b)
+
+
+# Set figure layout
+layout(matrix(c(1:4), 2,2), heights = c(0.8, 0.2));
+
+# Plot the dendrograms and module colors !!! TROUBLSHOOT PLOTS !!!
+
+plotDendroAndColors(Tree_Comp,cbind(colorh1b, colorh2b),c("Inter (Ip)", "Inter (Ip)"),main="Competition (Ip)", dendroLabels=FALSE,setLayout = FALSE, abHeight = 0.97,marAll = c(0.3, 4.5, 2, 0.2))
+
+plotDendroAndColors(Tree_Alone,cbind(colorh1b, colorh2b),c("Inter (Ip)", "Alone (Ip)"),main="Alone (Ip)", dendroLabels=FALSE,setLayout = FALSE, abHeight = 0.97)
+
+#dev.off()
+
+# Save the results
+
+colorhALLb=as.character(colorh1b)
+colorh2ALLb=as.character(colorh2b)
+
+dynamicColors_Comp = labels2colors(colorh1b)
+dynamicColors_Alone = labels2colors(colorh2b)
+
+# Give the module colors more descriptive names
+colorInter = colorhALLb;colorAlone = colorh2ALLb;
+
+
+# Save module colors (assignments) and the indicator
+save(colorInter, colorAlone, file = "InterAlone-TreatmentAnalysis-colorInter-colorAlone.RData")
+
+# Calculate eigengenes
+MEList_purp2 = moduleEigengenes(OTU_CompPurp, colors = dynamicColors_Comp)
+MEs_purp2 = MEList_purp2$eigengenes
+
+MEList_alone = moduleEigengenes(OTU_AlonePurp, colors = dynamicColors_Alone)
+MEs_alone = MEList_alone$eigengene
+
+
+# Calculate dissimilarity of module eigengenes
+      #MEDiss = 1-cor(MEs);
+
+# Cluster module eigengenes
+      #METree = hclust(as.dist(MEDiss), method = "average");
+
+# Plot the result
+#sizeGrWindow(7, 6)
+#plot(METree, main = "Clustering of module eigengenes",xlab = "", sub = "")
+```
+
+## Module Preservation analysis
+```{r,WGNCA compare modules between species}
+TrtData=list(IpInter = list(data = OTU_CompPurp), IpAlone = list(data = OTU_AlonePurp));
+
+# Set labels
+setLabels=c("Inter","Alone")
+names(TrtData)=setLabels
+
+# Number of data sets that we work
+nSets = 2;
+
+# Display the dimensions of the expression data (if you are confused by this construct, ignore it):
+lapply(TrtData, lapply, dim)
+
+
+# Load module labels
+y = load("InterAlone-TreatmentAnalysis-colorInter-colorAlone.RData")
+
+# Create an object (list) holding the module labels for each set:
+colorList2=list(colorInter,colorAlone)
+
+# Components of the list must be named so that the names can be matched to the names of SpData
+names(colorList2)=setLabels;
+names(colorList2)
+
+
+
+
+
+                                      ##################################
+                               #  Calculation of module preservation statistics
+                                      ##################################
+# Note:
+
+# The number of permutations drive the computation time
+# of the module preservation function. Use at least 200 permutations
+# Permutations are needed to calculate Zsummary and other permutation test statistics
+# set random seed of permutation test analysis
+
+# Setseed
+set.seed(1)
+
+#system.time( {mp2 = modulePreservation(TrtData, colorList2,referenceNetworks = c(1:2),loadPermutedStatistics = FALSE,nPermutations = 200,verbose = 3)} );
+
+# Save the results of the module preservation analysis. 
+#save(mp2, file = "PurpHed-PurpSpecific-modulePreservation.RData");
+load(file="PurpHed-PurpSpecific-modulePreservation.RData", .GlobalEnv)
+
+```
+
+
+## Preservation analysis statistics
+```{r}
+ref = 1
+test = 2
+
+statsObs = cbind(mp2$quality$observed[[ref]][[test]][, -1], mp2$preservation$observed[[ref]][[test]][, -1])
+statsZ = cbind(mp2$quality$Z[[ref]][[test]][, -1], mp2$preservation$Z[[ref]][[test]][, -1]);
+
+# Compare preservation to quality:
+print( cbind(statsObs[, c("medianRank.pres", "medianRank.qual")],signif(statsZ[, c("Zsummary.pres", "Zsummary.qual")], 2)) )
+
+# Module labels and module sizes are also contained in the results
+modColors = rownames(mp2$preservation$observed[[ref]][[test]])
+moduleSizes = mp2$preservation$Z[[ref]][[test]][, 1];
+# leave grey and gold modules out
+plotMods = !(modColors %in% c("grey"));
+
+# Main titles for the plot
+mains = c("Preservation Median rank", "Preservation Zsummary");
+
+
+
+# If plotting into a file, close it
+
+PresStats2=data.frame( cbind(statsObs[, c("medianRank.pres", "medianRank.qual")],signif(statsZ[, c("Zsummary.pres", "Zsummary.qual")], 2)))
+PresStats2=PresStats2[plotMods,]
+PresStats2$Module=row.names(PresStats2)
+PresStats2$ModuleSize=moduleSizes[plotMods]
+
+PresStats2[3,"Module"]="yellow"
+
+PresStats2$Module=as.factor(PresStats2$Module)
+
+MP_plot<-ggplot(PresStats2,aes(x=ModuleSize,y=medianRank.pres,color=Module))+
+  geom_point(size=10)+
+  scale_color_manual(values = c("blue", "brown","turquoise", "yellow"))+
+  theme_bw()+
+  ylab("Median Rank")+
+  xlab("Module Size")+
+  Tx
+
+MP_plot2=ggplot(PresStats2,aes(x=ModuleSize,y=Zsummary.pres,color=Module))+
+  geom_point(size=10,alpha=0.5)+
+  scale_color_manual(values = c("blue", "brown","turquoise", "yellow"))+
+  theme_bw()+
+  ylab("Z-Summary Statistic")+
+  xlab("Module Size")+
+  Tx+
+  geom_hline(aes(yintercept=0))+
+  geom_hline(aes(yintercept=2),linetype = "dotdash",color="blue")+
+  geom_hline(aes(yintercept=10),linetype = "dotdash",color="darkgreen")
+
+
+
+
+# Between treatments
+ref = 1
+test = 2
+
+statsObs = cbind(mp$quality$observed[[ref]][[test]][, -1], mp$preservation$observed[[ref]][[test]][, -1])
+statsZ = cbind(mp$quality$Z[[ref]][[test]][, -1], mp$preservation$Z[[ref]][[test]][, -1]);
+
+# Compare preservation to quality:
+print( cbind(statsObs[, c("medianRank.pres", "medianRank.qual")],signif(statsZ[, c("Zsummary.pres", "Zsummary.qual")], 2)) )
+
+# Module labels and module sizes are also contained in the results
+modColors = rownames(mp$preservation$observed[[ref]][[test]])
+moduleSizes = mp$preservation$Z[[ref]][[test]][, 1];
+# leave grey and gold modules out
+plotMods = !(modColors %in% c("grey"));
+# Text labels for points
+text = modColors[plotMods];
+# Auxiliary convenience variable
+plotData = cbind(mp$preservation$observed[[ref]][[test]][, 2], mp$preservation$Z[[ref]][[test]][, 2])
+
+# Main titles for the plot
+mains = c("Preservation Median rank", "Preservation Zsummary");
+
+
+# If plotting into a file, close it
+
+PresStats2=data.frame( cbind(statsObs[, c("medianRank.pres", "medianRank.qual")],signif(statsZ[, c("Zsummary.pres", "Zsummary.qual")], 2)))
+PresStats2=PresStats2[plotMods,]
+PresStats2$Module=row.names(PresStats2)
+PresStats2$ModuleSize=moduleSizes[plotMods]
+
+PresStats2[3,"Module"]
+PresStats2$Module=as.factor(PresStats2$Module)
+
+PresStats2["Module"]=as.character(PresStats2$Module)
+PresStats2[3,"Module"]="yellow"
+PresStats2["Module"]=as.factor(PresStats2$Module)
+
+MP_plotA<-ggplot(PresStats2,aes(x=ModuleSize,y=medianRank.pres,color=Module))+
+  geom_point(size=10)+
+  scale_color_manual(values = c("blue", "brown","turquoise", "yellow"))+
+  theme_bw()+
+  ylab("Median Rank")+
+  xlab("Module Size")+
+  Tx
+
+MP_plot2A=ggplot(PresStats2,aes(x=ModuleSize,y=Zsummary.pres,color=Module))+
+  geom_point(size=10,alpha=0.5)+
+  scale_color_manual(values =c("blue", "brown","turquoise", "yellow"))+
+  theme_bw()+
+  ylab("Z-Summary Statistic")+
+  xlab("Module Size")+
+  Tx+
+  geom_hline(aes(yintercept=0))+
+  geom_hline(aes(yintercept=2),linetype = "dotdash",color="blue")+
+  geom_hline(aes(yintercept=10),linetype = "dotdash",color="darkgreen")
+
+MP_plots=ggarrange(MP_plot2,MP_plot2A,labels = c("A","B"),common.legend = TRUE,font.label =list(size=22,face="plain"),nrow=1,ncol=2,hjust = -2,vjust = 0.4,legend = "bottom")
+
+
+annotate_figure(MP_plots,
+                top = text_grob("", face = "plain", size = 25,lineheight = 2)
+)
+```
+
+
+## Plot Phylum frequences per modules
+
+```{r}
+
+
+Taxa=tax_table(physeq_genus)
+Taxa_phyla=data.frame("OTU"=row.names(Taxa),"Phylum"=Taxa[,2])
+
+
+# I.purpurea alone
+PhyModulesAlone=data.frame("OTU"=colnames(OTU_AlonePurp),"Modules"=dynamicColors_Alone)
+PhyModulesAlone=merge(Taxa_phyla,PhyModulesAlone)
+
+# I.purpurea competition
+PhyModulesCompIp=data.frame("OTU"=colnames(OTU_CompPurp),"Modules"=dynamicColors_Comp)
+PhyModulesCompIp=merge(Taxa_phyla,PhyModulesCompIp)
+
+# I.hederacea competition
+PhyModulesCompHed=data.frame("OTU"=colnames(OTU_CompHed),"Modules"=dynamicColors_H)
+PhyModulesCompHed=merge(Taxa_phyla,PhyModulesCompHed)
+
+
+Colors=c("gold","yellow","darkgreen","brown","orange","pink","red","darkblue","purple","#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#E6AB02", "#A6761D","#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494","#FFFFE5", "#F7FCB9", "#D9F0A3",  "#004529","#FF7F00", "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928")
+
+
+
+AlonePlotMod <- ggplot(PhyModulesAlone%>%filter(Phylum!="Bacteria_unclassified"), aes(Modules,group=Phylum,fill=Phylum)) + 
+          geom_bar(aes(y = ((..count..)/sum(..count..)))) + 
+          scale_y_continuous(labels=scales::percent) +
+          #ylab("Relative Frequencies")+
+          ylab("")+
+          xlab("")+
+          theme_bw()+ 
+          scale_fill_manual(values = Colors)+
+          theme(legend.position = "none")+
+    #ggtitle(expression(paste(italic("I. purpurea"),"(alone)",sep="")))+
+  #theme(plot.title=element_text(size=25,hjust=0),axis.text.x=element_text(size=25,hjust=0))+
+    Tx
+
+
+
+
+CompPlotMod_Hed <- ggplot(PhyModulesCompHed%>%filter(Phylum!="Bacteria_unclassified"), aes(Modules,group=Phylum,fill=Phylum)) + 
+          geom_bar(aes(y = ((..count..)/sum(..count..)))) + 
+          scale_y_continuous(labels=scales::percent) +
+          #ylab("Relative Frequencies")+
+            ylab("")+
+          xlab("")+
+          theme_bw()+ 
+          scale_fill_manual(values = Colors)+
+          Tx+
+          theme(legend.position = "none")
+
+  #ggtitle(expression(paste(italic("I. hederacea"),"(Competiton)",sep="")))
+
+
+
+CompPlotMod_Purp <- ggplot(PhyModulesCompIp%>%filter(Phylum!="Bacteria_unclassified"), aes(Modules,group=Phylum,fill=Phylum)) + 
+          geom_bar(aes(y = ((..count..)/sum(..count..)))) + 
+          scale_y_continuous(labels=scales::percent) +
+          #ylab("Relative Frequencies")+
+            ylab("")+
+          xlab("")+
+          theme_bw()+ 
+          scale_fill_manual(values = Colors)+
+          Tx#+
+          #theme(legend.position = "none")
+
+
+
+
+## Save tables of phylum frequency per module per data set
+Modules_CompIp<-PhyModulesCompIp%>%filter(Phylum!="Bacteria_unclassified")%>% # Filter unclassified
+  group_by(Modules,Phylum)%>%
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))#%>%# Uncomment next two lines to double check total sums to one
+  #filter(Modules=="yellow")%>%  
+  # summarise(TotalPercent=sum(freq))
+
+## Save tables of phylum frequency per module per data set
+Modules_AloneIp<-PhyModulesAlone%>%filter(Phylum!="Bacteria_unclassified")%>% # Filter unclassified
+  group_by(Modules,Phylum)%>%
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))#%>%# Uncomment next two lines to double check total sums to one
+  #filter(Modules=="yellow")%>%  
+  # summarise(TotalPercent=sum(freq))
+
+## Save tables of phylum frequency per module per data set
+Modules_CompHed<-PhyModulesCompHed%>%filter(Phylum!="Bacteria_unclassified")%>% # Filter unclassified
+  group_by(Modules,Phylum)%>%
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))#%>%# Uncomment next two lines to double check total sums to one
+  #filter(Modules=="yellow")%>%  
+  # summarise(TotalPercent=sum(freq))
+
+Modules_CompHed$Group="Ihed-Comp"
+Modules_CompIp$Group="Ip-Comp"  
+Modules_AloneIp$Group="Ip-Alone"
+
+totaldata=rbind(Modules_AloneIp,Modules_CompHed,Modules_CompIp)
+
+M_hed<-ggplot(Modules_CompHed%>%filter(Phylum!="Bacteria_unclassified"),aes(x=Modules,y=freq,fill=Phylum))+
+  geom_bar(stat="identity")+
+  ylab("")+
+  xlab("")+
+  theme_bw()+ 
+  scale_fill_manual(values = Colors)+
+  Tx+
+  theme(legend.position="bottom")+
+  theme(axis.text.x = element_text(angle=45))
+
+M_P_C<-ggplot(Modules_CompIp%>%filter(Phylum!="Bacteria_unclassified"),aes(x=Modules,y=freq,fill=Phylum))+
+  geom_bar(stat="identity")+
+  ylab("")+
+  xlab("")+
+  theme_bw()+ 
+  theme(legend.position = "none")+
+  scale_fill_manual(values = Colors)+
+  Tx+
+  theme(axis.text.x = element_text(angle=45))
+
+M_P_A<-ggplot(Modules_AloneIp%>%filter(Phylum!="Bacteria_unclassified"),aes(x=Modules,y=freq,fill=Phylum))+
+  geom_bar(stat="identity")+
+  ylab("")+
+  xlab("")+
+  theme_bw()+ 
+  theme(legend.position = "none")+
+  scale_fill_manual(values = Colors)+
+  Tx+
+  theme(axis.text.x = element_text(angle=45))
+
+
+# 1. Create the plots
+#++++++++++++++++++++++++++++++++++
+# Create a box plot with a top legend position
+
+# 2. Save the legend
+#+++++++++++++++++++++++
+legend <- get_legend(M_hed)
+# 3. Remove the legend from the box plot
+#+++++++++++++++++++++++
+bp <- M_hed + theme(legend.position="none")
+
+
+A<-ggarrange(bp,M_P_C,M_P_A,labels=c("A","B","C"),nrow=1, font.label = list(size = 22, face = "plain"))
+
+ggarrange(A,legend,heights = c(1.5,1),nrow=2)
+ggarrange(legend)
+
+
+# Ven diagrams between modules and groups
+# Prepare a palette of 3 colors with R colorbrewer:
+
+myCol <- c("blue","brown","turquoise","yellow")
+
+
+# Within I. purp alone and in competiton
+
+# Blue module
+PurpCompBlue=PhyModulesCompIp%>%
+  filter(Modules=="blue")%>%
+  select(Phylum)
+
+PurpAloneBlue=PhyModulesAlone%>%
+  filter(Modules=="blue")%>%
+  select(Phylum)
+
+#brown
+PurpCompBrown=PhyModulesCompIp%>%
+  filter(Modules=="brown")%>%
+  select(Phylum)
+
+PurpAloneBrown=PhyModulesAlone%>%
+  filter(Modules=="brown")%>%
+  select(Phylum)
+
+# turquoise
+PurpCompTurquoise=PhyModulesCompIp%>%
+  filter(Modules=="turquoise")%>%
+  select(Phylum)
+
+PurpAloneTurquoise=PhyModulesAlone%>%
+  filter(Modules=="turquoise")%>%
+  select(Phylum)
+
+#Yellow
+PurpCompYellow=PhyModulesCompIp%>%
+  filter(Modules=="yellow")%>%
+  select(Phylum)
+
+PurpAloneYellow=PhyModulesAlone%>%
+  filter(Modules=="yellow")%>%
+  select(Phylum)
+
+# Within I. hed  in competiton
+
+# Blue module
+HedCompBlue=PhyModulesCompHed%>%
+  filter(Modules=="blue")%>%
+  select(Phylum)
+
+HedCompTurquoise=PhyModulesCompHed%>%
+  filter(Modules=="turquoise")%>%
+  select(Phylum)
+
+# Plot the Venn Diagrams
+
+library(venn)
+library(ggpolypath)
+
+input<-lapply(list(PurpCompBlue$Phylum,PurpCompBrown$Phylum,PurpCompTurquoise$Phylum,PurpCompYellow$Phylum),unique)
+
+tmp <- venn::venn(input,snames = c("Blue","Brown","Turquoise","Yellow"),zcolor = c("blue","brown","turquoise","yellow"),opacity = 0.3,ilabels = TRUE,box = FALSE,ilcs = 1)
+attr(tmp, "intersections")
+
+A<-venn(input, ggplot = TRUE, linetype = "dashed",snames = c("Blue","Brown","Turquoise","Yellow"),color=c("blue","brown","turquoise","yellow"),alpha=0.5,box=FALSE,ilcs=29)+
+  theme(text = element_text(size=22))
+
+
+# I. purpurea alone
+
+input2<-lapply(list(PurpAloneBlue$Phylum,PurpAloneBrown$Phylum,PurpAloneTurquoise$Phylum,PurpAloneYellow$Phylum),unique)
+
+tmp <- venn::venn(input2,snames = c("Blue","Brown","Turquoise","Yellow"),zcolor = c("blue","brown","turquoise","yellow"),opacity = 0.3,ilabels = TRUE,box = FALSE,ilcs = 1)
+attr(tmp, "intersections")
+
+B<-venn(input, ggplot = TRUE, linetype = "dashed",snames = c("Blue","Brown","Turquoise","Yellow"),color=c("blue","brown","turquoise","yellow"),alpha=0.5,box=FALSE)+
+  theme(text = element_text(size=22))
+
+# I. hederacea in competition
+
+input3<-lapply(list(HedCompBlue$Phylum,HedCompTurquoise$Phylum),unique)
+
+tmp <- venn::venn(input3,snames = c("Blue","Turquoise"),zcolor = c("blue","turquoise"),opacity = 0.3,ilabels = TRUE,box = FALSE,ilcs = 1)
+attr(tmp, "intersections")
+
+B<-venn(input3, ggplot = TRUE, linetype = "dashed",snames = c("Blue","Turquoise"),color=c("blue","turquoise","yellow"),alpha=0.5,box=FALSE)+
+  theme(text = element_text(size=22))
+```
+
+
+
+
+## Hypothesis testing WGCNA
+
+```{r,WGNCA within species III}
+# Data for I. hederacea in competition testing between species
+MEs_data_Hed=cbind(MEs_H,SAMPLE[which(SAMPLE$Sample_ID%in%row.names(MEs_H)),c("TRT","ML","Block","Combos")])
+
+# Data for I. purpurea in competition 
+MEs_data_Comp=cbind(MEs_P,SAMPLE[which(SAMPLE$Sample_ID%in%row.names(MEs_P)),c("TRT","ML","Block","Combos")])
+
+# Data for I. purpurea ALONE
+MEs_data_Alone=cbind(MEs_alone,SAMPLE[which(SAMPLE$Sample_ID%in%row.names(MEs_alone)),c("TRT","ML","Block","Combos")])
+
+
+
+## Add fitness and root data with the eigen value data
+
+MEs_data_Alone=merge(MEs_data_Alone,AvMLBkRoots)
+MEs_data_Alone=merge(MEs_data_Alone,FitAveraged)
+head(MEs_data_Alone)
+
+MEs_data_Comp=merge(MEs_data_Comp,AvMLBkRoots)
+MEs_data_Comp=merge(MEs_data_Comp,FitAveraged)
+head(MEs_data_Comp)
+
+# Add root data with eigen value data for I. hederacea
+MEs_data_Hed=merge(MEs_data_Hed,AvMLBkRoots)
+head(MEs_data_Hed)
+
+colnames(MEs_data_Comp)[grep("PC1|PC2|PC3|PC4",names(MEs_data_Comp))]=c("RootTopology","RootArchitecture","RootSize","RootMorphology")
+colnames(MEs_data_Alone)[grep("PC1|PC2|PC3|PC4",names(MEs_data_Alone))]=c("RootTopology","RootArchitecture","RootSize","RootMorphology")
+colnames(MEs_data_Hed)[grep("PC1|PC2|PC3|PC4",names(MEs_data_Hed))]=c("RootTopology","RootArchitecture","RootSize","RootMorphology")
+
+                                                        #############################################
+                                                         # Let's exaamine correlatios with modules
+                                                        #############################################
+# Index columns of interest
+I=grep("ME|Root|Relative",names(MEs_data_Alone))
+  Corr<-rcorr(as.matrix(MEs_data_Alone[c(I)]))
+  corrplot(Corr$r,type="upper")
+
+  
+  
+# Display significance
+# Mark the insignificant coefficients according to the specified p-value significance level
+
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+C1=corrplot(Corr$r, type = "upper",
+         p.mat = Corr$P, sig.level = 0.05, tl.col = "black", col=col(200))
+
+C1=ggcorrplot(Corr$r, type="lower",p.mat=Corr$P)
+
+
+
+J=grep("ME|Root|Relative",names(MEs_data_Comp))
+  Corr2<-rcorr(as.matrix(MEs_data_Comp[c(J)]))
+  corrplot(Corr$r,type="upper")
+
+# Display significance
+# Mark the insignificant coefficients according to the specified p-value significance level
+
+C2=corrplot(Corr2$r, type = "upper",
+         p.mat = Corr2$P, sig.level = 0.05, tl.col = "black", col=col(200))
+
+C2=ggcorrplot(Corr2$r, type="lower",p.mat=Corr2$P)
+
+## Make a plot w relative fitness
+## Melt the data
+data_long <- tidyr::gather(MEs_data_Comp, Module, EigenOTU, MEblue:MEyellow, factor_key=TRUE)
+
+ggplot(data_long%>%filter(EigenOTU<0.5,RelativeFitness<2),aes(EigenOTU,RelativeFitness,colour=Module))+
+  geom_point(alpha=0.3)+
+  geom_smooth(method="lm",se=F)+
+  scale_colour_manual(values = c("blue","brown","turquoise","yellow"))+
+  theme_classic()+
+  Tx
+
+# Within I. hederacea
+K=grep("ME|Root",names(MEs_data_Hed))
+  Corr3<-rcorr(as.matrix(MEs_data_Hed[c(K)]))
+  corrplot(Corr3$r,type="upper")
+
+# Display significance
+# Mark the insignificant coefficients according to the specified p-value significance level
+
+C3=corrplot(Corr3$r, type = "upper",
+         p.mat = Corr3$P, sig.level = 0.05, tl.col = "black", col=col(200))
+
+C3=ggcorrplot(Corr3$r, type="lower",p.mat=Corr3$P)
+
+
+ggarrange(C1,C2,common.legend = T,nrow=1,labels = "AUTO")
+
+```
+
+
+
+# Network Plotting
+
+## I. purpurea
+
+```{r}
+Modules_CompIp1<-PhyModulesCompIp%>%filter(Phylum!="Bacteria_unclassified")%>% # Filter unclassified
+  group_by(Phylum)%>%
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))
+
+ColorTop=Modules_CompIp1%>% 
+  #filter(Modules=="blue")%>%
+  arrange_(~ desc(freq)) %>%
+  group_by_(~Phylum)%>%
+  head(n = 5)
+
+ColorList=c('#d73027','#f46d43','#fdae61','#fee090','#e0f3f8','#abd9e9','#74add1','#4575b4') 
+
+ColorKey=data.frame("Phylum"=unique(ColorTop$Phylum),"Color"=ColorList[1:length(unique(ColorTop$Phylum))])
+
+
+Colors=rep(times=620,x="grey")
+
+for(i in 1:nrow(PhyModulesCompIp)){
+  if(PhyModulesCompIp[i,"Phylum"]%in%ColorTop$Phylum){
+  Colors[i]= paste(ColorKey[which(ColorKey$Phylum%in%PhyModulesCompIp[i,"Phylum"]),"Color"]) 
+  }  
+  }
+
+# Plot networks
+set.seed(123)
+
+
+# I. purpurea in competition
+adj <- TOM_P
+adj[adj > 0.1] = 1
+adj[adj != 1] = 0
+network <- graph.adjacency(adj)
+network <- simplify(network)  # removes self-loops
+V(network)$color <- dynamicColors_P
+par(mar=c(0,0,0,0))
+# remove unconnected nodes
+network <- igraph::delete.vertices(network, degree(network)==0)
+plot(network, layout=layout.fruchterman.reingold(network), edge.arrow.size = 0.5,vertex.label=NA)
+
+setseed(123)
+# Color in by Phylum
+# I. purpurea in competition
+adj <- TOM_P
+adj[adj > 0.1] = 1
+adj[adj != 1] = 0
+network <- graph.adjacency(adj)
+network <- simplify(network)  # removes self-loops
+V(network)$color <- Colors
+par(mar=c(0,0,0,0))
+# remove unconnected nodes
+network <- igraph::delete.vertices(network, degree(network)==0)
+plot(network, layout=layout.fruchterman.reingold(network), edge.arrow.size = 0.5,vertex.label=NA)
+
+# Clustering coefficient
+transitivity(network,"weighted")
+```
+
+
+
+## I. hederacea
+```{r}
+# First lets indicate top 5 phyla according to Rel Freq. (we will color these in the plots)
+
+## Save tables of phylum frequency per module per data set
+Modules_Hed1<-PhyModulesCompHed%>%filter(Phylum!="Bacteria_unclassified")%>% # Filter unclassified
+  group_by(Phylum)%>%
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n))
+
+ColorTop=Modules_Hed1%>% 
+  #filter(Modules=="blue")%>%
+  arrange_(~ desc(freq)) %>%
+  group_by_(~Phylum)%>%
+  head(n = 5)
+
+ColorList=c('#d73027','#f46d43','#fdae61','#fee090','#e0f3f8','#abd9e9','#74add1','#4575b4') 
+
+ColorKey=data.frame("Phylum"=unique(ColorTop$Phylum),"Color"=ColorList[1:length(unique(ColorTop$Phylum))])
+
+
+Colors=rep(times=620,x="grey")
+
+for(i in 1:nrow(PhyModulesCompHed)){
+  if(PhyModulesCompHed[i,"Phylum"]%in%ColorTop$Phylum){
+  Colors[i]= paste(ColorKey[which(ColorKey$Phylum%in%PhyModulesCompHed[i,"Phylum"]),"Color"]) 
+  }  
+  }
+
+set.seed(123)
+# I. hederacea in competition
+adj <- TOM_H
+adj[adj > 0.1] = 1
+adj[adj != 1] = 0
+network <- graph.adjacency(adj)
+network <- simplify(network)  # removes self-loops
+V(network)$color <- Colors #ifelse(Phlya_OTU_Hed$OTU%in%ColorTop$OTU,"gold","grey")
+
+# option 1
+g <- barabasi.game(100, directed=F)
+layout <- layout.reingold.tilford(g, circular=T)
+# option 2
+g = barabasi.game(100, directed=FALSE)
+layout=layout.fruchterman.reingold(g, niter=10000)
+
+ #layout=layout.fruchterman.reingold(network)
+par(mar=c(0,0,0,0))
+# remove unconnected nodes
+set.seed(123)
+
+network <- igraph::delete.vertices(network, degree(network)==0)
+plot(network,layout=layout.fruchterman.reingold(network), edge.arrow.size = 0.3,vertex.label=NA,rescale=T)
+ 
+
+
+### Plot the modules of I. hederacea
+set.seed(123)
+# I. hederacea in competition
+adj <- TOM_H
+adj[adj > 0.1] = 1
+adj[adj != 1] = 0
+network <- graph.adjacency(adj)
+network <- simplify(network)  # removes self-loops
+V(network)$color <- dynamicColors_H
+
+
+
+
+# option 1
+#g <- barabasi.game(100, directed=F)
+#layout <- layout.reingold.tilford(g, circular=T)
+
+ #layout=layout.fruchterman.reingold(network)
+par(mar=c(0,0,0,0))
+# remove unconnected nodes
+network <- igraph::delete.vertices(network, degree(network)==0)
+
+plot(network,layout=layout.fruchterman.reingold(network), edge.arrow.size = 0.3,vertex.label=NA,rescale=T)
+ 
+plot.new()
+dev.off()
+
+
+```
+
+
+
+## Network with sne
+
+```{r}
+#devtools::install_github("briatte/ggnet")
+library(ggnet)
+library(network)
+library(sna)
+library(ggplot2)
+
+set.seed(123)
+ggnet2(network, node.size = 6, color=Colors, edge.size = 1, edge.color = "grey")
+
+ggnet2(network, node.size = 6, color=dynamicColors_H, edge.size = 1, edge.color = "grey")
+```
+
