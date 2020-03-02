@@ -20,9 +20,6 @@ Cleaned up data used for preliminary and final data analysis.
         *Files with 'shared' suffix includes OTU counts
 * MetaDataTest.csv: Meta Data on samples
 
-### Mock_Output
-Mothur output of 'mock' samples supplied by sequencing core, these were not integrated into our study.
-
 ## Figures
 Preliminary and final figures.
 
