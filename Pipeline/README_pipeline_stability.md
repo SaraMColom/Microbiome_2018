@@ -82,7 +82,9 @@ The following code should run from within Mothur in the Flux system. Run the sta
 
 Change the name of the file from stability.files to whatever suits your study
 
-make.contigs(file=stability.files, processors=8)
+
+`make.contigs(file=stability.files, processors=8)`
+
 
 This implementation of the command will remove any sequences with ambiguous bases and anything longer than 275 bp. 
 
