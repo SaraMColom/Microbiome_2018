@@ -41,7 +41,7 @@ Specifics on how I obtained the SILVA and tax files are found here: https://gith
 ![](https://raw.githubusercontent.com/SaraMColom/Microbiome_2018/master/Pipeline/Chapter3Pipeline.jpg)
 
 # Experimental design
-We took samples from focal host plant, _I. purpurea_, in the presence and absence of competition from its sister species _I. hederacea_. We also sampled the competitor _I. hederacea_ plant. We sampled a total of 183 plants, 27 alone plants and a total of 32 unique competitive combination types. Note, we had 29 combination types with at least 2 biological replicates, and three combinations with a single representation. Each mate 24rnal line of _I. purpurea_ was replicated 513 times across competition treatment (except for a single maternal line), and 24 times within alone treatment.
+We took samples from focal host plant, _I. purpurea_, in the presence and absence of competition from its sister species _I. hederacea_. We also sampled the competitor _I. hederacea_ plant. We sampled a total of 183 plants, 27 alone plants and a total of 32 unique competitive combination types. Note, we had 29 combination types with at least 2 biological replicates, and three combinations with a single representation. 
 
 Below are a few tables describing our sample sizes by species and treatment, and the number of maternal lines and combination types per species.
 
