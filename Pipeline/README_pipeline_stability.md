@@ -205,8 +205,10 @@ For species richness see the _summary.single()_ function.
 
 # Runing job on Great Lakes
 
-Log into great lakes thru terminal: ssh -l scolom greatlakes.arc-ts.umich.edu
-Directory: /scratch/lsa_root/lsa/scolom/microbiome
+Log into great lakes thru terminal: 
+
+`ssh -l UserName greatlakes.arc-ts.umich.edu`
+`/scratch/lsa_root/lsa/UserName/microbiome`
 
 
 # ANOVA in R
