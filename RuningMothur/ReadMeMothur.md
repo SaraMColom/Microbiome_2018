@@ -7,21 +7,25 @@ See website: https://arc-ts.umich.edu/greatlakes/user-guide/ for detailed instru
 
 `ssh -l InsertUsernameHere greatlakes.arc-ts.umich.edu`
 
-2. Navigate to your scratch file replace InsertUsernameHere with your username. 
+2. Navigate to your scratch file replace InsertUsernameHere with your username.
+ 
 `cd /scratch/lsa_root/lsa/InsertUsernameHere/`
 
 3. Create slurm--see link here: https://arc-ts.umich.edu/greatlakes/slurm-user-guide/
 
 4. Load mothur version 1.43
+
 `module load Bioinformatics`
 `module load mothur/1.43.0`
 
 5. Unzip fastaQ files, replace 'FileNameHere' with your file name(s)
+
 `gunzip FileNameHere`
 
 6. Convert fastaQ to fasta files
 
 5. Run job, replace JobName with your job's name.
+
 `sbatch JobName`
 
 ## Important note:
