@@ -11,6 +11,12 @@ output:
     self_contained: yes 
 ---
 
+# R version
+
+```{r}
+version
+```
+
 
 ## Sample sizes
 
@@ -33,11 +39,6 @@ output:
 
 
 
-```{r setup,warning=F,comment=F,message=F}
-knitr::opts_chunk$set(root.dir = ("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
-               
-knitr::opts_knit$set(root.dir = ("/Volumes/GoogleDrive/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output"))
-```
 
 ### Load Libraries
 ```{r load_libs, include=T,warning=F,comment=F,message=F}
@@ -50,11 +51,10 @@ library(dplyr)
 library(scales)
 library(grid)
 library(reshape2)
-library(DESeq2)
+#library(DESeq2)
 library(pegas)
 library(pgirmess)
 library(multcomp)
-library(multcompView)
 library(ggpubr)
 library(ggcorrplot)
 library(RColorBrewer)
@@ -62,15 +62,10 @@ library(plotly)
 library(ggthemes)
 library(corrplot)
 library(Hmisc)
-library(Matrix)
-library(igraph)
-library(igraph)
-library(network)
-library(networkD3)
-library(intergraph)
+library(lmerTest)
 
 
-source("~/Google Drive File Stream/My Drive/IDM_Experiments-master/miSeq.R")
+source("miSeq.R")
 
 # Aesthetics
 Tx<-theme(axis.text.y = element_text(size=20),
@@ -108,13 +103,13 @@ GreenBlue=c("#59A14F","#4E79A7")
 ```{r Import Data,warning=F,comment=F,message=F}
 ### loading mothur output with FWDB+silva taxonomy and sample metadata. 
 ### Experiments run in 
-setwd("/Volumes/GoogleDrive/My Drive/Baucom Lab /Chapter3MicrobiomeMothur/Subset_Mothur_Output/")
-sharedfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.shared"
-taxfile <- "stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.0.03.cons.taxonomy"
+
+sharedfile <- "../DataSets/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.shared"
+taxfile <- "../DataSets/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.0.03.cons.taxonomy"
 
 mothurdata <- import_mothur(mothur_shared_file = sharedfile,mothur_constaxonomy_file = taxfile)
 
-sampledata= read.csv('~/Google Drive File Stream/My Drive/Chapter3MicrobiomeMothur/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/MetaDataTest.csv')
+sampledata= read.csv('../DataSets/MetaDataTest.csv')
 
 SAMPLE=sampledata
 row.names(SAMPLE)=SAMPLE$Sample_ID
@@ -139,6 +134,8 @@ colnames(tax_table(physeq.all))<-c("Kingdom","Phylum","Class","Order","Family","
 
 ```
 
+
+
 ```{r, aggregate data by genus}
 
 ## Aggregate at the genus level, then saving ea componant externally to reload and save time.
@@ -156,14 +153,14 @@ colnames(tax_table(physeq.all))<-c("Kingdom","Phylum","Class","Order","Family","
         # write.csv(x = meta,file = "sample_table.csv",row.names = F)
 
 
-otu=read.csv("~/Google Drive File Stream/My Drive/Baucom Lab /Chapter3MicrobiomeMothur/Microbiome_2018/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/otu_table.csv",row.names = 1)
+otu = read.csv("../DataSets/otu_table.csv",row.names = 1)
 
 colnames(otu)=gsub('X',"",colnames(otu))
 
 otu=otu_table(otu,taxa_are_rows = TRUE)
 
 
-tax=read.csv('~/Google Drive File Stream/My Drive/Baucom Lab /Chapter3MicrobiomeMothur/Microbiome_2018/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/tax_table.csv',row.names=1)
+tax=read.csv('../DataSets/tax_table.csv',row.names=1)
 taxRows=row.names(tax)
 taxCols=colnames(tax)
 tax=tax_table(as.matrix(tax))
@@ -172,7 +169,7 @@ tax=tax_table(as.matrix(tax))
 #colnames(tax)=taxCols
 
 
-meta=read.csv('~/Google Drive File Stream/My Drive/Baucom Lab /Chapter3MicrobiomeMothur/Microbiome_2018/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/MetaDataTest.csv')
+meta = read.csv('../DataSets/MetaDataTest.csv')
 namesKeep<-colnames(otu)
 
 row.names(meta)=meta$Sample_ID
@@ -187,9 +184,6 @@ physeq_genus=merge_phyloseq(otu,tax,meta)
 
 
 ```{r Proteobacteria phylum change to class,warning=F,comment=F,message=F}
-
-setwd("~/Google Drive File Stream/My Drive/Baucom Lab /Chapter3MicrobiomeMothur/Microbiome_2018/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output")
-
 ### ADD THE PROTEOBACTERIA CLASSES TO THE PHYLA NAME FIELD IN PHYLOSEQ OBJECT TAXONOMY 
 
 phy <- data.frame(tax_table(physeq_genus))
@@ -357,7 +351,6 @@ pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill 
   stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill =Species))+
   Tx
 
-dev.off()
 A=ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T,labels=c("C","D"),font.label = list(size = 15, color = "black", face =
   "plain"),hjust = -8,vjust=1)
 B=ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T,labels=c("A","B"),font.label = list(size = 15, color = "black", face =
@@ -400,50 +393,32 @@ p3 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Sp
 
 ```{r adonis experimental data when all data combined,warning=F,comment=F,message=F}
 ## All experiment, add variable treatment, then species
-sampledf <- data.frame(sample_data(physeq.scale))
-sampledf=subset(sampledf,sampledf$TRT=="Alone"|sampledf$TRT=="Inter")
+sampledf <- data.frame(sample_data(physeq.scale)) %>% 
+  select(-Comment)
 
 ## Subsample by species 
-physeq.purp=subset_samples(physeq.scale, Species == "Ip")
+
+physeq.purp <- subset_samples(physeq.scale, Species == "Ip")
+
+treatment <- sampledf %>% 
+  filter(Species == "Ip") %>% 
+  pull(TRT)
+
+block <- sampledf %>% 
+  filter(Species == "Ip") %>% 
+  pull(Block)
 
 ## Subsample within competition
-physeq.comp=subset_samples(physeq.scale, TRT=="Inter")
 
-# Calculate bray curtis for experimental samples only
-physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray") # acrosss species and treatment
-physeq.bray2 <- phyloseq::distance(physeq = physeq.purp, method = "bray") # within Ipurp
-physeq.bray3 <- phyloseq::distance(physeq = physeq.comp, method = "bray") # within competition
+physeq.comp = subset_samples(physeq.scale, TRT=="Inter")
 
-sampledf$Comp=sub(".*\\-","",sampledf$Combos)
+# Adonis test for treatment within I.purpurea
 
-# Adonis test for treatment, across species
-adonis(physeq.bray ~ TRT, data = sampledf)
-b = betadisper(physeq.bray,sampledf$TRT)
+adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
 
-p <- permutest(b)
-p$tab
 
-# Adonis test for treatment, WITHIN species
-adonis(physeq.bray2 ~ TRT+Block, data = sampledf%>%filter(Species=="Ip")) # No treatment effect on bray distances
-
-b = betadisper(physeq.bray,sampledf$TRT)
-p <- permutest(b)
-p$tab
-
-# Adonis test for treatment, WITHIN species
-adonis(physeq.bray2 ~ TRT+Block+Comp, data = sampledf%>%filter(Species=="Ip")) # No treatment effect on bray distances
 
 # Adonis test for species 
-set.seed(7L)
-adonis(physeq.bray3 ~ Species+Block, data = sampledf%>%filter(TRT=="Inter"))
-b = betadisper(physeq.bray3,( sampledf%>%filter(TRT=="Inter"))$Species)
-p <- permutest(b)
-p$tab
-
-sampledf$Block=as.factor(sampledf$Block)
-sampledf$Comp=as.factor(sampledf$Comp)
-
-
 
 ```
 
@@ -452,6 +427,10 @@ sampledf$Comp=as.factor(sampledf$Comp)
 
 # # # # # # # # # # # # # # # # # # # # # 
 #             ACROSS SAMPLES
+
+physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray")
+
+
 amova(physeq.bray ~ TRT, data = sampledf) # Across all samples
 amova(physeq.bray ~ Species, data = sampledf) # Across all samples
 
@@ -461,6 +440,7 @@ amova(physeq.bray ~ Species, data = sampledf) # Across all samples
 
 physeq.Purp <- subset_samples(physeq.scale, Species == "Ip")
 sampledf.Purp<- data.frame(sample_data(physeq.Purp))
+
 # Calculate bray curtis for summer samples only
 physeq.Purp.bray <- phyloseq::distance(physeq = physeq.Purp, method = "bray")
 amova(physeq.Purp.bray ~ TRT, data = sampledf.Purp) # Across all samples
@@ -472,6 +452,7 @@ amova(physeq.Purp.bray ~ TRT, data = sampledf.Purp) # Across all samples
 
 physeq.Comp <- subset_samples(physeq.scale, TRT=="Inter")
 sampledf.Comp<- data.frame(sample_data(physeq.Comp))
+
 # Calculate bray curtis for summer samples only
 physeq.Comp.bray <- phyloseq::distance(physeq = physeq.Comp, method = "bray")
 amova(physeq.Comp.bray ~ Species, data = sampledf.Comp) # marginal species differences
@@ -486,13 +467,13 @@ amova(physeq.Comp.bray ~ Species, data = sampledf.Comp) # marginal species diffe
 # Check for 'core' microbiome members as the phylum level which taxa are present
 # at 1 % overall abundance and at least 75% of samples 
 
-PhylumGlom<-tax_glom(physeq.Purp,taxrank="Phylum")
-FamGlom<-tax_glom(physeq.Purp,taxrank="Family")
-ClassGlom<-tax_glom(physeq.Purp,taxrank="Class")
+PhylumGlom <- tax_glom(physeq.Purp,taxrank="Phylum")
+FamGlom <- tax_glom(physeq.Purp,taxrank="Family")
+ClassGlom <- tax_glom(physeq.Purp,taxrank="Class")
 
 
-coreTaxa = filter_taxa(PhylumGlom, function(x) sum(x > 1) > (0.75 * length(x)), TRUE)
-coreTaxaFamily = filter_taxa(FamGlom, function(x) sum(x > 1) > (0.75 * length(x)), TRUE)
+coreTaxa <- filter_taxa(PhylumGlom, function(x) sum(x > 1) > (0.75 * length(x)), TRUE)
+coreTaxaFamily <- filter_taxa(FamGlom, function(x) sum(x > 1) > (0.75 * length(x)), TRUE)
 
 ## Plot at phylum level
 
@@ -500,8 +481,10 @@ coreTaxaFamily = filter_taxa(FamGlom, function(x) sum(x > 1) > (0.75 * length(x)
 physeq1_phylumAlone <- coreTaxa  %>%
   subset_samples(TRT=="Alone")%>%
   transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
-  psmelt()                                      # Melt to long format
-physeq1_phylum=physeq1_phylum[order(physeq1_phylum$Phylum),] 
+  psmelt()       
+
+# Melt to long format
+physeq1_phylumAlone = physeq1_phylumAlone[order(physeq1_phylumAlone$Phylum),] 
 
 physeq1_phylumComp <- coreTaxa  %>%
   subset_samples(TRT!="Alone")%>%
@@ -537,19 +520,20 @@ ggplot(physeq1_phylum, aes(x = TRT, y = Abundance, fill = Phylum)) +
 
 
 ## Testing if different at the phylum level
+
 ```{r}
 
-PhlyaList<-as.list(unique(physeq1_phylum$Phylum))
+PhlyaList <- as.list(unique(physeq1_phylum$Phylum))
 
-KrusMicrTest<-function(Microbe){
-  Result=kruskal.test(Abundance ~ TRT, data = physeq1_phylum[which(physeq1_phylum$Phylum==Microbe),]) 
+KrusMicrTest <- function(Microbe){
+  Result <- kruskal.test(Abundance ~ TRT, data = physeq1_phylum[which(physeq1_phylum$Phylum == Microbe),]) 
 
-ResDf=data.frame("ChiSq"=Result$statistic,"Pval"=Result$p.value,"Phylum"=paste(Microbe))  
+ResDf <- data.frame("ChiSq" = Result$statistic,"Pval" = Result$p.value,"Phylum" = paste(Microbe))  
   return(ResDf)  
 }
 
-AllResults=lapply(PhlyaList,KrusMicrTest)
-KruskalRes=do.call('rbind',AllResults)
+AllResults <- lapply(PhlyaList,KrusMicrTest)
+KruskalRes <- do.call('rbind',AllResults)
 ```
 
 
@@ -558,12 +542,12 @@ KruskalRes=do.call('rbind',AllResults)
 
 # Family level
 physeq1_FamilyAlone <- coreTaxaFamily  %>%
-  subset_samples(TRT=="Alone")%>%
+  subset_samples(TRT == "Alone")%>%
   transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
   psmelt()                                      # Melt to long format
 
 physeq1_FamilyComp <- coreTaxaFamily  %>%
-  subset_samples(TRT!="Alone")%>%
+  subset_samples(TRT != "Alone")%>%
   transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
   psmelt()       
 
@@ -573,20 +557,21 @@ physeq1_Family<-rbind(physeq1_FamilyAlone,physeq1_FamilyComp)
 FamList<-as.list(unique(physeq1_Family$Family))
 
 KrusMicrTest<-function(Microbe){
-  Result=kruskal.test(Abundance ~ TRT, data = physeq1_Family[which(physeq1_Family$Family==Microbe),]) 
+  Result = kruskal.test(Abundance ~ TRT, data = physeq1_Family[which(physeq1_Family$Family == Microbe),]) 
 
-ResDf=data.frame("ChiSq"=Result$statistic,"Pval"=Result$p.value,"Family"=paste(Microbe))  
+ResDf <- data.frame("ChiSq" = Result$statistic,"Pval" = Result$p.value,"Family" = paste(Microbe))  
   return(ResDf)  
 }
 
-AllResultsFamily=lapply(FamList,KrusMicrTest)
-KruskalResFamily=do.call('rbind',AllResultsFamily)
+AllResultsFamily <- lapply(FamList,KrusMicrTest)
+KruskalResFamily <- do.call('rbind',AllResultsFamily)
 
-KruskalResFamily%>%filter(Pval<0.055)
+KruskalResFamily %>%
+  filter(Pval<0.055)
 
 # Do false discovery rate for mulitple corrections
 
-KruskalResFamily$AdjPval=p.adjust(KruskalResFamily$Pval, method = "fdr", n = 213)
+KruskalResFamily$AdjPval <- p.adjust(KruskalResFamily$Pval, method = "fdr", n = 213)
 ```
 
 
@@ -594,14 +579,14 @@ KruskalResFamily$AdjPval=p.adjust(KruskalResFamily$Pval, method = "fdr", n = 213
 
 ```{r alpha diversity,warning=F,comment=F,message=F}
 hist(sample_sums(physeq1))
+
 # Remove sample with less than 20K reads, this looks WAAAY off
 # Rarify first
-ps.rarefied=rarefy_even_depth(physeq1,rngseed=1,sample.size=min(sample_sums(physeq1)),replace=F)
+ps.rarefied <- rarefy_even_depth(physeq1,rngseed = 1,sample.size=min(sample_sums(physeq1)),replace = F)
 
-plot_richness(ps.rarefied,x="TRT",measures=c("Observed","Shannon"))+
-  geom_boxplot()+
+plot_richness(ps.rarefied,x ="TRT",measures = c("Observed","Shannon")) +
+  geom_boxplot() +
   theme_classic()
-
 ```
 
 
@@ -619,6 +604,8 @@ _*Inverse Simpson*_ it is an indication of the richness in a community with unif
 
 ```{r Richness and Inverse Simpson,warning=F,comment=F,message=F}
 # Initialize matrices to store richness and Inverse Simpson estimates
+
+trials = 100
 
 richness <- matrix(nrow = 173, ncol = trials)
 row.names(richness) <- sample_names(physeq1)
@@ -654,10 +641,9 @@ sim<- as.numeric(as.matrix(estimate_richness(r, measures = "Simpson")))
 s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
 shan <- as.numeric(as.matrix(estimate_richness(r, measures = "Shannon")))
 
-InvSimp=simp
+InvSimp = simp
 
 ```
-
 
 
 
@@ -667,31 +653,34 @@ InvSimp=simp
 length(rich)
 
 Sample_ID <- sample_names(physeq1)
-Block <-sample_data(physeq1)$Block
-Species <-sample_data(physeq1)$Species
-TRT <-sample_data(physeq1)$TRT
-Combos <-sample_data(physeq1)$Combos
-ML <-sample_data(physeq1)$ML
+Block <- sample_data(physeq1)$Block
+Species <- sample_data(physeq1)$Species
+TRT <- sample_data(physeq1)$TRT
+Combos <- sample_data(physeq1)$Combos
+ML <- sample_data(physeq1)$ML
 
-alpha=data.frame(Sample_ID,ML,Block,TRT,Species,Combos,rich,InvSimp,sim,shan)
+alpha <- data.frame(Sample_ID, ML, Block, TRT, Species, Combos, rich, InvSimp, sim, shan)
 
-alpha$even=alpha$shan/alpha$rich
+alpha$even <- alpha$shan/alpha$rich
 
 # DO VIOLIN PLOT HERE!!!
 
 
-p=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=rich)) +
-  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
-  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+p <- ggplot(alpha %>%
+              filter(TRT ==
+                       "Inter"), aes(x = Species, y = rich)) +
+  geom_violin(trim = FALSE, aes(fill = Species), alpha = 0.3) + 
+  geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize=1,aes(color = Species, fill = Species))+
   theme_classic()+
   scale_color_brewer(palette = "Paired")+
   scale_fill_brewer(palette = "Paired")+
   ggtitle("Mean Species Richness")
 
 
-q=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=InvSimp)) +
-  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
-  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+q <- ggplot(alpha %>%
+              filter(TRT == "Inter"), aes(x = Species, y = InvSimp)) +
+  geom_violin(trim = FALSE, aes(fill = Species),alpha = 0.3)+ 
+  geom_dotplot(binaxis ='y', stackdir = 'center', dotsize = 1,aes(color = Species, fill = Species))+
   theme_classic()+
   scale_color_brewer(palette = "Paired")+
   scale_fill_brewer(palette = "Paired")+
@@ -699,18 +688,20 @@ q=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=InvSimp)) +
   ylab("")
 
 
-t=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=sim)) +
-  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
-  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+t <- ggplot(alpha %>% 
+              filter(TRT == "Inter"), aes(x = Species, y = sim)) +
+  geom_violin(trim = FALSE,aes(fill = Species),alpha = 0.3)+ 
+  geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize=1,aes(color=Species,fill=Species))+
   theme_classic()+
   scale_color_brewer(palette = "Paired")+
   scale_fill_brewer(palette = "Paired")+
   ggtitle("Mean Simpson")+
   ylab("")
 
-v=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=even)) +
-  geom_violin(trim=FALSE,aes(fill=Species),alpha=0.3)+ 
-  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=Species,fill=Species))+
+v <- ggplot(alpha %>% 
+              filter(TRT == "Inter"), aes(x = Species, y = even)) +
+  geom_violin(trim = FALSE, aes(fill = Species), alpha = 0.3)+ 
+  geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize = 1,aes(color = Species, fill = Species))+
   theme_classic()+
   scale_color_brewer(palette = "Paired")+
   scale_fill_brewer(palette = "Paired")+
@@ -719,31 +710,33 @@ v=ggplot(alpha%>%filter(TRT=="Inter"), aes(x=Species, y=even)) +
 
 
 
-ggarrange(p,q,t,v,common.legend=T,ncol=2,nrow=2)
+ggarrange(p,q,t,v, common.legend = T, ncol = 2,nrow = 2)
 
 
 
       ### Treatment
 
-pT=ggplot(alpha%>%filter(Species=="Ip"), aes(x=TRT, y=rich)) +
-  geom_violin(trim=FALSE,aes(fill=TRT),alpha=0.3)+ 
-  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=TRT,fill=TRT))+
+pT <- ggplot(alpha %>%
+               filter(Species == "Ip"), aes(x = TRT, y = rich)) +
+  geom_violin(trim = FALSE, aes(fill = TRT), alpha = 0.3)+ 
+  geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize=1,aes(color = TRT, fill = TRT))+
   theme_classic()+
-  scale_color_manual(values=c("#B2DF8A","#fee090"))+
-  scale_fill_manual(values=c("#B2DF8A","#fee090"))+
+  scale_color_manual(values = c("#B2DF8A","#fee090"))+
+  scale_fill_manual(values = c("#B2DF8A","#fee090"))+
   ggtitle("Mean Treatment Richness")
 
 
-qT=ggplot(alpha%>%filter(Species=="Ip"), aes(x=TRT, y=InvSimp)) +
-  geom_violin(trim=FALSE,aes(fill=TRT),alpha=0.3)+ 
-  geom_dotplot(binaxis='y', stackdir='center', dotsize=1,aes(color=TRT,fill=TRT))+
+qT <- ggplot(alpha %>% 
+               filter(Species == "Ip"), aes(x = TRT, y = InvSimp)) +
+  geom_violin(trim = FALSE, aes(fill = TRT),alpha = 0.3)+ 
+  geom_dotplot(binaxis ='y', stackdir ='center', dotsize = 1,aes(color = TRT, fill = TRT))+
   theme_classic()+
   scale_color_manual(values = c("#B2DF8A","#fee090"))+
   scale_fill_manual(values = c("#B2DF8A","#fee090"))+
   ggtitle("Mean Treatment Inverse Simpson")+
   ylab(" ")
 
-ggarrange(pT,qT,common.legend=T)
+ggarrange(pT, qT, common.legend = T)
 
 ```
 
@@ -757,20 +750,20 @@ shapiro.test(alpha$rich) # Not normal
 shapiro.test(alpha$even) # Normal
 shapiro.test(alpha$sim) # Normal
 
-histogram(alpha$rich,xlab="Richness") # Note richness though, not normal, looks close to normal.
+histogram(alpha$rich,xlab = "Richness") # Note richness though, not normal, looks close to normal.
 
-histogram(alpha$InvSimp,xlab="Inverse-Simpson")
-histogram(alpha$sim,xlab="Simpson")
+histogram(alpha$InvSimp,xlab = "Inverse-Simpson")
+histogram(alpha$sim,xlab = "Simpson")
 
 
 #   Run the ANOVA and save it as an object
 
 # Test for species within competition
-aov.Richness = aov(rich~Species+Block,alpha%>%filter(TRT=="Inter"))
-aov.simpsonInv = aov(InvSimp~Species+Block,alpha%>%filter(TRT=="Inter"))
-aov.simpson = aov(sim~Species+Block,alpha%>%filter(TRT=="Inter"))
-aov.evenness = aov(even~Species+Block,alpha%>%filter(TRT=="Inter"))
-aov.shannon = aov(shan~Species+Block,alpha%>%filter(TRT=="Inter"))
+aov.Richness = aov(rich~Species+Block,alpha %>% filter(TRT == "Inter"))
+aov.simpsonInv = aov(InvSimp~Species+Block,alpha %>% filter(TRT == "Inter"))
+aov.simpson = aov(sim~Species+Block,alpha %>% filter(TRT == "Inter"))
+aov.evenness = aov(even~Species+Block,alpha %>% filter(TRT == "Inter"))
+aov.shannon = aov(shan~Species+Block,alpha %>% filter(TRT == "Inter"))
 
 #Call for the summary of that ANOVA, which will include P-values
 summary(aov.Richness)
@@ -783,13 +776,15 @@ summary(aov.shannon)
 
 
 # Test for treatment within I. purpurea
-alpha.purp<-alpha%>%filter(Species=="Ip")
-alpha.purp$Comp<-as.factor(alpha.purp$Comp)
-aov.Richness = lm(rich~Block*Comp,alpha.purp%>%filter(TRT=="Inter"))
-aov.simpsonInv = lm(InvSimp~Block*Comp,alpha.purp%>%filter(TRT=="Inter"))
-aov.simpson = lm(sim~Block*Comp,alpha.purp%>%filter(TRT=="Inter"))
-aov.evenness = lm(even~Block*Comp,alpha.purp%>%filter(TRT=="Inter"))
-aov.shannon = lm(shan~Block*Comp,alpha.purp%>%filter(TRT=="Inter"))
+alpha.purp <- alpha %>% filter(Species == "Ip")
+alpha.purp$TRT <- as.factor(alpha.purp$TRT)
+alpha.purp$Block <- as.factor(alpha.purp$Block)
+
+aov.Richness <- lm(rich ~ TRT + Block, alpha.purp)
+aov.simpsonInv <- lm(InvSimp ~ TRT + Block,alpha.purp)
+aov.simpson <- lm(sim ~ TRT + Block,alpha.purp)
+aov.evenness <- lm(even ~ TRT + Block,alpha.purp)
+aov.shannon <- lm(shan ~ TRT + Block,alpha.purp)
 
 
 #Call for the summary of that ANOVA, which will include P-values
@@ -802,58 +797,42 @@ anova(aov.shannon)
 # No significant differences
 
 
-# Model accross species and treatment 
-aov.Richness = aov(rich~TRT+Species+Block,alpha)
-aov.simpsonInv = aov(InvSimp~TRT+Species+Block,alpha)
-aov.simpson = aov(sim~TRT+Species+Block,alpha)
-aov.evenness = aov(even~TRT+Species+Block,alpha)
-aov.shannon = aov(shan~TRT+Species+Block,alpha)
-
-
-#Call for the summary of that ANOVA, which will include P-values
-anova(aov.Richness)
-anova(aov.simpsonInv)
-anova(aov.simpson)
-anova(aov.evenness)
-# summary(aov.shannon)
-
-
 
 # Boxplot
-ggplot(alpha%>%filter(Species=="Ip"),aes(TRT,rich))+
+ggplot(alpha %>% filter(Species == "Ip"),aes(TRT,rich))+
   geom_boxplot()+
   theme_bw()+
   ylab("Richness")+
   xlab("")+
-  scale_x_discrete(labels=c("Alone","Competition"))+
-  theme(axis.text.x = element_text(vjust = -1),axis.text=element_text(size=20),axis.title=element_text(size=30),axis.title.x = element_text(vjust=-1))+
+  scale_x_discrete(labels = c("Alone","Competition"))+
+  theme(axis.text.x = element_text(vjust = -1),axis.text = element_text(size = 20),axis.title = element_text(size=30),axis.title.x = element_text(vjust = -1))+
   Margin
 
-ggplot(alpha%>%filter(Species=="Ip"),aes(TRT,even))+
+ggplot(alpha %>% filter(Species == "Ip"),aes(TRT, even))+
   geom_boxplot()+
   theme_bw()+
   ylab("Evenness")+
   xlab("")+
-  scale_x_discrete(labels=c("Alone","Competition"))+
-  theme(axis.text.x = element_text(vjust = -1),axis.text=element_text(size=20),axis.title=element_text(size=30),axis.title.x = element_text(vjust=-1))+
+  scale_x_discrete(labels = c("Alone", "Competition"))+
+  theme(axis.text.x = element_text(vjust = -1),axis.text=element_text(size=20),axis.title=element_text(size = 30),axis.title.x = element_text(vjust = -1))+
   Margin
 
-ggplot(alpha%>%filter(Species=="Ip"),aes(TRT,sim))+
+ggplot(alpha %>% filter(Species == "Ip"),aes(TRT,sim))+
   geom_boxplot()+
   theme_bw()+
   ylab("Simpson")+
   xlab("")+
-  scale_x_discrete(labels=c("Alone","Competition"))+
-  theme(axis.text.x = element_text(vjust = -1),axis.text=element_text(size=20),axis.title=element_text(size=30),axis.title.x = element_text(vjust=-1))+
+  scale_x_discrete(labels = c("Alone","Competition"))+
+  theme(axis.text.x = element_text(vjust = -1),axis.text=element_text(size=20),axis.title = element_text(size = 30),axis.title.x = element_text(vjust = -1))+
   Margin
 
-ggplot(alpha%>%filter(Species=="Ip"),aes(TRT,InvSimp))+
+ggplot(alpha %>% filter(Species == "Ip"),aes(TRT,InvSimp))+
   geom_boxplot()+
   theme_bw()+
   ylab("Inverse Simpson")+
   xlab("")+
-  scale_x_discrete(labels=c("Alone","Competition"))+
-  theme(axis.text.x = element_text(vjust = -1),axis.text=element_text(size=20),axis.title=element_text(size=30),axis.title.x = element_text(vjust=-1))+
+  scale_x_discrete(labels = c("Alone","Competition"))+
+  theme(axis.text.x = element_text(vjust = -1),axis.text=element_text(size = 20),axis.title = element_text(size = 30),axis.title.x = element_text(vjust = -1))+
   Margin
 
 ```
@@ -863,10 +842,10 @@ ggplot(alpha%>%filter(Species=="Ip"),aes(TRT,InvSimp))+
 # Test for treatment within I. purpurea
 alpha$Comp=sub(".*\\-","",alpha$Combos)
 
-RichLmm = lmer(rich~TRT+Block+(1|Block:ML),alpha%>%filter(Species=="Ip"))
-InvLmm = lmer(InvSimp~TRT+Block+(1|Block:ML),alpha%>%filter(Species=="Ip"))
-SimLmm = lmer(sim~TRT+Block+(1|Block:ML),alpha%>%filter(Species=="Ip"))
-EvenLmm = lmer(even~TRT+Block+(1|Block:ML),alpha%>%filter(Species=="Ip"))
+RichLmm = lmer(rich ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
+InvLmm = lmer(InvSimp ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
+SimLmm = lmer(sim ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
+EvenLmm = lmer(even ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
 
 anova(RichLmm)
 ranova(RichLmm)
@@ -882,10 +861,10 @@ ranova(EvenLmm)
 
 # Competitor as fixed effect
 
-RichLmm = lm(rich~TRT+Block*Comp,alpha%>%filter(Species=="Ip"))
-InvLmm = lm(InvSimp~TRT+Block*Comp,alpha%>%filter(Species=="Ip"))
-SimLmm = lm(sim~TRT+Block*Comp,alpha%>%filter(Species=="Ip"))
-EvenLmm = lm(even~TRT+Block*Comp,alpha%>%filter(Species=="Ip"))
+RichLmm = lm(rich~TRT+Block*Comp,alpha %>% filter(Species == "Ip"))
+InvLmm = lm(InvSimp~TRT+Block*Comp,alpha %>% filter(Species =="Ip"))
+SimLmm = lm(sim~TRT+Block*Comp,alpha %>% filter(Species == "Ip"))
+EvenLmm = lm(even~TRT+Block*Comp,alpha %>% filter(Species == "Ip"))
 
 anova(RichLmm)
 
@@ -901,7 +880,7 @@ anova(EvenLmm)
 Here, I correlate leaf number to OTUs with at least 5% relative abundance in at least one sample in our data set.
 
 ```{r Analyzing leaf data,warning=F,comment=F,message=F}
-LeafData<-read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/SizeFitData.csv")
+LeafData<-read.csv("../DataSets/SizeFitData.csv")
 
 LeafData$Sample_ID=paste(LeafData$Position,ifelse(grepl("Ihed",LeafData$ML),"H","P"),sep="")
 ```
@@ -911,14 +890,14 @@ LeafData$Sample_ID=paste(LeafData$Position,ifelse(grepl("Ihed",LeafData$ML),"H",
 
 ## Additional estimates of alpha diversity
  # Specify a few:
-AlphaExtra=estimate_richness(physeq1, measures=c("Observed", "InvSimpson", "Shannon", "Chao1"))
+AlphaExtra = estimate_richness(physeq1, measures=c("Observed", "InvSimpson", "Shannon", "Chao1"))
 ```
 
 
 ## Preliminary test with roots
 
 ```{r Preliminary exam on root linear model}
-RootData=read.csv("~/Google Drive File Stream/My Drive/Baucom Lab /Chapter3MicrobiomeMothur/Microbiome_2018/DataSets/MothurOutput_Mock_Microbiome/Microbiome_Output/RootTraits_PCs.csv")
+RootData = read.csv("../DataSets/RootTraits_PCs.csv")
 
 RootAlphaObs=merge(alpha,RootData[c("Sample_ID","PC1","PC2","PC3","PC4")])
 
@@ -1192,7 +1171,7 @@ ranova(Ax4LMM)
 
 
 ```{r Read in fitness data}
-Fitness=read.csv("~/Google Drive File Stream/My Drive/Field_2018/Field_2018_Rcode/CharacterDisplacementRootTraits/CleanData/FitPA4.csv")
+Fitness=read.csv("../DataSets/FitPA4.csv")
 
 library(dplyr)
 # Calculate relative fitness
@@ -1207,7 +1186,7 @@ Ipurp.Fit=Fitness%>%
 Ipurp.Alpha=alpha%>%
   filter(Species=="Ip")
 
-FitnessPurp=merge(Ipurp.Fit,MeanSeedNumber,by=c("Trt","Species"))
+FitnessPurp <- merge(Ipurp.Fit,MeanSeedNumber,by=c("Trt","Species"))
 FitnessPurp$RelativeFit=FitnessPurp$SeedNumber/FitnessPurp$MeanSeedNumber
 FitnessPurp$Block=as.factor(FitnessPurp$Block)
 
@@ -1236,7 +1215,7 @@ dev.off()
 plot(StdFitness$RelativeFit,StdFitness$RelativeFitness)
 
 # Average fitness by block, maternal line and treatment--we use NON standardized fitness (ie size effects not removed)
-FitAveraged=aggregate(RelativeFit~Block+Trt+ML,FitnessPurp,mean)
+FitAveraged <- aggregate(RelativeFit~Block+Trt+ML,FitnessPurp,mean)
 colnames(FitAveraged)<-c("Block","Trt","ML","RelativeFitness")
 FitAveraged$TRT=FitAveraged$Trt
 dim(FitAveraged)
@@ -1256,7 +1235,7 @@ FitnessPurp$Combos=as.factor(FitnessPurp$Combos)
 
 BrayFit=merge(physeq.pcoa.df,FitAveraged)
 
-FitAlpha=merge(FitAveraged,alpha)
+FitAlpha <- merge(FitAveraged,alpha)
 dim(FitAlpha)
 
 ggplot(FitAlpha,aes(TRT,RelativeFitness))+
@@ -1276,7 +1255,7 @@ RootAveraged=aggregate(list(RootData[c("PC1","PC2","PC3","PC4")]),by=list(RootDa
 colnames(RootAveraged)=c("Trt","ML","PC1","PC2","PC3","PC4")
 head(RootAveraged)
 
-RootFitAlpha=merge(FitAlpha,RootAveraged)
+RootFitAlpha <- merge(FitAlpha,RootAveraged)
 head(RootFitAlpha)
 
 #RootFitLeafAlpha=merge(RootFitAlpha,LeafData[c("Sample_ID","Leaf.Number")],by="Sample_ID")
@@ -1430,6 +1409,7 @@ ggplot(FitAlpha)+
 
 ```{r Tests of Phenotypic Selection}
 RootFitAlpha$Comp<-sub(".*\\-","",RootFitAlpha$Combos)
+
 # PC1 and richness
 summary(lm(RelativeFitness~Block+PC1*rich,RootFitAlpha%>%filter(TRT=="Alone")))
 summary(lm(RelativeFitness~Block+PC1*rich+Comp,RootFitAlpha%>%filter(TRT!="Alone")))
@@ -1519,7 +1499,6 @@ anova(lm(RelativeFitness~PC4*sim*TRT*Block,RootFitAlpha))
 # Significant PC4:Block
 # Significant sim:TRT:Block
 
-summary(simPC4)
 
 # Inv Simp and PC1
 summary(lm(RelativeFitness~PC1*InvSimp+Block,RootFitAlpha%>%filter(TRT=="Alone")))
@@ -1542,12 +1521,16 @@ anova(lm(RelativeFitness~PC2*InvSimp*TRT*Block,RootFitAlpha))
 
 # PC3 and Inv Sipm
 anova(lm(RelativeFitness~PC3*InvSimp*TRT+Block,RootFitAlpha))
-summary(InvSimpPC3) #Significant
+
+# summary(InvSimpPC3) #Significant
 
 # Within treatment regressions
-InvSimpPC3Alone=lm(RelativeFitness~PC3*InvSimp*Comp+Block,RootFitAlpha%>%filter(TRT=="Alone"))
-summary(InvSimpPC3Alone)
-InvSimpPC3Comp=lm(RelativeFitness~PC3*InvSimp+Block,RootFitAlpha%>%filter(TRT!="Alone"))
+#InvSimpPC3Alone = lm(RelativeFitness~PC3*InvSimp*Comp+Block,RootFitAlpha%>%filter(TRT=="Alone"))
+
+#summary(InvSimpPC3Alone)
+
+InvSimpPC3Comp = lm(RelativeFitness~PC3*InvSimp+Block,RootFitAlpha %>%filter(TRT!="Alone"))
+
 summary(InvSimpPC3Comp)
 
 # Inv simp and PC4

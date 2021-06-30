@@ -1,0 +1,386 @@
+"Block","Order","Position","ML","Trt","Comp","Combos","Population","Species","Block.1","Leaf.Number","Comment","X","UniqId","GerminationDate","Comment1","Dead_plant","DeathCause","RootsHarvested","SeedsCounted","SeedNumber"
+"1",102,"102","PA4.2Ip","Alone","NA","NA","PA4","Ip",1,6,"",1,"102Ip","43258.0",NA,NA,NA,"N","Y",96
+"1",106,"106","PA4.13Ip","Inter","PA 4.3 Ihed","PA 4.13 Ip-PA 4.3 Ihed","PA4","Ip",1,7,"",2,"106Ip","43262.0",NA,NA,NA,"N","Y",209
+"1",107,"107","PA4.18Ip","Inter","PA 4.9 Ihed","PA 4.18 Ip-PA 4.9 Ihed","PA4","Ip",1,8,"",3,"107Ip","43258.0",NA,NA,NA,"N","Y",192
+"1",109,"109A","PA4.11Ip","Inter","PA 4.2 Ihed","PA 4.11 Ip-PA 4.2 Ihed","PA4","Ip",1,4,"",4,"109AIp","43262.0",NA,NA,NA,"N","Y",112
+"1",11,"11A","PA4.19Ip","Inter","PA 4.2 Ihed","PA 4.19 Ip-PA 4.2 Ihed","PA4","Ip",1,16,"",10,"11AIp","43262.0",NA,NA,NA,"N","Y",140
+"1",110,"110","PA4.11Ip","Inter","PA 4.12 Ihed","PA 4.11 Ip-PA 4.12 Ihed","PA4","Ip",1,7,"",5,"110Ip","43258.0",NA,NA,NA,"N","Y",219
+"1",113,"113A","PA4.18Ip","Inter","PA 4.2 Ihed","PA 4.18 Ip-PA 4.2 Ihed","PA4","Ip",1,8,"",6,"113AIp","43262.0",NA,NA,NA,"N","Y",153
+"1",114,"114","PA4.15Ip","Alone","NA","NA","PA4","Ip",1,5,"",7,"114Ip","43258.0",NA,NA,NA,"N","Y",75
+"1",118,"118","PA4.14Ip","Inter","PA 4.7 Ihed","PA 4.14 Ip-PA 4.7 Ihed","PA4","Ip",1,4,"",8,"118Ip","43258.0",NA,NA,NA,"N","Y",35
+"1",119,"119","PA4.15Ip","Inter","PA 4.9 Ihed","PA 4.15 Ip-PA 4.9 Ihed","PA4","Ip",1,5,"",9,"119Ip","43262.0",NA,NA,NA,"N","Y",23
+"1",125,"125A","PA4.18Ip","Inter","PA 4.15 Ihed","PA 4.18 Ip-PA 4.15 Ihed","PA4","Ip",1,4,"",11,"125AIp","43262.0",NA,NA,NA,"N","Y",39
+"1",127,"127A","PA4.18Ip","Inter","PA 4.15 Ihed","PA 4.18 Ip-PA 4.15 Ihed","PA4","Ip",1,7,"",12,"127AIp","43262.0",NA,NA,NA,"N","Y",11
+"1",128,"128","PA4.17Ip","Inter","PA 4.12 Ihed","PA 4.17 Ip-PA 4.12 Ihed","PA4","Ip",1,7,"",13,"128Ip","43258.0",NA,NA,NA,"N","Y",34
+"1",129,"129A","PA4.17Ip","Inter","PA 4.2 Ihed","PA 4.17 Ip-PA 4.2 Ihed","PA4","Ip",1,5,"",14,"129AIp","43262.0",NA,NA,NA,"N","Y",56
+"1",130,"130","PA4.15Ip","Inter","PA 4.7 Ihed","PA 4.15 Ip-PA 4.7 Ihed","PA4","Ip",1,5,"",15,"130Ip","43262.0",NA,NA,NA,"N","Y",56
+"1",131,"131","PA4.17Ip","Inter","PA 4.9 Ihed","PA 4.17 Ip-PA 4.9 Ihed","PA4","Ip",1,5,"",16,"131Ip","43258.0",NA,NA,NA,"N","Y",270
+"1",131,"131A","PA4.14Ip","Inter","PA 4.15 Ihed","PA 4.14 Ip-PA 4.15 Ihed","PA4","Ip",1,5,"",17,"131AIp","43262.0",NA,NA,NA,"N","Y",40
+"1",133,"133","PA4.1Ip","Inter","PA 4.12 Ihed","PA 4.1 Ip-PA 4.12 Ihed","PA4","Ip",1,6,"",18,"133Ip","43262.0",NA,NA,NA,"N","Y",105
+"1",134,"134","PA4.19Ip","Inter","PA 4.7 Ihed","PA 4.19 Ip-PA 4.7 Ihed","PA4","Ip",1,6,"",19,"134Ip","43258.0",NA,NA,NA,"N","Y",117
+"1",135,"135","PA4.14Ip","Inter","PA 4.3 Ihed","PA 4.14 Ip-PA 4.3 Ihed","PA4","Ip",1,7,"",20,"135Ip","43262.0",NA,NA,NA,"N","Y",199
+"1",136,"136","PA4.2Ip","Alone","NA","NA","PA4","Ip",1,6,"",21,"136Ip","43258.0",NA,NA,NA,"N","Y",93
+"1",137,"137A","PA4.13Ip","Inter","PA 4.15 Ihed","PA 4.13 Ip-PA 4.15 Ihed","PA4","Ip",1,8,"",22,"137AIp","43262.0",NA,NA,NA,"Y","Y",40
+"1",138,"138","PA4.11Ip","Alone","NA","NA","PA4","Ip",1,7,"",23,"138Ip","43258.0",NA,NA,NA,"N","Y",56
+"1",139,"139A","PA4.11Ip","Inter","PA 4.2 Ihed","PA 4.11 Ip-PA 4.2 Ihed","PA4","Ip",1,6,"",24,"139AIp","43262.0",NA,NA,NA,"N","Y",63
+"1",140,"140","PA4.13Ip","Inter","PA 4.3 Ihed","PA 4.13 Ip-PA 4.3 Ihed","PA4","Ip",1,6,"",25,"140Ip","43258.0",NA,NA,NA,"N","Y",92
+"1",142,"142","PA4.16Ip","Inter","PA 4.3 Ihed","PA 4.16 Ip-PA 4.3 Ihed","PA4","Ip",1,4,"",26,"142Ip","43258.0",NA,NA,NA,"N","Y",51
+"1",145,"145","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",1,6,"",27,"145Ip","43258.0",NA,NA,NA,"N","Y",130
+"1",145,"145A","PA4.16Ip","Inter","PA 4.15 Ihed","PA 4.16 Ip-PA 4.15 Ihed","PA4","Ip",1,7,"",28,"145AIp","43262.0",NA,NA,NA,"N","Y",78
+"1",146,"146","PA4.2Ip","Inter","PA 4.12 Ihed","PA 4.2 Ip-PA 4.12 Ihed","PA4","Ip",1,5,"",29,"146Ip","43258.0",NA,NA,NA,"N","Y",50
+"1",147,"147","PA4.15Ip","Inter","PA 4.3 Ihed","PA 4.15 Ip-PA 4.3 Ihed","PA4","Ip",1,6,"",30,"147Ip","43258.0",NA,NA,NA,"N","Y",51
+"1",15,"15A","PA4.17Ip","Inter","PA 4.15 Ihed","PA 4.17 Ip-PA 4.15 Ihed","PA4","Ip",1,15,"",35,"15AIp","43262.0",NA,NA,NA,"N","Y",34
+"1",151,"151","PA4.14Ip","Alone","NA","NA","PA4","Ip",1,9,"",31,"151Ip","43258.0",NA,NA,NA,"N","Y",383
+"1",153,"153","PA4.1Ip","Alone","NA","NA","PA4","Ip",1,10,"",32,"153Ip","43258.0",NA,NA,NA,"N","Y",321
+"1",155,"155","PA4.15Ip","Inter","PA 4.12 Ihed","PA 4.15 Ip-PA 4.12 Ihed","PA4","Ip",1,6,"",33,"155Ip",NA,"LG",NA,NA,"N","Y",136
+"1",157,"157A","PA4.11Ip","Inter","PA 4.15 Ihed","PA 4.11 Ip-PA 4.15 Ihed","PA4","Ip",1,7,"",34,"157AIp","43262.0",NA,NA,NA,"N","Y",58
+"1",161,"161","PA4.15Ip","Inter","PA 4.12 Ihed","PA 4.15 Ip-PA 4.12 Ihed","PA4","Ip",1,7,"",36,"161Ip","43258.0",NA,NA,NA,"N","Y",13
+"1",169,"169","PA4.18Ip","Inter","PA 4.9 Ihed","PA 4.18 Ip-PA 4.9 Ihed","PA4","Ip",1,8,"",37,"169Ip","43262.0",NA,NA,NA,"N","Y",61
+"1",171,"171","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",1,8,"",38,"171Ip","43262.0",NA,NA,NA,"N","Y",151
+"1",172,"172","PA4.15Ip","Alone","NA","NA","PA4","Ip",1,11,"",39,"172Ip","43262.0",NA,NA,NA,"N","Y",256
+"1",173,"173","PA4.16Ip","Inter","PA 4.12 Ihed","PA 4.16 Ip-PA 4.12 Ihed","PA4","Ip",1,8,"",40,"173Ip","43262.0",NA,NA,NA,"N","Y",299
+"1",174,"174","PA4.15Ip","Inter","PA 4.3 Ihed","PA 4.15 Ip-PA 4.3 Ihed","PA4","Ip",1,7,"",41,"174Ip","43262.0",NA,NA,NA,"N","Y",168
+"1",175,"175","PA4.11Ip","Inter","PA 4.9 Ihed","PA 4.11 Ip-PA 4.9 Ihed","PA4","Ip",1,8,"",42,"175Ip","43262.0",NA,NA,NA,"N","Y",163
+"1",180,"180","PA4.2Ip","Inter","PA 4.3 Ihed","PA 4.2 Ip-PA 4.3 Ihed","PA4","Ip",1,10,"",44,"180Ip","43258.0",NA,NA,NA,"N","Y",242
+"1",184,"184","PA4.14Ip","Inter","PA 4.3 Ihed","PA 4.14 Ip-PA 4.3 Ihed","PA4","Ip",1,11,"",45,"184Ip","43258.0",NA,NA,NA,"N","Y",333
+"1",19,"19","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",1,20,"",46,"19Ip","43258.0",NA,NA,NA,"N","Y",186
+"1",19,"19A","PA4.19Ip","Inter","PA 4.15 Ihed","PA 4.19 Ip-PA 4.15 Ihed","PA4","Ip",1,13,"",50,"19AIp","43262.0",NA,NA,NA,"N","Y",175
+"1",193,"193","PA4.2Ip","Inter","PA 4.3 Ihed","PA 4.2 Ip-PA 4.3 Ihed","PA4","Ip",1,4,"",48,"193Ip","43262.0",NA,NA,NA,"N","Y",11
+"1",197,"197","PA4.11Ip","Inter","PA 4.9 Ihed","PA 4.11 Ip-PA 4.9 Ihed","PA4","Ip",1,4,"",49,"197Ip","43262.0",NA,NA,NA,"N","Y",71
+"1",203,"203","PA4.17Ip","Alone","NA","NA","PA4","Ip",1,7,"",53,"203Ip","43262.0",NA,NA,NA,"N","Y",202
+"1",204,"204","PA4.17Ip","Alone","NA","NA","PA4","Ip",1,7,"",54,"204Ip","43258.0",NA,NA,NA,"N","Y",79
+"1",206,"206","PA4.16Ip","Inter","PA 4.3 Ihed","PA 4.16 Ip-PA 4.3 Ihed","PA4","Ip",1,7,"",55,"206Ip","43258.0",NA,NA,NA,"Y","Y",53
+"1",207,"207","PA4.17Ip","Inter","PA 4.3 Ihed","PA 4.17 Ip-PA 4.3 Ihed","PA4","Ip",1,7,"",56,"207Ip","43258.0",NA,NA,NA,"N","Y",78
+"1",213,"213","PA4.16Ip","Alone","NA","NA","PA4","Ip",1,8,"",57,"213Ip","43258.0",NA,NA,NA,"N","Y",172
+"1",219,"219","PA4.11Ip","Inter","PA 4.12 Ihed","PA 4.11 Ip-PA 4.12 Ihed","PA4","Ip",1,4,"",58,"219Ip","43262.0",NA,NA,NA,"N","Y",151
+"1",22,"22","PA4.17Ip","Inter","PA 4.12 Ihed","PA 4.17 Ip-PA 4.12 Ihed","PA4","Ip",1,12,"",59,"22Ip","43258.0",NA,NA,NA,"N","Y",111
+"1",223,"223","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",1,6,"",60,"223Ip","43258.0",NA,NA,NA,"N","Y",658
+"1",224,"224","PA4.19Ip","Inter","PA 4.3 Ihed","PA 4.19 Ip-PA 4.3 Ihed","PA4","Ip",1,6,"",61,"224Ip","43262.0",NA,NA,NA,"N","Y",252
+"1",226,"226","PA4.15Ip","Inter","PA 4.9 Ihed","PA 4.15 Ip-PA 4.9 Ihed","PA4","Ip",1,9,"",62,"226Ip","43258.0",NA,NA,NA,"Y","Y",168
+"1",228,"228","PA4.13Ip","Alone","NA","NA","PA4","Ip",1,6,"",63,"228Ip","43262.0",NA,NA,NA,"N","Y",159
+"1",234,"234","PA4.16Ip","Alone","NA","NA","PA4","Ip",1,5,"",64,"234Ip","43262.0",NA,NA,NA,"Y","Y",89
+"1",241,"241","PA4.15Ip","Inter","PA 4.7 Ihed","PA 4.15 Ip-PA 4.7 Ihed","PA4","Ip",1,9,"",65,"241Ip","43258.0",NA,NA,NA,"N","Y",198
+"1",244,"244","PA4.2Ip","Inter","PA 4.7 Ihed","PA 4.2 Ip-PA 4.7 Ihed","PA4","Ip",1,8,"",66,"244Ip","43258.0",NA,NA,NA,"N","Y",208
+"1",245,"245","PA4.19Ip","Inter","PA 4.12 Ihed","PA 4.19 Ip-PA 4.12 Ihed","PA4","Ip",1,5,"",67,"245Ip","43258.0",NA,NA,NA,"N","Y",138
+"1",246,"246","PA4.18Ip","Inter","PA 4.7 Ihed","PA 4.18 Ip-PA 4.7 Ihed","PA4","Ip",1,6,"",68,"246Ip","43258.0",NA,NA,NA,"N","Y",131
+"1",30,"30","PA4.19Ip","Alone","NA","NA","PA4","Ip",1,8,"",86,"30Ip","43264.0",NA,NA,NA,"N","Y",114
+"1",33,"33A","PA4.13Ip","Inter","PA 4.2 Ihed","PA 4.13 Ip-PA 4.2 Ihed","PA4","Ip",1,8,"",103,"33AIp","43262.0",NA,NA,NA,"N","Y",47
+"1",35,"35A","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",1,8,"",117,"35AIp","43262.0",NA,NA,NA,"N","Y",158
+"1",36,"36","PA4.1Ip","Inter","PA 4.7 Ihed","PA 4.1 Ip-PA 4.7 Ihed","PA4","Ip",1,6,"",118,"36Ip","43258.0",NA,NA,NA,"N","Y",73
+"1",38,"38","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",1,8,"",128,"38Ip","43258.0",NA,NA,NA,"N","Y",252
+"1",39,"39","PA4.11Ip","Inter","PA 4.3 Ihed","PA 4.11 Ip-PA 4.3 Ihed","PA4","Ip",1,9,"",135,"39Ip","43262.0",NA,NA,NA,"N","Y",141
+"1",41,"41","PA4.17Ip","Inter","PA 4.7 Ihed","PA 4.17 Ip-PA 4.7 Ihed","PA4","Ip",1,7,"",146,"41Ip","43262.0",NA,NA,NA,"N","Y",104
+"1",44,"44","PA4.14Ip","Alone","NA","NA","PA4","Ip",1,9,"",163,"44Ip","43262.0",NA,NA,NA,"N","Y",241
+"1",45,"45A","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",1,13,"",175,"45AIp","43262.0",NA,NA,NA,"N","Y",94
+"1",46,"46","PA4.13Ip","Inter","PA 4.9 Ihed","PA 4.13 Ip-PA 4.9 Ihed","PA4","Ip",1,7,"",176,"46Ip","43262.0",NA,NA,NA,"N","Y",299
+"1",47,"47A","PA4.14Ip","Inter","PA 4.2 Ihed","PA 4.14 Ip-PA 4.2 Ihed","PA4","Ip",1,9,"",185,"47AIp","43262.0",NA,NA,NA,"N","Y",294
+"1",5,"5A","PA4.11Ip","Inter","PA 4.15 Ihed","PA 4.11 Ip-PA 4.15 Ihed","PA4","Ip",1,9,"",220,"5AIp","43262.0",NA,NA,NA,"N","Y",53
+"1",52,"52","PA4.17Ip","Inter","PA 4.9 Ihed","PA 4.17 Ip-PA 4.9 Ihed","PA4","Ip",1,10,"",194,"52Ip","43258.0",NA,NA,NA,"N","Y",208
+"1",53,"53","PA4.16Ip","Alone","NA","NA","PA4","Ip",1,6,"",197,"53Ip","43258.0",NA,NA,NA,"N","Y",150
+"1",58,"58","PA4.11Ip","Inter","PA 4.7 Ihed","PA 4.11 Ip-PA 4.7 Ihed","PA4","Ip",1,17,"",212,"58Ip","43262.0",NA,NA,NA,"N","Y",234
+"1",61,"61A","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",1,14,"",232,"61AIp","43262.0",NA,NA,NA,"N","Y",274
+"1",65,"65A","PA4.1Ip","Inter","PA 4.2 Ihed","PA 4.1 Ip-PA 4.2 Ihed","PA4","Ip",1,9,"",249,"65AIp","43262.0",NA,NA,NA,"N","Y",201
+"1",69,"69A","PA4.2Ip","Inter","PA 4.2 Ihed","PA 4.2 Ip-PA 4.2 Ihed","PA4","Ip",1,10,"",279,"69AIp","43262.0",NA,NA,NA,"N","Y",294
+"1",70,"70","PA4.15Ip","Alone","NA","NA","PA4","Ip",1,9,"",280,"70Ip","43258.0",NA,NA,NA,"Y","Y",259
+"1",71,"71","PA4.14Ip","Alone","NA","NA","PA4","Ip",1,16,"",286,"71Ip","43258.0",NA,NA,NA,"Y","Y",96
+"1",72,"72","PA4.14Ip","Inter","PA 4.12 Ihed","PA 4.14 Ip-PA 4.12 Ihed","PA4","Ip",1,9,"",293,"72Ip","43258.0",NA,NA,NA,"N","Y",146
+"1",73,"73","PA4.14Ip","Inter","PA 4.9 Ihed","PA 4.14 Ip-PA 4.9 Ihed","PA4","Ip",1,6,"",299,"73Ip","43258.0",NA,NA,NA,"N","Y",146
+"1",73,"73A","PA4.16Ip","Inter","PA 4.15 Ihed","PA 4.16 Ip-PA 4.15 Ihed","PA4","Ip",1,5,"",304,"73AIp","43262.0",NA,NA,NA,"N","Y",80
+"1",74,"74","PA4.11Ip","Inter","PA 4.3 Ihed","PA 4.11 Ip-PA 4.3 Ihed","PA4","Ip",1,8,"",305,"74Ip","43258.0",NA,NA,NA,"N","Y",106
+"1",75,"75A","PA4.15Ip","Inter","PA 4.15 Ihed","PA 4.15 Ip-PA 4.15 Ihed","PA4","Ip",1,9,"",317,"75AIp","43262.0",NA,NA,NA,"N","Y",230
+"1",77,"77","PA4.2Ip","Inter","PA 4.7 Ihed","PA 4.2 Ip-PA 4.7 Ihed","PA4","Ip",1,7,"",326,"77Ip","43262.0",NA,NA,NA,"N","Y",214
+"1",78,"78","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",1,10,"",328,"78Ip","43258.0",NA,NA,NA,"Y","Y",71
+"1",79,"79A","PA4.13Ip","Inter","PA 4.2 Ihed","PA 4.13 Ip-PA 4.2 Ihed","PA4","Ip",1,5,"",342,"79AIp","43262.0",NA,NA,NA,"N","Y",67
+"1",80,"80","PA4.14Ip","Inter","PA 4.9 Ihed","PA 4.14 Ip-PA 4.9 Ihed","PA4","Ip",1,5,"",343,"80Ip","43258.0",NA,NA,NA,"N","Y",96
+"1",82,"82","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",1,16,"",358,"82Ip","43258.0",NA,NA,NA,"N","Y",172
+"1",85,"85A","PA4.17Ip","Inter","PA 4.2 Ihed","PA 4.17 Ip-PA 4.2 Ihed","PA4","Ip",1,7,"",385,"85AIp","43264.0",NA,NA,NA,"N","Y",145
+"1",87,"87","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",1,9,"",389,"87Ip","43258.0",NA,NA,NA,"N","Y",175
+"1",88,"88","PA4.16Ip","Inter","PA 4.7 Ihed","PA 4.16 Ip-PA 4.7 Ihed","PA4","Ip",1,15,"",394,"88Ip","43258.0",NA,NA,NA,"N","Y",149
+"1",9,"9A","PA4.14Ip","Inter","PA 4.2 Ihed","PA 4.14 Ip-PA 4.2 Ihed","PA4","Ip",1,9,"",438,"9AIp","43262.0",NA,NA,NA,"N","Y",22
+"1",90,"90","PA4.2Ip","Inter","PA 4.12 Ihed","PA 4.2 Ip-PA 4.12 Ihed","PA4","Ip",1,10,"",404,"90Ip","43262.0",NA,NA,NA,"N","Y",262
+"1",96,"96","PA4.16Ip","Inter","PA 4.7 Ihed","PA 4.16 Ip-PA 4.7 Ihed","PA4","Ip",1,8,"",420,"96Ip","43262.0",NA,NA,NA,"N","Y",164
+"1",97,"97A","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",1,5,"",430,"97AIp","43262.0",NA,NA,NA,"Y","Y",114
+"1",99,"99","PA4.11Ip","Alone","NA","NA","PA4","Ip",1,11,"",431,"99Ip","43258.0",NA,NA,NA,"N","Y",143
+"1",99,"99A","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",1,10,"",437,"99AIp","43262.0",NA,NA,NA,"N","Y",71
+"2",255,"255","PA4.13Ip","Inter","PA 4.7 Ihed","PA 4.13 Ip-PA 4.7 Ihed","PA4","Ip",2,9,"",69,"255Ip","43258.0",NA,NA,NA,"N","Y",289
+"2",256,"256","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",2,7,"",70,"256Ip","43258.0",NA,NA,NA,"N","Y",276
+"2",259,"259","PA4.1Ip","Inter","PA 4.12 Ihed","PA 4.1 Ip-PA 4.12 Ihed","PA4","Ip",2,9,"",71,"259Ip","43258.0",NA,NA,NA,"N","Y",241
+"2",260,"260","PA4.15Ip","Inter","PA 4.12 Ihed","PA 4.15 Ip-PA 4.12 Ihed","PA4","Ip",2,7,"",72,"260Ip","43258.0",NA,NA,NA,"N","Y",316
+"2",261,"261","PA4.18Ip","Inter","PA 4.9 Ihed","PA 4.18 Ip-PA 4.9 Ihed","PA4","Ip",2,5,"",73,"261Ip","43258.0",NA,NA,NA,"N","Y",112
+"2",264,"264","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",2,8,"",74,"264Ip","43258.0",NA,NA,NA,"N","Y",172
+"2",265,"265","PA4.15Ip","Alone","NA","NA","PA4","Ip",2,8,"",75,"265Ip","43258.0",NA,NA,NA,"N","Y",95
+"2",270,"270","PA4.16Ip","Alone","NA","NA","PA4","Ip",2,5,"",78,"270Ip","43258.0",NA,NA,NA,"N","Y",111
+"2",282,"282","PA4.19Ip","Inter","PA 4.7 Ihed","PA 4.19 Ip-PA 4.7 Ihed","PA4","Ip",2,8,"",80,"282Ip","43258.0",NA,NA,NA,"N","Y",121
+"2",284,"284","PA4.16Ip","Inter","PA 4.7 Ihed","PA 4.16 Ip-PA 4.7 Ihed","PA4","Ip",2,6,"",81,"284Ip","43258.0",NA,NA,NA,"N","Y",57
+"2",286,"286","PA4.11Ip","Inter","PA 4.9 Ihed","PA 4.11 Ip-PA 4.9 Ihed","PA4","Ip",2,14,"",82,"286Ip","43258.0",NA,NA,NA,"N","Y",204
+"2",297,"297","PA4.2Ip","Inter","PA 4.12 Ihed","PA 4.2 Ip-PA 4.12 Ihed","PA4","Ip",2,5,"",84,"297Ip","43258.0",NA,NA,NA,"N","Y",54
+"2",300,"300","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",2,6,"",87,"300Ip","43258.0",NA,NA,NA,"N","Y",88
+"2",305,"305","PA4.14Ip","Alone","NA","NA","PA4","Ip",2,11,"",88,"305Ip","43258.0",NA,NA,NA,"N","Y",1128
+"2",306,"306","PA4.1Ip","Alone","NA","NA","PA4","Ip",2,16,"",89,"306Ip","43258.0",NA,NA,NA,"N","Y",596
+"2",308,"308","PA4.16Ip","Inter","PA 4.3 Ihed","PA 4.16 Ip-PA 4.3 Ihed","PA4","Ip",2,5,"",90,"308Ip","43258.0",NA,NA,NA,"N","Y",577
+"2",314,"314","PA4.14Ip","Inter","PA 4.3 Ihed","PA 4.14 Ip-PA 4.3 Ihed","PA4","Ip",2,5,"",93,"314Ip","43262.0",NA,NA,NA,"N","Y",84
+"2",315,"315","PA4.15Ip","Inter","PA 4.3 Ihed","PA 4.15 Ip-PA 4.3 Ihed","PA4","Ip",2,9,"",94,"315Ip","43258.0",NA,NA,NA,"N","Y",149
+"2",322,"322","PA4.14Ip","Inter","PA 4.9 Ihed","PA 4.14 Ip-PA 4.9 Ihed","PA4","Ip",2,9,"",95,"322Ip","43258.0",NA,NA,NA,"N","Y",324
+"2",324,"324","PA4.18Ip","Alone","NA","NA","PA4","Ip",2,9,"",96,"324Ip","43258.0",NA,NA,NA,"N","Y",357
+"2",328,"328","PA4.13Ip","Inter","PA 4.12 Ihed","PA 4.13 Ip-PA 4.12 Ihed","PA4","Ip",2,6,"",97,"328Ip","43258.0",NA,NA,NA,"N","Y",155
+"2",329,"329","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",2,6,"",98,"329Ip","43258.0",NA,NA,NA,"N","Y",378
+"2",330,"330","PA4.15Ip","Alone","NA","NA","PA4","Ip",2,6,"",99,"330Ip","43258.0",NA,NA,NA,"N","Y",444
+"2",332,"332","PA4.17Ip","Inter","PA 4.9 Ihed","PA 4.17 Ip-PA 4.9 Ihed","PA4","Ip",2,8,"",100,"332Ip","43262.0",NA,NA,NA,"N","Y",207
+"2",334,"334","PA4.2Ip","Inter","PA 4.7 Ihed","PA 4.2 Ip-PA 4.7 Ihed","PA4","Ip",2,12,"",101,"334Ip","43262.0",NA,NA,NA,"N","Y",139
+"2",342,"342","PA4.2Ip","Inter","PA 4.3 Ihed","PA 4.2 Ip-PA 4.3 Ihed","PA4","Ip",2,8,"",104,"342Ip","43262.0",NA,NA,NA,"N","Y",340
+"2",343,"343","PA4.19Ip","Inter","PA 4.12 Ihed","PA 4.19 Ip-PA 4.12 Ihed","PA4","Ip",2,7,"",105,"343Ip","43262.0",NA,NA,NA,"N","Y",180
+"2",346,"346","PA4.11Ip","Inter","PA 4.9 Ihed","PA 4.11 Ip-PA 4.9 Ihed","PA4","Ip",2,6,"",106,"346Ip","43262.0",NA,NA,NA,"N","Y",116
+"2",347,"347","PA4.11Ip","Alone","NA","NA","PA4","Ip",2,8,"",107,"347Ip","43262.0",NA,NA,NA,"N","Y",84
+"2",349,"349","PA4.19Ip","Inter","PA 4.12 Ihed","PA 4.19 Ip-PA 4.12 Ihed","PA4","Ip",2,13,"",108,"349Ip","43262.0",NA,NA,NA,"N","Y",398
+"2",349,"349A","PA4.15Ip","Inter","PA 4.15 Ihed","PA 4.15 Ip-PA 4.15 Ihed","PA4","Ip",2,12,"",109,"349AIp","43262.0",NA,NA,NA,"N","Y",481
+"2",350,"350","PA4.13Ip","Alone","NA","NA","PA4","Ip",2,5,"",110,"350Ip","43262.0",NA,NA,NA,"N","Y",134
+"2",351,"351","PA4.17Ip","Inter","PA 4.3 Ihed","PA 4.17 Ip-PA 4.3 Ihed","PA4","Ip",2,7,"",111,"351Ip","43258.0",NA,NA,NA,"N","Y",95
+"2",352,"352","PA4.16Ip","Inter","PA 4.9 Ihed","PA 4.16 Ip-PA 4.9 Ihed","PA4","Ip",2,17,"",112,"352Ip","43258.0",NA,NA,NA,"N","Y",153
+"2",353,"353","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",2,8,"",113,"353Ip","43262.0",NA,NA,NA,"N","Y",139
+"2",355,"355","PA4.2Ip","Alone","NA","NA","PA4","Ip",2,7,"",114,"355Ip","43262.0",NA,NA,NA,"N","Y",119
+"2",355,"355A","PA4.2Ip","Inter","PA 4.2 Ihed","PA 4.2 Ip-PA 4.2 Ihed","PA4","Ip",2,13,"",115,"355AIp","43262.0",NA,NA,NA,"N","Y",149
+"2",359,"359A","PA4.2Ip","Inter","PA 4.2 Ihed","PA 4.2 Ip-PA 4.2 Ihed","PA4","Ip",2,6,"",116,"359AIp","43262.0",NA,NA,NA,"N","Y",121
+"2",361,"361A","PA4.17Ip","Inter","PA 4.2 Ihed","PA 4.17 Ip-PA 4.2 Ihed","PA4","Ip",2,7,"",119,"361AIp","43262.0",NA,NA,NA,"N","Y",95
+"2",363,"363A","PA4.17Ip","Inter","PA 4.15 Ihed","PA 4.17 Ip-PA 4.15 Ihed","PA4","Ip",2,5,"",120,"363AIp","43262.0",NA,NA,NA,"N","Y",42
+"2",367,"367A","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",2,6,"",121,"367AIp","43262.0",NA,"Y",NA,"N","Y",104
+"2",371,"371A","PA4.19Ip","Inter","PA 4.15 Ihed","PA 4.19 Ip-PA 4.15 Ihed","PA4","Ip",2,9,"",123,"371AIp","43262.0",NA,NA,NA,"N","Y",165
+"2",373,"373","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",2,5,"",124,"373Ip","43262.0",NA,NA,NA,"N","Y",60
+"2",375,"375","PA4.17Ip","Inter","PA 4.9 Ihed","PA 4.17 Ip-PA 4.9 Ihed","PA4","Ip",2,8,"",125,"375Ip","43262.0",NA,NA,NA,"N","Y",45
+"2",380,"380","PA4.16Ip","Inter","PA 4.3 Ihed","PA 4.16 Ip-PA 4.3 Ihed","PA4","Ip",2,6,"",129,"380Ip","43262.0",NA,NA,NA,"N","Y",51
+"2",381,"381A","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",2,6,"",130,"381AIp","43262.0",NA,NA,NA,"N","Y",11
+"2",385,"385","PA4.18Ip","Inter","PA 4.9 Ihed","PA 4.18 Ip-PA 4.9 Ihed","PA4","Ip",2,5,"",131,"385Ip","43262.0",NA,NA,NA,"N","Y",96
+"2",385,"385A","PA4.1Ip","Inter","PA 4.2 Ihed","PA 4.1 Ip-PA 4.2 Ihed","PA4","Ip",2,7,"",132,"385AIp","43262.0",NA,NA,NA,"N","Y",88
+"2",387,"387A","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",2,6,"",134,"387AIp","43262.0",NA,NA,NA,"N","Y",74
+"2",392,"392","PA4.15Ip","Inter","PA 4.9 Ihed","PA 4.15 Ip-PA 4.9 Ihed","PA4","Ip",2,12,"",137,"392Ip","43258.0",NA,NA,NA,"N","Y",200
+"2",393,"393","PA4.13Ip","Inter","PA 4.9 Ihed","PA 4.13 Ip-PA 4.9 Ihed","PA4","Ip",2,9,"",138,"393Ip","43262.0",NA,NA,NA,"N","Y",160
+"2",393,"393A","PA4.16Ip","Inter","PA 4.15 Ihed","PA 4.16 Ip-PA 4.15 Ihed","PA4","Ip",2,17,"",139,"393AIp","43262.0",NA,NA,NA,"N","Y",109
+"2",401,"401","PA4.11Ip","Inter","PA 4.7 Ihed","PA 4.11 Ip-PA 4.7 Ihed","PA4","Ip",2,5,"",140,"401Ip","43262.0",NA,NA,NA,"N","Y",48
+"2",401,"401A","PA4.14Ip","Inter","PA 4.15 Ihed","PA 4.14 Ip-PA 4.15 Ihed","PA4","Ip",2,7,"",141,"401AIp","43262.0",NA,NA,NA,"N","Y",49
+"2",403,"403A","PA4.13Ip","Inter","PA 4.15 Ihed","PA 4.13 Ip-PA 4.15 Ihed","PA4","Ip",2,7,"",142,"403AIp","43262.0",NA,NA,NA,"N","Y",211
+"2",405,"405A","PA4.11Ip","Inter","PA 4.2 Ihed","PA 4.11 Ip-PA 4.2 Ihed","PA4","Ip",2,5,"",143,"405AIp","43262.0",NA,NA,NA,"N","Y",59
+"2",406,"406","PA4.18Ip","Inter","PA 4.7 Ihed","PA 4.18 Ip-PA 4.7 Ihed","PA4","Ip",2,9,"",144,"406Ip","43258.0",NA,NA,NA,"N","Y",126
+"2",410,"410","PA4.11Ip","Inter","PA 4.7 Ihed","PA 4.11 Ip-PA 4.7 Ihed","PA4","Ip",2,7,"",147,"410Ip","43262.0",NA,NA,NA,"N","Y",88
+"2",411,"411A","PA4.13Ip","Inter","PA 4.2 Ihed","PA 4.13 Ip-PA 4.2 Ihed","PA4","Ip",2,5,"",148,"411AIp","43262.0",NA,NA,NA,"N","Y",142
+"2",421,"421","PA4.18Ip","Inter","PA 4.3 Ihed","PA 4.18 Ip-PA 4.3 Ihed","PA4","Ip",2,12,"",150,"421Ip","43262.0",NA,NA,NA,"N","Y",193
+"2",423,"423","PA4.11Ip","Inter","PA 4.12 Ihed","PA 4.11 Ip-PA 4.12 Ihed","PA4","Ip",2,7,"",151,"423Ip","43262.0",NA,NA,NA,"N","Y",91
+"2",425,"425","PA4.11Ip","Alone","NA","NA","PA4","Ip",2,14,"",152,"425Ip","43262.0",NA,NA,NA,"N","Y",384
+"2",426,"426","PA4.18Ip","Inter","PA 4.7 Ihed","PA 4.18 Ip-PA 4.7 Ihed","PA4","Ip",2,8,"",153,"426Ip","43258.0",NA,NA,NA,"Y","Y",85
+"2",427,"427A","PA4.18Ip","Inter","PA 4.2 Ihed","PA 4.18 Ip-PA 4.2 Ihed","PA4","Ip",2,7,"",154,"427AIp","43262.0",NA,NA,NA,"N","Y",83
+"2",428,"428","PA4.16Ip","Inter","PA 4.12 Ihed","PA 4.16 Ip-PA 4.12 Ihed","PA4","Ip",2,7,"",155,"428Ip","43262.0",NA,NA,NA,"N","Y",198
+"2",429,"429","PA4.15Ip","Inter","PA 4.7 Ihed","PA 4.15 Ip-PA 4.7 Ihed","PA4","Ip",2,9,"",156,"429Ip","43262.0",NA,NA,NA,"N","Y",156
+"2",431,"431A","PA4.17Ip","Inter","PA 4.2 Ihed","PA 4.17 Ip-PA 4.2 Ihed","PA4","Ip",2,14,"",157,"431AIp","43262.0",NA,NA,NA,"N","Y",248
+"2",434,"434","PA4.13Ip","Inter","PA 4.12 Ihed","PA 4.13 Ip-PA 4.12 Ihed","PA4","Ip",2,7,"",158,"434Ip","43262.0",NA,NA,NA,"N","Y",13
+"2",435,"435","PA4.15Ip","Alone","NA","NA","PA4","Ip",2,9,"",159,"435Ip","43262.0",NA,NA,NA,"Y","Y",47
+"2",435,"435A","PA4.11Ip","Inter","PA 4.15 Ihed","PA 4.11 Ip-PA 4.15 Ihed","PA4","Ip",2,13,"",160,"435AIp","43262.0",NA,NA,NA,"N","Y",374
+"2",436,"436","PA4.13Ip","Inter","PA 4.9 Ihed","PA 4.13 Ip-PA 4.9 Ihed","PA4","Ip",2,6,"",161,"436Ip","43262.0",NA,NA,NA,"N","Y",207
+"2",437,"437A","PA4.13Ip","Inter","PA 4.2 Ihed","PA 4.13 Ip-PA 4.2 Ihed","PA4","Ip",2,8,"",162,"437AIp","43262.0",NA,NA,NA,"N","Y",27
+"2",441,"441A","PA4.19Ip","Inter","PA 4.2 Ihed","PA 4.19 Ip-PA 4.2 Ihed","PA4","Ip",2,9,"",165,"441AIp","43262.0",NA,NA,NA,"N","Y",107
+"2",445,"445A","PA4.1Ip","Inter","PA 4.2 Ihed","PA 4.1 Ip-PA 4.2 Ihed","PA4","Ip",2,6,"",166,"445AIp","43262.0",NA,NA,NA,"N","Y",155
+"2",448,"448","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",2,7,"",167,"448Ip","43262.0",NA,NA,NA,"N","Y",239
+"2",449,"449","PA4.17Ip","Alone","NA","NA","PA4","Ip",2,7,"",168,"449Ip","43262.0",NA,NA,NA,"N","Y",193
+"2",451,"451A","PA4.14Ip","Inter","PA 4.2 Ihed","PA 4.14 Ip-PA 4.2 Ihed","PA4","Ip",2,5,"",169,"451AIp","43262.0",NA,NA,NA,"N","Y",61
+"2",452,"452","PA4.2Ip","Inter","PA 4.7 Ihed","PA 4.2 Ip-PA 4.7 Ihed","PA4","Ip",2,6,"",170,"452Ip","43262.0",NA,NA,NA,"N","Y",77
+"2",454,"454","PA4.11Ip","Inter","PA 4.3 Ihed","PA 4.11 Ip-PA 4.3 Ihed","PA4","Ip",2,5,"",171,"454Ip","43262.0",NA,NA,NA,"N","Y",48
+"2",455,"455","PA4.17Ip","Inter","PA 4.7 Ihed","PA 4.17 Ip-PA 4.7 Ihed","PA4","Ip",2,7,"",172,"455Ip","43262.0",NA,NA,NA,"N","Y",142
+"2",459,"459","PA4.11Ip","Inter","PA 4.3 Ihed","PA 4.11 Ip-PA 4.3 Ihed","PA4","Ip",2,6,"",173,"459Ip","43262.0",NA,NA,NA,"N","Y",100
+"2",459,"459A","PA4.15Ip","Inter","PA 4.2 Ihed","PA 4.15 Ip-PA 4.2 Ihed","PA4","Ip",2,5,"",174,"459AIp","43262.0",NA,NA,NA,"N","Y",23
+"2",465,"465A","PA4.19Ip","Inter","PA 4.15 Ihed","PA 4.19 Ip-PA 4.15 Ihed","PA4","Ip",2,6,"",178,"465AIp","43262.0",NA,NA,NA,"N","Y",178
+"2",469,"469A","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",2,7,"",179,"469AIp","43262.0",NA,NA,NA,"N","Y",91
+"2",471,"471A","PA4.16Ip","Inter","PA 4.15 Ihed","PA 4.16 Ip-PA 4.15 Ihed","PA4","Ip",2,5,"",181,"471AIp","43262.0",NA,NA,NA,"N","Y",51
+"2",476,"476","PA4.14Ip","Inter","PA 4.12 Ihed","PA 4.14 Ip-PA 4.12 Ihed","PA4","Ip",2,7,"",183,"476Ip","43262.0",NA,NA,NA,"N","Y",29
+"2",479,"479A","PA4.11Ip","Inter","PA 4.2 Ihed","PA 4.11 Ip-PA 4.2 Ihed","PA4","Ip",2,7,"",184,"479AIp","43262.0",NA,NA,NA,"N","Y",84
+"2",486,"486","PA4.14Ip","Inter","PA 4.3 Ihed","PA 4.14 Ip-PA 4.3 Ihed","PA4","Ip",2,5,"",186,"486Ip","43262.0",NA,NA,NA,"N","Y",149
+"2",492,"492","PA4.1Ip","Inter","PA 4.7 Ihed","PA 4.1 Ip-PA 4.7 Ihed","PA4","Ip",2,7,"",187,"492Ip","43262.0",NA,NA,NA,"N","Y",70
+"2",494,"494","PA4.17Ip","Inter","PA 4.12 Ihed","PA 4.17 Ip-PA 4.12 Ihed","PA4","Ip",2,6,"",188,"494Ip","43258.0",NA,NA,NA,"N","Y",54
+"3",501,"501","PA4.2Ip","Inter","PA 4.3 Ihed","PA 4.2 Ip-PA 4.3 Ihed","PA4","Ip",3,5,"",190,"501Ip","43262.0",NA,NA,NA,"N","Y",113
+"3",504,"504","PA4.11Ip","Inter","PA 4.12 Ihed","PA 4.11 Ip-PA 4.12 Ihed","PA4","Ip",3,7,"",191,"504Ip","43262.0",NA,NA,NA,"N","Y",276
+"3",510,"510","PA4.13Ip","Inter","PA 4.7 Ihed","PA 4.13 Ip-PA 4.7 Ihed","PA4","Ip",3,9,"",192,"510Ip","43262.0",NA,NA,NA,"N","Y",209
+"3",517,"517","PA4.14Ip","Inter","PA 4.3 Ihed","PA 4.14 Ip-PA 4.3 Ihed","PA4","Ip",3,16,"",193,"517Ip","43262.0",NA,NA,NA,"N","Y",1547
+"3",521,"521","PA4.18Ip","Inter","PA 4.3 Ihed","PA 4.18 Ip-PA 4.3 Ihed","PA4","Ip",3,9,"",195,"521Ip","43262.0",NA,NA,NA,"N","Y",559
+"3",532,"532","PA4.11Ip","Inter","PA 4.12 Ihed","PA 4.11 Ip-PA 4.12 Ihed","PA4","Ip",3,5,"",198,"532Ip","43264.0",NA,NA,NA,"N","Y",52
+"3",536,"536","PA4.13Ip","Inter","PA 4.2 Ihed","PA 4.13 Ip-PA 4.2 Ihed","PA4","Ip",3,5,"",200,"536Ip","43262.0",NA,NA,NA,"N","Y",107
+"3",537,"537","PA4.11Ip","Inter","PA 4.7 Ihed","PA 4.11 Ip-PA 4.7 Ihed","PA4","Ip",3,6,"",201,"537Ip","43262.0",NA,NA,NA,"N","Y",129
+"3",545,"545","PA4.11Ip","Alone","NA","NA","PA4","Ip",3,8,"",202,"545Ip","43262.0",NA,NA,NA,"N","Y",241
+"3",559,"559","PA4.14Ip","Inter","PA 4.12 Ihed","PA 4.14 Ip-PA 4.12 Ihed","PA4","Ip",3,14,"",203,"559Ip","43262.0",NA,NA,NA,"N","Y",569
+"3",560,"560","PA4.14Ip","Inter","PA 4.9 Ihed","PA 4.14 Ip-PA 4.9 Ihed","PA4","Ip",3,21,"",204,"560Ip","43258.0",NA,NA,NA,"N","Y",413
+"3",562,"562","PA4.16Ip","Inter","PA 4.3 Ihed","PA 4.16 Ip-PA 4.3 Ihed","PA4","Ip",3,23,"",205,"562Ip","43259.0",NA,NA,NA,"N","Y",773
+"3",567,"567","PA4.17Ip","Alone","NA","NA","PA4","Ip",3,15,"",206,"567Ip","43259.0",NA,NA,NA,"N","Y",167
+"3",569,"569","PA4.2Ip","Inter","PA 4.12 Ihed","PA 4.2 Ip-PA 4.12 Ihed","PA4","Ip",3,17,"",207,"569Ip","43259.0",NA,NA,NA,"N","Y",248
+"3",570,"570","PA4.19Ip","Inter","PA 4.7 Ihed","PA 4.19 Ip-PA 4.7 Ihed","PA4","Ip",3,20,"",208,"570Ip","43259.0",NA,NA,NA,"N","Y",246
+"3",572,"572","PA4.15Ip","Alone","NA","NA","PA4","Ip",3,13,"",209,"572Ip","43259.0",NA,NA,NA,"N","Y",232
+"3",576,"576","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",3,11,"",210,"576Ip","43259.0",NA,NA,NA,"N","Y",80
+"3",577,"577","PA4.16Ip","Inter","PA 4.12 Ihed","PA 4.16 Ip-PA 4.12 Ihed","PA4","Ip",3,12,"",211,"577Ip","43262.0",NA,NA,NA,"N","Y",631
+"3",582,"582","PA4.2Ip","Inter","PA 4.12 Ihed","PA 4.2 Ip-PA 4.12 Ihed","PA4","Ip",3,17,"",213,"582Ip","43259.0",NA,NA,NA,"N","Y",201
+"3",585,"585","PA4.15Ip","Inter","PA 4.3 Ihed","PA 4.15 Ip-PA 4.3 Ihed","PA4","Ip",3,35,"",214,"585Ip","43259.0",NA,NA,NA,"N","Y",432
+"3",586,"586","PA4.14Ip","Inter","PA 4.9 Ihed","PA 4.14 Ip-PA 4.9 Ihed","PA4","Ip",3,17,"",215,"586Ip","43259.0",NA,NA,NA,"N","Y",219
+"3",588,"588","PA4.15Ip","Inter","PA 4.9 Ihed","PA 4.15 Ip-PA 4.9 Ihed","PA4","Ip",3,20,"",216,"588Ip","43259.0",NA,NA,NA,"N","Y",393
+"3",592,"592","PA4.1Ip","Inter","PA 4.7 Ihed","PA 4.1 Ip-PA 4.7 Ihed","PA4","Ip",3,8,"",217,"592Ip","43259.0",NA,NA,NA,"N","Y",58
+"3",594,"594","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",3,10,"",218,"594Ip","43259.0",NA,NA,NA,"N","Y",426
+"3",596,"596","PA4.2Ip","Inter","PA 4.7 Ihed","PA 4.2 Ip-PA 4.7 Ihed","PA4","Ip",3,22,"",219,"596Ip","43259.0",NA,NA,NA,"N","Y",241
+"3",600,"600","PA4.2Ip","Inter","PA 4.3 Ihed","PA 4.2 Ip-PA 4.3 Ihed","PA4","Ip",3,10,"",221,"600Ip","43259.0",NA,NA,NA,"N","Y",72
+"3",604,"604","PA4.15Ip","Inter","PA 4.3 Ihed","PA 4.15 Ip-PA 4.3 Ihed","PA4","Ip",3,8,"",222,"604Ip","43259.0",NA,NA,NA,"N","Y",55
+"3",607,"607","PA4.18Ip","Inter","PA 4.7 Ihed","PA 4.18 Ip-PA 4.7 Ihed","PA4","Ip",3,9,"",223,"607Ip","43259.0",NA,NA,NA,"N","Y",142
+"3",609,"609","PA4.16Ip","Inter","PA 4.12 Ihed","PA 4.16 Ip-PA 4.12 Ihed","PA4","Ip",3,11,"",224,"609Ip","43259.0",NA,NA,NA,"N","Y",131
+"3",610,"610","PA4.1Ip","Alone","NA","NA","PA4","Ip",3,9,"",225,"610Ip","43259.0",NA,NA,NA,"N","Y",224
+"3",611,"611","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",3,7,"",226,"611Ip","43259.0",NA,NA,NA,"N","Y",81
+"3",612,"612","PA4.17Ip","Alone","NA","NA","PA4","Ip",3,12,"",227,"612Ip","43259.0",NA,NA,NA,"N","Y",152
+"3",613,"613","PA4.13Ip","Inter","PA 4.12 Ihed","PA 4.13 Ip-PA 4.12 Ihed","PA4","Ip",3,6,"",228,"613Ip","43259.0",NA,NA,NA,"N","Y",279
+"3",614,"614","PA4.17Ip","Inter","PA 4.3 Ihed","PA 4.17 Ip-PA 4.3 Ihed","PA4","Ip",3,4,"",229,"614Ip","43259.0",NA,NA,NA,"N","Y",94
+"3",616,"616","PA4.19Ip","Inter","PA 4.12 Ihed","PA 4.19 Ip-PA 4.12 Ihed","PA4","Ip",3,7,"",230,"616Ip","43259.0",NA,NA,NA,"N","Y",132
+"3",617,"617","PA4.16Ip","Alone","NA","NA","PA4","Ip",3,14,"",231,"617Ip","43259.0",NA,NA,NA,"N","Y",239
+"3",623,"623","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",3,18,"",233,"623Ip","43259.0",NA,NA,NA,"N","Y",298
+"3",627,"627","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",3,8,"",235,"627Ip","43259.0",NA,NA,NA,"N","Y",155
+"3",628,"628","PA4.18Ip","Alone","NA","NA","PA4","Ip",3,11,"",236,"628Ip","43259.0",NA,NA,NA,"N","Y",126
+"3",629,"629","PA4.18Ip","Inter","PA 4.15 Ihed","PA 4.18 Ip-PA 4.15 Ihed","PA4","Ip",3,16,"",237,"629Ip","43259.0",NA,NA,NA,"N","Y",363
+"3",631,"631","PA4.2Ip","Alone","NA","NA","PA4","Ip",3,5,"",238,"631Ip","43259.0",NA,NA,NA,"N","Y",92
+"3",634,"634","PA4.19Ip","Alone","NA","NA","PA4","Ip",3,15,"",239,"634Ip","43259.0",NA,NA,NA,"N","Y",280
+"3",639,"639","PA4.14Ip","Inter","PA 4.3 Ihed","PA 4.14 Ip-PA 4.3 Ihed","PA4","Ip",3,12,"",241,"639Ip","43259.0",NA,NA,NA,"Y","Y",81
+"3",643,"643","PA4.15Ip","Alone","NA","NA","PA4","Ip",3,9,"",242,"643Ip","43259.0",NA,NA,NA,"N","Y",208
+"3",645,"645","PA4.13Ip","Inter","PA 4.7 Ihed","PA 4.13 Ip-PA 4.7 Ihed","PA4","Ip",3,12,"",243,"645Ip","43259.0",NA,NA,NA,"N","Y",409
+"3",650,"650","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",3,20,"",244,"650Ip","43259.0",NA,NA,NA,"N","Y",314
+"3",651,"651","PA4.18Ip","Inter","PA 4.9 Ihed","PA 4.18 Ip-PA 4.9 Ihed","PA4","Ip",3,13,"",245,"651Ip","43259.0",NA,NA,NA,"N","Y",162
+"3",653,"653","PA4.15Ip","Inter","PA 4.15 Ihed","PA 4.15 Ip-PA 4.15 Ihed","PA4","Ip",3,20,"",246,"653Ip","43262.0",NA,NA,NA,"N","Y",1001
+"3",654,"654","PA4.19Ip","Inter","PA 4.7 Ihed","PA 4.19 Ip-PA 4.7 Ihed","PA4","Ip",3,25,"",247,"654Ip","43259.0",NA,NA,NA,"N","Y",175
+"3",659,"659","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",3,16,"",248,"659Ip","43259.0",NA,NA,NA,"N","Y",110
+"3",660,"660","PA4.16Ip","Alone","NA","NA","PA4","Ip",3,12,"",250,"660Ip","43259.0",NA,NA,NA,"N","Y",410
+"3",662,"662","PA4.15Ip","Inter","PA 4.12 Ihed","PA 4.15 Ip-PA 4.12 Ihed","PA4","Ip",3,16,"",251,"662Ip","43262.0",NA,NA,NA,"N","Y",338
+"3",663,"663","PA4.16Ip","Inter","PA 4.9 Ihed","PA 4.16 Ip-PA 4.9 Ihed","PA4","Ip",3,15,"",252,"663Ip","43262.0",NA,NA,NA,"N","Y",280
+"3",663,"663A","PA4.19Ip","Inter","PA 4.2 Ihed","PA 4.19 Ip-PA 4.2 Ihed","PA4","Ip",3,6,"",253,"663AIp","43262.0",NA,NA,NA,"N","Y",85
+"3",664,"664","PA4.19Ip","Inter","PA 4.9 Ihed","PA 4.19 Ip-PA 4.9 Ihed","PA4","Ip",3,11,"",254,"664Ip","43259.0",NA,NA,NA,"N","Y",220
+"3",665,"665A","PA4.15Ip","Inter","PA 4.2 Ihed","PA 4.15 Ip-PA 4.2 Ihed","PA4","Ip",3,13,"",255,"665AIp","43259.0",NA,NA,NA,"N","Y",263
+"3",667,"667","PA4.16Ip","Inter","PA 4.7 Ihed","PA 4.16 Ip-PA 4.7 Ihed","PA4","Ip",3,14,"",256,"667Ip","43259.0",NA,NA,NA,"N","Y",487
+"3",668,"668","PA4.14Ip","Alone","NA","NA","PA4","Ip",3,17,"",257,"668Ip","43259.0",NA,NA,NA,"N","Y",493
+"3",669,"669A","PA4.18Ip","Inter","PA 4.15 Ihed","PA 4.18 Ip-PA 4.15 Ihed","PA4","Ip",3,12,"",258,"669AIp","43259.0",NA,NA,NA,"N","Y",370
+"3",671,"671","PA4.13Ip","Inter","PA 4.9 Ihed","PA 4.13 Ip-PA 4.9 Ihed","PA4","Ip",3,5,"",260,"671Ip","43259.0",NA,NA,NA,"N","Y",72
+"3",671,"671A","PA4.16Ip","Inter","PA 4.2 Ihed","PA 4.16 Ip-PA 4.2 Ihed","PA4","Ip",3,13,"",261,"671AIp","43259.0",NA,NA,NA,"Y","Y",249
+"3",673,"673","PA4.18Ip","Inter","PA 4.9 Ihed","PA 4.18 Ip-PA 4.9 Ihed","PA4","Ip",3,8,"",262,"673Ip","43259.0",NA,NA,NA,"Y","Y",421
+"3",676,"676","PA4.14Ip","Inter","PA 4.7 Ihed","PA 4.14 Ip-PA 4.7 Ihed","PA4","Ip",3,10,"",263,"676Ip","43262.0",NA,NA,NA,"N","Y",136
+"3",681,"681A","PA4.19Ip","Inter","PA 4.15 Ihed","PA 4.19 Ip-PA 4.15 Ihed","PA4","Ip",3,31,"",264,"681AIp","43259.0",NA,NA,NA,"N","Y",585
+"3",683,"683A","PA4.19Ip","Inter","PA 4.2 Ihed","PA 4.19 Ip-PA 4.2 Ihed","PA4","Ip",3,24,"",265,"683AIp","43259.0",NA,NA,NA,"N","Y",394
+"3",685,"685A","PA4.16Ip","Inter","PA 4.15 Ihed","PA 4.16 Ip-PA 4.15 Ihed","PA4","Ip",3,12,"",267,"685AIp","43259.0",NA,NA,NA,"N","Y",155
+"3",689,"689","PA4.1Ip","Alone","NA","NA","PA4","Ip",3,10,"",268,"689Ip","43259.0",NA,NA,NA,"N","Y",156
+"3",689,"689A","PA4.18Ip","Inter","PA 4.2 Ihed","PA 4.18 Ip-PA 4.2 Ihed","PA4","Ip",3,13,"",269,"689AIp","43259.0",NA,NA,NA,"N","Y",241
+"3",691,"691","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",3,11,"",270,"691Ip","43259.0",NA,NA,NA,"N","Y",203
+"3",691,"691A","PA4.13Ip","Inter","PA 4.15 Ihed","PA 4.13 Ip-PA 4.15 Ihed","PA4","Ip",3,11,"",271,"691AIp","43259.0",NA,NA,NA,"N","Y",86
+"3",692,"692","PA4.15Ip","Inter","PA 4.7 Ihed","PA 4.15 Ip-PA 4.7 Ihed","PA4","Ip",3,14,"",272,"692Ip","43259.0",NA,NA,NA,"N","Y",159
+"3",693,"693","PA4.15Ip","Inter","PA 4.3 Ihed","PA 4.15 Ip-PA 4.3 Ihed","PA4","Ip",3,15,"",273,"693Ip","43259.0",NA,NA,NA,"Y","Y",154
+"3",693,"693A","PA4.17Ip","Inter","PA 4.15 Ihed","PA 4.17 Ip-PA 4.15 Ihed","PA4","Ip",3,10,"",274,"693AIp","43259.0",NA,NA,NA,"N","Y",88
+"3",695,"695","PA4.17Ip","Inter","PA 4.3 Ihed","PA 4.17 Ip-PA 4.3 Ihed","PA4","Ip",3,9,"",275,"695Ip","43259.0",NA,NA,NA,"N","Y",189
+"3",697,"697","PA4.17Ip","Inter","PA 4.9 Ihed","PA 4.17 Ip-PA 4.9 Ihed","PA4","Ip",3,7,"",276,"697Ip","43262.0",NA,NA,NA,"N","Y",141
+"3",697,"697A","PA4.15Ip","Inter","PA 4.15 Ihed","PA 4.15 Ip-PA 4.15 Ihed","PA4","Ip",3,9,"",277,"697AIp","43259.0",NA,NA,NA,"N","Y",131
+"3",698,"698","PA4.17Ip","Inter","PA 4.15 Ihed","PA 4.17 Ip-PA 4.15 Ihed","PA4","Ip",3,11,"",278,"698Ip","43259.0",NA,NA,NA,"Y","Y",219
+"3",705,"705","PA4.1Ip","Inter","PA 4.2 Ihed","PA 4.1 Ip-PA 4.2 Ihed","PA4","Ip",3,14,"",281,"705Ip","43259.0",NA,NA,NA,"N","Y",235
+"3",705,"705A","PA4.11Ip","Inter","PA 4.2 Ihed","PA 4.11 Ip-PA 4.2 Ihed","PA4","Ip",3,10,"",282,"705AIp","43259.0",NA,NA,NA,"N","Y",158
+"3",707,"707A","PA4.13Ip","Inter","PA 4.2 Ihed","PA 4.13 Ip-PA 4.2 Ihed","PA4","Ip",3,12,"",283,"707AIp","43259.0",NA,NA,NA,"N","Y",136
+"3",708,"708","PA4.16Ip","Inter","PA 4.9 Ihed","PA 4.16 Ip-PA 4.9 Ihed","PA4","Ip",3,9,"",284,"708Ip","43259.0",NA,NA,NA,"N","Y",87
+"3",709,"709","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",3,8,"",285,"709Ip","43259.0",NA,NA,NA,"N","Y",46
+"3",711,"711","PA4.17Ip","Inter","PA 4.2 Ihed","PA 4.17 Ip-PA 4.2 Ihed","PA4","Ip",3,13,"",287,"711Ip","43259.0",NA,NA,NA,"N","Y",219
+"3",712,"712","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",3,9,"",288,"712Ip","43262.0",NA,NA,NA,"N","Y",94
+"3",713,"713A","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",3,12,"",289,"713AIp","43259.0",NA,NA,NA,"N","Y",300
+"3",715,"715A","PA4.16Ip","Inter","PA 4.2 Ihed","PA 4.16 Ip-PA 4.2 Ihed","PA4","Ip",3,10,"",290,"715AIp","43259.0",NA,NA,NA,"N","Y",80
+"3",717,"717","PA4.17Ip","Inter","PA 4.9 Ihed","PA 4.17 Ip-PA 4.9 Ihed","PA4","Ip",3,13,"",291,"717Ip","43259.0",NA,NA,NA,"N","Y",229
+"3",718,"718","PA4.15Ip","Inter","PA 4.7 Ihed","PA 4.15 Ip-PA 4.7 Ihed","PA4","Ip",3,15,"",292,"718Ip","43259.0",NA,NA,NA,"N","Y",369
+"3",720,"720","PA4.13Ip","Inter","PA 4.9 Ihed","PA 4.13 Ip-PA 4.9 Ihed","PA4","Ip",3,7,"",294,"720Ip","43259.0",NA,NA,NA,"N","Y",110
+"3",725,"725","PA4.13Ip","Inter","PA 4.3 Ihed","PA 4.13 Ip-PA 4.3 Ihed","PA4","Ip",3,17,"",295,"725Ip","43262.0",NA,NA,NA,"N","Y",828
+"3",727,"727","PA4.15Ip","Inter","PA 4.9 Ihed","PA 4.15 Ip-PA 4.9 Ihed","PA4","Ip",3,15,"",296,"727Ip","43259.0",NA,NA,NA,"N","Y",267
+"3",729,"729","PA4.15Ip","Inter","PA 4.12 Ihed","PA 4.15 Ip-PA 4.12 Ihed","PA4","Ip",3,13,"",297,"729Ip","43259.0",NA,NA,NA,"N","Y",258
+"3",730,"730","PA4.19Ip","Inter","PA 4.12 Ihed","PA 4.19 Ip-PA 4.12 Ihed","PA4","Ip",3,6,"",300,"730Ip","43259.0",NA,NA,NA,"N","Y",116
+"3",737,"737A","PA4.14Ip","Inter","PA 4.2 Ihed","PA 4.14 Ip-PA 4.2 Ihed","PA4","Ip",3,6,"",302,"737AIp","43259.0",NA,NA,NA,"Y","Y",203
+"3",739,"739A","PA4.14Ip","Inter","PA 4.15 Ihed","PA 4.14 Ip-PA 4.15 Ihed","PA4","Ip",3,5,"",303,"739AIp","43259.0",NA,NA,NA,"N","Y",98
+"3",744,"744","PA4.18Ip","Alone","NA","NA","PA4","Ip",3,12,"",306,"744Ip","43259.0",NA,NA,NA,"N","Y",122
+"3",747,"747A","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",3,16,"",307,"747AIp","43259.0",NA,NA,NA,"N","Y",836
+"3",748,"748","PA4.19Ip","Inter","PA 4.3 Ihed","PA 4.19 Ip-PA 4.3 Ihed","PA4","Ip",3,16,"",308,"748Ip","43259.0",NA,NA,NA,"N","Y",411
+"3",758,"758B","PA4.11Ip","Inter","PA 4.2 Ihed","PA 4.11 Ip-PA 4.2 Ihed","PA4","Ip",3,15,"",316,"758BIp","43259.0",NA,NA,NA,"N","Y",619
+"3",761,"761B","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",3,17,"",319,"761BIp","43262.0",NA,NA,NA,"N","Y",519
+"3",763,"763B","PA4.1Ip","Inter","PA 4.2 Ihed","PA 4.1 Ip-PA 4.2 Ihed","PA4","Ip",3,8,"",320,"763BIp","43262.0",NA,NA,NA,"N","Y",163
+"3",766,"766B","PA4.15Ip","Inter","PA 4.2 Ihed","PA 4.15 Ip-PA 4.2 Ihed","PA4","Ip",3,14,"",323,"766BIp","43259.0",NA,NA,NA,"N","Y",226
+"3",767,"767B","PA4.17Ip","Inter","PA 4.15 Ihed","PA 4.17 Ip-PA 4.15 Ihed","PA4","Ip",3,20,"",324,"767BIp","43259.0",NA,NA,NA,"N","Y",404
+"4",751,"751A","PA4.17Ip","Inter","PA 4.2 Ihed","PA 4.17 Ip-PA 4.2 Ihed","PA4","Ip",4,15,"",309,"751AIp","43262.0",NA,NA,NA,"N","Y",826
+"4",753,"753","PA4.17Ip","Inter","PA 4.9 Ihed","PA 4.17 Ip-PA 4.9 Ihed","PA4","Ip",4,22,"",310,"753Ip","43259.0",NA,NA,NA,"N","Y",227
+"4",754,"754","PA4.18Ip","Alone","NA","NA","PA4","Ip",4,13,"",312,"754Ip","43259.0",NA,NA,NA,"N","Y",398
+"4",755,"755","PA4.13Ip","Inter","PA 4.3 Ihed","PA 4.13 Ip-PA 4.3 Ihed","PA4","Ip",4,18,"",313,"755Ip","43259.0",NA,NA,NA,"Y","Y",422
+"4",755,"755A","PA4.11Ip","Inter","PA 4.15 Ihed","PA 4.11 Ip-PA 4.15 Ihed","PA4","Ip",4,16,"",314,"755AIp","43259.0",NA,NA,NA,"N","Y",430
+"4",757,"757","PA4.15Ip","Inter","PA 4.2 Ihed","PA 4.15 Ip-PA 4.2 Ihed","PA4","Ip",4,16,"",315,"757Ip","43259.0",NA,NA,NA,"N","Y",109
+"4",761,"761","PA4.18Ip","Inter","PA 4.7 Ihed","PA 4.18 Ip-PA 4.7 Ihed","PA4","Ip",4,16,"",318,"761Ip","43259.0",NA,NA,NA,"N","Y",372
+"4",764,"764","PA4.17Ip","Inter","PA 4.12 Ihed","PA 4.17 Ip-PA 4.12 Ihed","PA4","Ip",4,25,"",321,"764Ip","43259.0",NA,NA,NA,"N","Y",944
+"4",765,"765A","PA4.13Ip","Inter","PA 4.2 Ihed","PA 4.13 Ip-PA 4.2 Ihed","PA4","Ip",4,15,"",322,"765AIp","43259.0",NA,NA,NA,"N","Y",384
+"4",769,"769","PA4.14Ip","Inter","PA 4.12 Ihed","PA 4.14 Ip-PA 4.12 Ihed","PA4","Ip",4,12,"",325,"769Ip","43259.0",NA,NA,NA,"N","Y",197
+"4",779,"779A","PA4.19Ip","Inter","PA 4.2 Ihed","PA 4.19 Ip-PA 4.2 Ihed","PA4","Ip",4,8,"",327,"779AIp","43259.0",NA,NA,NA,"N","Y",126
+"4",780,"780","PA4.14Ip","Inter","PA 4.9 Ihed","PA 4.14 Ip-PA 4.9 Ihed","PA4","Ip",4,20,"",329,"780Ip","43259.0",NA,NA,NA,"N","Y",603
+"4",781,"781","PA4.16Ip","Inter","PA 4.12 Ihed","PA 4.16 Ip-PA 4.12 Ihed","PA4","Ip",4,10,"",330,"781Ip","43262.0",NA,NA,NA,"N","Y",145
+"4",781,"781A","PA4.17Ip","Inter","PA 4.2 Ihed","PA 4.17 Ip-PA 4.2 Ihed","PA4","Ip",4,7,"",331,"781AIp","43259.0",NA,NA,NA,"N","Y",83
+"4",786,"786","PA4.19Ip","Inter","PA 4.9 Ihed","PA 4.19 Ip-PA 4.9 Ihed","PA4","Ip",4,9,"",332,"786Ip","43262.0",NA,NA,NA,"N","Y",162
+"4",787,"787","PA4.18Ip","Inter","PA 4.7 Ihed","PA 4.18 Ip-PA 4.7 Ihed","PA4","Ip",4,5,"",333,"787Ip","43259.0",NA,NA,NA,"N","Y",89
+"4",787,"787A","PA4.2Ip","Inter","PA 4.2 Ihed","PA 4.2 Ip-PA 4.2 Ihed","PA4","Ip",4,6,"",334,"787AIp","43259.0",NA,NA,NA,"Y","Y",25
+"4",791,"791","PA4.2Ip","Inter","PA 4.12 Ihed","PA 4.2 Ip-PA 4.12 Ihed","PA4","Ip",4,8,"",335,"791Ip","43259.0",NA,NA,NA,"N","Y",263
+"4",791,"791A","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",4,9,"",336,"791AIp","43259.0",NA,NA,NA,"N","Y",168
+"4",793,"793","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",4,6,"",337,"793Ip","43259.0",NA,NA,NA,"N","Y",195
+"4",793,"793A","PA4.2Ip","Inter","PA 4.2 Ihed","PA 4.2 Ip-PA 4.2 Ihed","PA4","Ip",4,7,"",338,"793AIp","43259.0",NA,NA,NA,"N","Y",118
+"4",795,"795A","PA4.1Ip","Inter","PA 4.15 Ihed","PA 4.1 Ip-PA 4.15 Ihed","PA4","Ip",4,5,"",340,"795AIp","43262.0",NA,NA,NA,"N","Y",105
+"4",796,"796","PA4.14Ip","Alone","NA","NA","PA4","Ip",4,7,"",341,"796Ip","43259.0",NA,NA,NA,"N","Y",113
+"4",800,"800","PA4.16Ip","Inter","PA 4.9 Ihed","PA 4.16 Ip-PA 4.9 Ihed","PA4","Ip",4,11,"",344,"800Ip","43259.0",NA,NA,NA,"N","Y",227
+"4",803,"803","PA4.15Ip","Inter","PA 4.7 Ihed","PA 4.15 Ip-PA 4.7 Ihed","PA4","Ip",4,7,"",345,"803Ip","43262.0",NA,NA,NA,"N","Y",340
+"4",803,"803A","PA4.2Ip","Inter","PA 4.15 Ihed","PA 4.2 Ip-PA 4.15 Ihed","PA4","Ip",4,9,"",346,"803AIp","43259.0",NA,NA,NA,"N","Y",163
+"4",804,"804","PA4.11Ip","Inter","PA 4.7 Ihed","PA 4.11 Ip-PA 4.7 Ihed","PA4","Ip",4,7,"",347,"804Ip","43262.0",NA,NA,NA,"Y","Y",101
+"4",805,"805","PA4.15Ip","Inter","PA 4.15 Ihed","PA 4.15 Ip-PA 4.15 Ihed","PA4","Ip",4,13,"",348,"805Ip","43259.0",NA,NA,NA,"Y","Y",197
+"4",805,"805A","PA4.19Ip","Inter","PA 4.15 Ihed","PA 4.19 Ip-PA 4.15 Ihed","PA4","Ip",4,9,"",349,"805AIp","43259.0",NA,NA,NA,"N","Y",54
+"4",806,"806","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",4,9,"",350,"806Ip","43259.0",NA,NA,NA,"N","Y",260
+"4",807,"807A","PA4.17Ip","Inter","PA 4.15 Ihed","PA 4.17 Ip-PA 4.15 Ihed","PA4","Ip",4,8,"",351,"807AIp","43259.0",NA,NA,NA,"N","Y",299
+"4",808,"808","PA4.13Ip","Inter","PA 4.3 Ihed","PA 4.13 Ip-PA 4.3 Ihed","PA4","Ip",4,5,"",352,"808Ip","43262.0",NA,NA,NA,"N","Y",38
+"4",809,"809","PA4.19Ip","Inter","PA 4.7 Ihed","PA 4.19 Ip-PA 4.7 Ihed","PA4","Ip",4,13,"",353,"809Ip","43262.0",NA,NA,NA,"N","Y",186
+"4",811,"811","PA4.14Ip","Inter","PA 4.9 Ihed","PA 4.14 Ip-PA 4.9 Ihed","PA4","Ip",4,10,"",354,"811Ip","43259.0",NA,NA,NA,"N","Y",377
+"4",815,"815","PA4.1Ip","Inter","PA 4.12 Ihed","PA 4.1 Ip-PA 4.12 Ihed","PA4","Ip",4,8,"",355,"815Ip","43259.0",NA,NA,NA,"N","Y",194
+"4",816,"816","PA4.14Ip","Inter","PA 4.3 Ihed","PA 4.14 Ip-PA 4.3 Ihed","PA4","Ip",4,4,"",356,"816Ip","43262.0",NA,NA,NA,"N","Y",60
+"4",817,"817","PA4.11Ip","Inter","PA 4.3 Ihed","PA 4.11 Ip-PA 4.3 Ihed","PA4","Ip",4,5,"",357,"817Ip","43262.0",NA,NA,NA,"N","Y",181
+"4",821,"821","PA4.14Ip","Inter","PA 4.7 Ihed","PA 4.14 Ip-PA 4.7 Ihed","PA4","Ip",4,7,"",359,"821Ip","43262.0",NA,NA,NA,"N","Y",171
+"4",822,"822","PA4.2Ip","Inter","PA 4.7 Ihed","PA 4.2 Ip-PA 4.7 Ihed","PA4","Ip",4,10,"",361,"822Ip","43262.0",NA,NA,NA,"N","Y",167
+"4",825,"825","PA4.17Ip","Inter","PA 4.7 Ihed","PA 4.17 Ip-PA 4.7 Ihed","PA4","Ip",4,10,"",363,"825Ip","43262.0",NA,NA,NA,"N","Y",167
+"4",827,"827","PA4.19Ip","Inter","PA 4.7 Ihed","PA 4.19 Ip-PA 4.7 Ihed","PA4","Ip",4,13,"",364,"827Ip","43259.0",NA,NA,NA,"N","Y",136
+"4",828,"828","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",4,6,"",365,"828Ip","43262.0",NA,NA,NA,"N","Y",56
+"4",829,"829","PA4.2Ip","Inter","PA 4.9 Ihed","PA 4.2 Ip-PA 4.9 Ihed","PA4","Ip",4,8,"",366,"829Ip","43264.0",NA,NA,NA,"N","Y",87
+"4",831,"831A","PA4.15Ip","Inter","PA 4.15 Ihed","PA 4.15 Ip-PA 4.15 Ihed","PA4","Ip",4,8,"",368,"831AIp","43259.0",NA,NA,NA,"N","Y",306
+"4",834,"834","PA4.15Ip","Alone","NA","NA","PA4","Ip",4,10,"",370,"834Ip","43259.0",NA,NA,NA,"N","Y",431
+"4",835,"835A","PA4.16Ip","Inter","PA 4.15 Ihed","PA 4.16 Ip-PA 4.15 Ihed","PA4","Ip",4,9,"",371,"835AIp","43259.0",NA,NA,NA,"N","Y",43
+"4",837,"837A","PA4.14Ip","Inter","PA 4.15 Ihed","PA 4.14 Ip-PA 4.15 Ihed","PA4","Ip",4,12,"",372,"837AIp","43259.0",NA,NA,NA,"N","Y",197
+"4",841,"841A","PA4.17Ip","Inter","PA 4.15 Ihed","PA 4.17 Ip-PA 4.15 Ihed","PA4","Ip",4,9,"",373,"841AIp","43259.0",NA,NA,NA,"N","Y",143
+"4",843,"843","PA4.11Ip","Inter","PA 4.12 Ihed","PA 4.11 Ip-PA 4.12 Ihed","PA4","Ip",4,7,"",374,"843Ip","43259.0",NA,NA,NA,"N","Y",121
+"4",845,"845","PA4.13Ip","Inter","PA 4.9 Ihed","PA 4.13 Ip-PA 4.9 Ihed","PA4","Ip",4,4,"",375,"845Ip","43264.0",NA,NA,NA,"N","Y",89
+"4",847,"847","PA4.15Ip","Inter","PA 4.9 Ihed","PA 4.15 Ip-PA 4.9 Ihed","PA4","Ip",4,12,"",376,"847Ip","43264.0",NA,NA,NA,"N","Y",155
+"4",848,"848","PA4.2Ip","Alone","NA","NA","PA4","Ip",4,21,"",377,"848Ip","43264.0",NA,NA,NA,"N","Y",447
+"4",851,"851","PA4.11Ip","Alone","NA","NA","PA4","Ip",4,5,"",378,"851Ip","43264.0",NA,NA,NA,"N","Y",111
+"4",851,"851A","PA4.14Ip","Inter","PA 4.15 Ihed","PA 4.14 Ip-PA 4.15 Ihed","PA4","Ip",4,6,"",379,"851AIp","43264.0",NA,NA,NA,"N","Y",91
+"4",852,"852","PA4.15Ip","Inter","PA 4.3 Ihed","PA 4.15 Ip-PA 4.3 Ihed","PA4","Ip",4,9,"",380,"852Ip","43264.0",NA,NA,NA,"N","Y",26
+"4",855,"855","PA4.19Ip","Alone","NA","NA","PA4","Ip",4,6,"",381,"855Ip","43264.0",NA,NA,NA,"N","Y",131
+"4",855,"855A","PA4.18Ip","Inter","PA 4.15 Ihed","PA 4.18 Ip-PA 4.15 Ihed","PA4","Ip",4,10,"",382,"855AIp","43264.0",NA,NA,NA,"N","Y",71
+"4",857,"857","PA4.17Ip","Inter","PA 4.7 Ihed","PA 4.17 Ip-PA 4.7 Ihed","PA4","Ip",4,11,"",383,"857Ip","43264.0",NA,NA,NA,"N","Y",207
+"4",858,"858","PA4.19Ip","Inter","PA 4.12 Ihed","PA 4.19 Ip-PA 4.12 Ihed","PA4","Ip",4,9,"",384,"858Ip","43264.0",NA,NA,NA,"N","Y",33
+"4",862,"862","PA4.15Ip","Inter","PA 4.12 Ihed","PA 4.15 Ip-PA 4.12 Ihed","PA4","Ip",4,7,"",387,"862Ip","43258.0",NA,NA,NA,"N","Y",91
+"4",867,"867","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",4,6,"",388,"867Ip","43264.0",NA,NA,NA,"N","Y",28
+"4",875,"875","PA4.14Ip","Inter","PA 4.2 Ihed","PA 4.14 Ip-PA 4.2 Ihed","PA4","Ip",4,11,"",391,"875Ip","43259.0",NA,NA,NA,"Y","Y",212
+"4",877,"877","PA4.2Ip","Inter","PA 4.7 Ihed","PA 4.2 Ip-PA 4.7 Ihed","PA4","Ip",4,10,"",392,"877Ip","43259.0",NA,NA,NA,"N","Y",198
+"4",880,"880","PA4.18Ip","Alone","NA","NA","PA4","Ip",4,13,"",395,"880Ip","43259.0",NA,NA,NA,"N","Y",91
+"4",881,"881","PA4.16Ip","Inter","PA 4.7 Ihed","PA 4.16 Ip-PA 4.7 Ihed","PA4","Ip",4,11,"",396,"881Ip","43259.0",NA,NA,NA,"Y","Y",123
+"4",885,"885","PA4.14Ip","Alone","NA","NA","PA4","Ip",4,8,"",398,"885Ip","43259.0",NA,NA,NA,"N","Y",90
+"4",887,"887","PA4.2Ip","Alone","NA","NA","PA4","Ip",4,10,"",399,"887Ip","43259.0",NA,NA,NA,"N","Y",303
+"4",888,"888","PA4.17Ip","Alone","NA","NA","PA4","Ip",4,5,"",400,"888Ip","43264.0",NA,NA,NA,"N","Y",43
+"4",889,"889","PA4.19Ip","Inter","PA 4.3 Ihed","PA 4.19 Ip-PA 4.3 Ihed","PA4","Ip",4,7,"",401,"889Ip","43259.0",NA,NA,NA,"N","Y",108
+"4",899,"899","PA4.1Ip","Inter","PA 4.3 Ihed","PA 4.1 Ip-PA 4.3 Ihed","PA4","Ip",4,7,"",403,"899Ip","43259.0",NA,NA,NA,"N","Y",101
+"4",900,"900","PA4.2Ip","Inter","PA 4.3 Ihed","PA 4.2 Ip-PA 4.3 Ihed","PA4","Ip",4,6,"",405,"900Ip","43259.0",NA,NA,NA,"N","Y",25
+"4",911,"911","PA4.16Ip","Inter","PA 4.7 Ihed","PA 4.16 Ip-PA 4.7 Ihed","PA4","Ip",4,10,"",407,"911Ip","43259.0",NA,NA,NA,"N","Y",430
+"4",912,"912","PA4.13Ip","Alone","NA","NA","PA4","Ip",4,7,"",408,"912Ip","43259.0",NA,NA,NA,"N","Y",261
+"4",918,"918","PA4.18Ip","Inter","PA 4.12 Ihed","PA 4.18 Ip-PA 4.12 Ihed","PA4","Ip",4,9,"",410,"918Ip","43259.0",NA,NA,NA,"N","Y",200
+"4",926,"926","PA4.1Ip","Alone","NA","NA","PA4","Ip",4,6,"",412,"926Ip","43259.0",NA,NA,NA,"N","Y",165
+"4",931,"931","PA4.17Ip","Inter","PA 4.3 Ihed","PA 4.17 Ip-PA 4.3 Ihed","PA4","Ip",4,10,"",413,"931Ip","43259.0",NA,NA,NA,"Y","Y",73
+"4",932,"932","PA4.16Ip","Inter","PA 4.3 Ihed","PA 4.16 Ip-PA 4.3 Ihed","PA4","Ip",4,10,"",414,"932Ip","43259.0",NA,NA,NA,"N","Y",74
+"4",950,"950","PA4.19Ip","Alone","NA","NA","PA4","Ip",4,13,"",418,"950Ip","43262.0",NA,NA,NA,"N","Y",341
+"4",957,"957","PA4.1Ip","Inter","PA 4.9 Ihed","PA 4.1 Ip-PA 4.9 Ihed","PA4","Ip",4,7,"",419,"957Ip","43262.0",NA,NA,NA,"N","Y",191
+"4",960,"960","PA4.17Ip","Inter","PA 4.12 Ihed","PA 4.17 Ip-PA 4.12 Ihed","PA4","Ip",4,4,"",421,"960Ip","43262.0",NA,NA,NA,"N","Y",17
+"4",961,"961","PA4.1Ip","Inter","PA 4.2 Ihed","PA 4.1 Ip-PA 4.2 Ihed","PA4","Ip",4,5,"",422,"961Ip","43262.0",NA,NA,NA,"N","Y",169
+"4",962,"962","PA4.17Ip","Alone","NA","NA","PA4","Ip",4,5,"",423,"962Ip","43262.0",NA,NA,NA,"N","Y",90
+"4",963,"963","PA4.11Ip","Inter","PA 4.3 Ihed","PA 4.11 Ip-PA 4.3 Ihed","PA4","Ip",4,5,"",424,"963Ip","43262.0",NA,NA,NA,"N","Y",84
+"4",967,"967","PA4.18Ip","Inter","PA 4.3 Ihed","PA 4.18 Ip-PA 4.3 Ihed","PA4","Ip",4,6,"",425,"967Ip","43262.0",NA,NA,NA,"N","Y",153
+"4",974,"974","PA4.11Ip","Inter","PA 4.15 Ihed","PA 4.11 Ip-PA 4.15 Ihed","PA4","Ip",4,5,"",426,"974Ip","43262.0",NA,NA,NA,"N","Y",5
+"4",976,"976","PA4.11Ip","Inter","PA 4.9 Ihed","PA 4.11 Ip-PA 4.9 Ihed","PA4","Ip",4,7,"",427,"976Ip","43262.0",NA,NA,NA,"N","Y",18
+"4",991,"991","PA4.11Ip","Inter","PA 4.12 Ihed","PA 4.11 Ip-PA 4.12 Ihed","PA4","Ip",4,9,"",432,"991Ip","43259.0",NA,NA,NA,"N","Y",137
+"4",994,"994","PA4.15Ip","Inter","PA 4.7 Ihed","PA 4.15 Ip-PA 4.7 Ihed","PA4","Ip",4,13,"",433,"994Ip","43259.0",NA,NA,NA,"N","Y",341
+"4",995,"995","PA4.16Ip","Inter","PA 4.12 Ihed","PA 4.16 Ip-PA 4.12 Ihed","PA4","Ip",4,7,"",434,"995Ip","43264.0",NA,NA,NA,"N","Y",5
