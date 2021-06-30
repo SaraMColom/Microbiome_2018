@@ -3,11 +3,8 @@ title: "RhizMicrobiome_GenusLevel"
 author: "Sara Colom"
 date: "2/8/2020"
 output: 
-  html_document:
+  github_document:
     toc: true
-    toc_float: true
-    highlight: tango
-    self_contained: yes 
 ---
 
 
@@ -277,7 +274,7 @@ physeq1
 ## Beta Diversity
 
 
-```{r PCoA Treatment and Species comparisoin Bray Curtis Estimate, warning = F, comment = F, message = F}
+```{r PCoA Treatment and Species comparisoin Bray Curtis Estimate, warning = F, comment = F, message = F, fig.height = 12, fig.width = 16}
 
 # Beta diversity pcoa Bray-Curtis DNA only 
 physeq.pcoa <-
@@ -1013,7 +1010,7 @@ SizePurp <- SizeAveraged %>% filter(Species == "Ip")
 ```
 
 
-```{r phenotypic selection}
+```{r, fig.height = 12, fig.width = 16}
 
 ####  ####  ####  ####  ####  ####   ####
 #  Examine selection on microbiome first
