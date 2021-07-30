@@ -269,168 +269,6 @@ physeq1
 
 ```
 
-# Community Composition
-
-## Beta Diversity
-
-
-```{r PCoA Treatment and Species comparisoin Bray Curtis Estimate, warning = F, comment = F, message = F, fig.height = 12, fig.width = 16}
-
-# Beta diversity pcoa Bray-Curtis DNA only 
-physeq.pcoa <-
-  ordinate(
-    physeq = physeq.scale,
-    method = "PCoA",
-    distance = "bray"
-  )
-
-physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
-
-physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
-
-SampData <- data.frame(sample_data(physeq))
-
-colnames(SampData)[1] <- "Duplicates"
-
-SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
-
-physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData,by="Duplicates"))
-
-bray_values <- physeq.pcoa$values
-bray_rel_eigens <- bray_values$Relative_eig
-
-bray_rel_eigen1 <- bray_rel_eigens[1]
-bray_rel_eigen1_percent <- round(bray_rel_eigen1 * 100, digits = 1)
-
-bray_rel_eigen2 <- bray_rel_eigens[2]
-bray_rel_eigen2_percent <- round(bray_rel_eigen2 * 100, digits = 1)
-
-bray_rel_eigen3 <- bray_rel_eigens[3]
-bray_rel_eigen3_percent <- round(bray_rel_eigen3 * 100, digits = 1)
-
-bray_rel_eigen4 <- bray_rel_eigens[4]
-bray_rel_eigen4_percent <- round(bray_rel_eigen4 * 100, digits = 1)
-
-bray_rel_eigen5 <- bray_rel_eigens[5]
-bray_rel_eigen5_percent <- round(bray_rel_eigen5 * 100, digits = 1)
-
-# Prep axis labels & title
-bray_axis1 <- paste("PCoA 1:",bray_rel_eigen1_percent, "%")
-bray_axis2 <- paste("PCoA 2:",bray_rel_eigen2_percent, "%")
-bray_axis3 <- paste("PCoA 3:",bray_rel_eigen3_percent, "%")
-bray_axis4 <- paste("PCoA 4:",bray_rel_eigen4_percent, "%")
-PCoA_title <- paste("Bray-Curtis, ",ntaxa(physeq.scale), "OTUs")
-
-
-pcoa_exp_trt <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = TRT, fill = TRT)) +
-  xlab(bray_axis1) + 
-  ylab(bray_axis2) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
-  scale_color_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
-  Tx +
-  theme(axis.text.x = element_text(angle = 45), axis.text = element_text(color="black", size = 15,vjust = 0.5,hjust = 1))
-#  scale_fill_discrete(name = "Treatment", labels = c("Alone", "Competition")) +
- # scale_color_discrete(name = "Treatment", labels = c("Alone", "Competition"))
-
-
-
-pcoa_exp_trtA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = TRT,fill = TRT)) +
-  xlab(bray_axis3) + 
-  ylab(bray_axis4) + 
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
-  scale_color_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
-  Tx
-
-
-pcoa_exp_sp <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = Species,fill = Species)) +
-  xlab("") + 
-  ylab(bray_axis2) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
- scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-   stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
-  Tx
-
-
-pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill = Species)) +
-  xlab("") + 
-  ylab(bray_axis4) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
-  Tx
-
-A <- ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T, Labels = c("C", "D"),font.label = list(size = 15, color = "black", face =
-  "plain"),hjust = -8,vjust = 1)
-
-B <- ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T, labels = c("A", "B"),font.label = list(size = 15, color = "black", face =
-  "plain"),hjust = -8,vjust = 1)
-
-MainFig <- ggarrange(B, A, nrow = 2)
-
-annotate_figure(MainFig,
-                top = text_grob(PCoA_title, face = "plain", size = 25, lineheight = 2)
-)
-```
-
-
-
-```{r 3D graphic, warning = F, comment = F, message = F}
-
-physeq.pcoa.df$TrtSp <- paste(physeq.pcoa.df$TRT, physeq.pcoa.df$Species, sep="")
-
-p <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.3, color = ~TrtSp) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis2),
-                     zaxis = list(title = bray_axis3)))
-
-
-p1 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis2),
-                     zaxis = list(title = bray_axis4)))
-
-p3 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis3),
-                     zaxis = list(title = bray_axis4)))
-
-```
-
-# PERMANOVA (Table 2)
-
-```{r adonis experimental data when all data combined, warning = F,comment = F,message = F}
-
-## All experiment, add variable treatment, then species
-sampledf <- data.frame(sample_data(physeq.scale))
-
-physeq.purp = subset_samples(physeq.scale, Species == "Ip")
-
-treatment <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(TRT)
-
-block <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(Block)
-
-adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
-
-```
-
-
 
 ```{r}
 physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray")
@@ -594,9 +432,9 @@ _*Inverse Simpson*_ it is an indication of the richness in a community with unif
 
 ### I commented out the subsampling to save time. The matrices produced were saved and then reoponed from their tab delmited formats into corresponding matrices.
 
-set.seed(3)
+set.seed(711)
 
-r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
+r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
          
  ## Calculate richness
 rich <- as.numeric(as.matrix(estimate_richness(r, measures = "Observed")))
@@ -607,7 +445,7 @@ simp <- as.numeric(as.matrix(estimate_richness(r, measures = "InvSimpson")))
 
 sim<- as.numeric(as.matrix(estimate_richness(r, measures = "Simpson")))
 
-s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
+s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
 
 shan <- as.numeric(as.matrix(estimate_richness(r, measures = "Shannon")))
 
@@ -768,6 +606,170 @@ anova(aov.simpson)
 anova(aov.evenness)
 
 # No significant differences
+```
+
+
+
+
+# Community Composition
+
+## Beta Diversity
+
+
+```{r PCoA Treatment and Species comparisoin Bray Curtis Estimate, warning = F, comment = F, message = F, fig.height = 12, fig.width = 16}
+
+# Beta diversity pcoa Bray-Curtis DNA only 
+physeq.pcoa <-
+  ordinate(
+    physeq = physeq.scale,
+    method = "PCoA",
+    distance = "bray"
+  )
+
+physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
+
+physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
+
+SampData <- data.frame(sample_data(physeq))
+
+colnames(SampData)[1] <- "Duplicates"
+
+SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
+
+physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData,by="Duplicates"))
+
+bray_values <- physeq.pcoa$values
+bray_rel_eigens <- bray_values$Relative_eig
+
+bray_rel_eigen1 <- bray_rel_eigens[1]
+bray_rel_eigen1_percent <- round(bray_rel_eigen1 * 100, digits = 1)
+
+bray_rel_eigen2 <- bray_rel_eigens[2]
+bray_rel_eigen2_percent <- round(bray_rel_eigen2 * 100, digits = 1)
+
+bray_rel_eigen3 <- bray_rel_eigens[3]
+bray_rel_eigen3_percent <- round(bray_rel_eigen3 * 100, digits = 1)
+
+bray_rel_eigen4 <- bray_rel_eigens[4]
+bray_rel_eigen4_percent <- round(bray_rel_eigen4 * 100, digits = 1)
+
+bray_rel_eigen5 <- bray_rel_eigens[5]
+bray_rel_eigen5_percent <- round(bray_rel_eigen5 * 100, digits = 1)
+
+# Prep axis labels & title
+bray_axis1 <- paste("PCoA 1:",bray_rel_eigen1_percent, "%")
+bray_axis2 <- paste("PCoA 2:",bray_rel_eigen2_percent, "%")
+bray_axis3 <- paste("PCoA 3:",bray_rel_eigen3_percent, "%")
+bray_axis4 <- paste("PCoA 4:",bray_rel_eigen4_percent, "%")
+PCoA_title <- paste("Bray-Curtis, ",ntaxa(physeq.scale), "OTUs")
+
+
+pcoa_exp_trt <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = TRT, fill = TRT)) +
+  xlab(bray_axis1) + 
+  ylab(bray_axis2) +
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
+  scale_color_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
+  Tx +
+  theme(axis.text.x = element_text(angle = 45), axis.text = element_text(color="black", size = 15,vjust = 0.5,hjust = 1))
+#  scale_fill_discrete(name = "Treatment", labels = c("Alone", "Competition")) +
+ # scale_color_discrete(name = "Treatment", labels = c("Alone", "Competition"))
+
+
+
+pcoa_exp_trtA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = TRT,fill = TRT)) +
+  xlab(bray_axis3) + 
+  ylab(bray_axis4) + 
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
+  scale_color_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
+  Tx
+
+
+pcoa_exp_sp <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = Species,fill = Species)) +
+  xlab("") + 
+  ylab(bray_axis2) +
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+ scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+   stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
+  Tx
+
+
+pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill = Species)) +
+  xlab("") + 
+  ylab(bray_axis4) +
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
+  Tx
+
+A <- ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T, Labels = c("C", "D"),font.label = list(size = 15, color = "black", face =
+  "plain"),hjust = -8,vjust = 1)
+
+B <- ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T, labels = c("A", "B"),font.label = list(size = 15, color = "black", face =
+  "plain"),hjust = -8,vjust = 1)
+
+MainFig <- ggarrange(B, A, nrow = 2)
+
+annotate_figure(MainFig,
+                top = text_grob(PCoA_title, face = "plain", size = 25, lineheight = 2)
+)
+```
+
+
+
+```{r 3D graphic, warning = F, comment = F, message = F}
+
+physeq.pcoa.df$TrtSp <- paste(physeq.pcoa.df$TRT, physeq.pcoa.df$Species, sep="")
+
+p <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.3, color = ~TrtSp) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis2),
+                     zaxis = list(title = bray_axis3)))
+
+
+p1 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis2),
+                     zaxis = list(title = bray_axis4)))
+
+p3 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis3),
+                     zaxis = list(title = bray_axis4)))
+
+```
+
+# PERMANOVA (Table 2)
+
+```{r adonis experimental data when all data combined, warning = F,comment = F,message = F}
+
+## All experiment, add variable treatment, then species
+sampledf <- data.frame(sample_data(physeq.scale))
+
+physeq.purp = subset_samples(physeq.scale, Species == "Ip")
+
+treatment <- sampledf %>% 
+  filter(Species == "Ip") %>% 
+  pull(TRT)
+
+block <- sampledf %>% 
+  filter(Species == "Ip") %>% 
+  pull(Block)
+
+adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
+
 ```
 
 
@@ -1253,7 +1255,7 @@ summary(model)
 
 
 
- report
+
 summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
 summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Competition
 

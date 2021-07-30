@@ -11,9 +11,6 @@ Sara Colom
   - [Load Libraries](#load-libraries)
   - [Read in Data](#read-in-data)
       - [Sequence depth and pruning](#sequence-depth-and-pruning)
-  - [Community Composition](#community-composition)
-      - [Beta Diversity](#beta-diversity)
-  - [PERMANOVA (Table 2)](#permanova-table-2)
       - [Test for differently abundant
         OTUs](#test-for-differently-abundant-otus)
           - [Visualize the different groups at the family
@@ -30,12 +27,15 @@ Sara Colom
   - [Linear mixed models](#linear-mixed-models)
   - [ANOVA Test for treatment within I. purpurea (Table
     1)](#anova-test-for-treatment-within-i-purpurea-table-1)
+  - [Community Composition](#community-composition)
+      - [Beta Diversity](#beta-diversity)
+  - [PERMANOVA (Table 2)](#permanova-table-2)
   - [Correlations with root traits](#correlations-with-root-traits)
       - [Prep root data](#prep-root-data)
       - [Within species (root traits and
         alphadiv)](#within-species-root-traits-and-alphadiv)
-      - [Plotting significant linear associations (Table
-        3)](#plotting-significant-linear-associations-table-3)
+      - [Plotting significant linear
+        associations](#plotting-significant-linear-associations)
       - [Linear mixed models (not
         reported)](#linear-mixed-models-not-reported)
       - [Selection on microbe
@@ -293,178 +293,6 @@ physeq1
     ## sample_data() Sample Data:       [ 173 samples by 9 sample variables ]
     ## tax_table()   Taxonomy Table:    [ 1098 taxa by 6 taxonomic ranks ]
 
-# Community Composition
-
-## Beta Diversity
-
-``` r
-# Beta diversity pcoa Bray-Curtis DNA only 
-physeq.pcoa <-
-  ordinate(
-    physeq = physeq.scale,
-    method = "PCoA",
-    distance = "bray"
-  )
-
-physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
-
-physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
-
-SampData <- data.frame(sample_data(physeq))
-
-colnames(SampData)[1] <- "Duplicates"
-
-SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
-
-physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData,by="Duplicates"))
-
-bray_values <- physeq.pcoa$values
-bray_rel_eigens <- bray_values$Relative_eig
-
-bray_rel_eigen1 <- bray_rel_eigens[1]
-bray_rel_eigen1_percent <- round(bray_rel_eigen1 * 100, digits = 1)
-
-bray_rel_eigen2 <- bray_rel_eigens[2]
-bray_rel_eigen2_percent <- round(bray_rel_eigen2 * 100, digits = 1)
-
-bray_rel_eigen3 <- bray_rel_eigens[3]
-bray_rel_eigen3_percent <- round(bray_rel_eigen3 * 100, digits = 1)
-
-bray_rel_eigen4 <- bray_rel_eigens[4]
-bray_rel_eigen4_percent <- round(bray_rel_eigen4 * 100, digits = 1)
-
-bray_rel_eigen5 <- bray_rel_eigens[5]
-bray_rel_eigen5_percent <- round(bray_rel_eigen5 * 100, digits = 1)
-
-# Prep axis labels & title
-bray_axis1 <- paste("PCoA 1:",bray_rel_eigen1_percent, "%")
-bray_axis2 <- paste("PCoA 2:",bray_rel_eigen2_percent, "%")
-bray_axis3 <- paste("PCoA 3:",bray_rel_eigen3_percent, "%")
-bray_axis4 <- paste("PCoA 4:",bray_rel_eigen4_percent, "%")
-PCoA_title <- paste("Bray-Curtis, ",ntaxa(physeq.scale), "OTUs")
-
-
-pcoa_exp_trt <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = TRT, fill = TRT)) +
-  xlab(bray_axis1) + 
-  ylab(bray_axis2) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
-  scale_color_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
-  Tx +
-  theme(axis.text.x = element_text(angle = 45), axis.text = element_text(color="black", size = 15,vjust = 0.5,hjust = 1))
-#  scale_fill_discrete(name = "Treatment", labels = c("Alone", "Competition")) +
- # scale_color_discrete(name = "Treatment", labels = c("Alone", "Competition"))
-
-
-
-pcoa_exp_trtA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = TRT,fill = TRT)) +
-  xlab(bray_axis3) + 
-  ylab(bray_axis4) + 
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
-  scale_color_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
-  Tx
-
-
-pcoa_exp_sp <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = Species,fill = Species)) +
-  xlab("") + 
-  ylab(bray_axis2) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
- scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-   stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
-  Tx
-
-
-pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill = Species)) +
-  xlab("") + 
-  ylab(bray_axis4) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
-  Tx
-
-A <- ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T, Labels = c("C", "D"),font.label = list(size = 15, color = "black", face =
-  "plain"),hjust = -8,vjust = 1)
-
-B <- ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T, labels = c("A", "B"),font.label = list(size = 15, color = "black", face =
-  "plain"),hjust = -8,vjust = 1)
-
-MainFig <- ggarrange(B, A, nrow = 2)
-
-annotate_figure(MainFig,
-                top = text_grob(PCoA_title, face = "plain", size = 25, lineheight = 2)
-)
-```
-
-![](README_files/figure-gfm/PCoA%20Treatment%20and%20Species%20comparisoin%20Bray%20Curtis%20Estimate-1.png)<!-- -->
-
-``` r
-physeq.pcoa.df$TrtSp <- paste(physeq.pcoa.df$TRT, physeq.pcoa.df$Species, sep="")
-
-p <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.3, color = ~TrtSp) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis2),
-                     zaxis = list(title = bray_axis3)))
-
-
-p1 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis2),
-                     zaxis = list(title = bray_axis4)))
-
-p3 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis3),
-                     zaxis = list(title = bray_axis4)))
-```
-
-# PERMANOVA (Table 2)
-
-``` r
-## All experiment, add variable treatment, then species
-sampledf <- data.frame(sample_data(physeq.scale))
-
-physeq.purp = subset_samples(physeq.scale, Species == "Ip")
-
-treatment <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(TRT)
-
-block <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(Block)
-
-adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
-```
-
-    FALSE 
-    FALSE Call:
-    FALSE adonis(formula = otu_table(physeq.purp) %>% t ~ treatment + block,      method = "bray") 
-    FALSE 
-    FALSE Permutation: free
-    FALSE Number of permutations: 999
-    FALSE 
-    FALSE Terms added sequentially (first to last)
-    FALSE 
-    FALSE           Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)    
-    FALSE treatment  1    0.0258 0.025835  0.8460 0.00796  0.556    
-    FALSE block      3    0.3189 0.106312  3.4813 0.09826  0.001 ***
-    FALSE Residuals 95    2.9011 0.030538         0.89378           
-    FALSE Total     99    3.2459                  1.00000           
-    FALSE ---
-    FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
 ``` r
 physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray")
 
@@ -650,9 +478,9 @@ as affected by sampling effort as the Shannon index.
 ``` r
 ### I commented out the subsampling to save time. The matrices produced were saved and then reoponed from their tab delmited formats into corresponding matrices.
 
-set.seed(3)
+set.seed(711)
 
-r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
+r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
          
  ## Calculate richness
 rich <- as.numeric(as.matrix(estimate_richness(r, measures = "Observed")))
@@ -663,7 +491,7 @@ simp <- as.numeric(as.matrix(estimate_richness(r, measures = "InvSimpson")))
 
 sim<- as.numeric(as.matrix(estimate_richness(r, measures = "Simpson")))
 
-s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE)
+s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
 
 shan <- as.numeric(as.matrix(estimate_richness(r, measures = "Shannon")))
 
@@ -787,7 +615,7 @@ shapiro.test(alpha$rich) # Not normal
     FALSE   Shapiro-Wilk normality test
     FALSE 
     FALSE data:  alpha$rich
-    FALSE W = 0.98976, p-value = 0.248
+    FALSE W = 0.98984, p-value = 0.2539
 
 ``` r
 shapiro.test(alpha$even) # Normal
@@ -797,7 +625,7 @@ shapiro.test(alpha$even) # Normal
     FALSE   Shapiro-Wilk normality test
     FALSE 
     FALSE data:  alpha$even
-    FALSE W = 0.98147, p-value = 0.02095
+    FALSE W = 0.98648, p-value = 0.09413
 
 ``` r
 shapiro.test(alpha$sim) # Normal
@@ -807,7 +635,7 @@ shapiro.test(alpha$sim) # Normal
     FALSE   Shapiro-Wilk normality test
     FALSE 
     FALSE data:  alpha$sim
-    FALSE W = 0.90285, p-value = 2.957e-09
+    FALSE W = 0.90115, p-value = 2.331e-09
 
 ``` r
 histogram(alpha$rich,xlab = "Richness") # Note richness though, not normal, looks close to normal.
@@ -840,14 +668,18 @@ InvLmm <- lmer(InvSimp ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species ==
 SimLmm <- lmer(sim ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
 
 EvenLmm <- lmer(even ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
+```
 
+    ## boundary (singular) fit: see ?isSingular
+
+``` r
 anova(RichLmm)
 ```
 
     ## Type III Analysis of Variance Table with Satterthwaite's method
     ##        Sum Sq Mean Sq NumDF  DenDF F value   Pr(>F)   
-    ## TRT     722.5   722.5     1 86.835  0.8307 0.364582   
-    ## Block 14285.4  4761.8     3 27.740  5.4751 0.004382 **
+    ## TRT    1320.5  1320.5     1 87.801  1.4442 0.232690   
+    ## Block 13858.8  4619.6     3 26.431  5.0524 0.006744 **
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -859,18 +691,18 @@ ranova(RichLmm)
     ## 
     ## Model:
     ## rich ~ TRT + Block + (1 | Block:ML)
-    ##                npar  logLik    AIC     LRT Df Pr(>Chisq)
-    ## <none>            7 -466.25 946.49                      
-    ## (1 | Block:ML)    6 -466.38 944.75 0.26058  1     0.6097
+    ##                npar  logLik    AIC    LRT Df Pr(>Chisq)
+    ## <none>            7 -467.21 948.42                     
+    ## (1 | Block:ML)    6 -467.22 946.44 0.0238  1     0.8774
 
 ``` r
 anova(InvLmm)
 ```
 
     ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##       Sum Sq Mean Sq NumDF  DenDF F value  Pr(>F)  
-    ## TRT     2.59   2.587     1 80.632  0.0339 0.85435  
-    ## Block 654.09 218.030     3 23.898  2.8583 0.05823 .
+    ##       Sum Sq Mean Sq NumDF  DenDF F value Pr(>F)  
+    ## TRT     0.27   0.273     1 82.613  0.0035 0.9533  
+    ## Block 721.76 240.588     3 24.544  3.0419 0.0479 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -883,8 +715,8 @@ ranova(InvLmm)
     ## Model:
     ## InvSimp ~ TRT + Block + (1 | Block:ML)
     ##                npar  logLik    AIC    LRT Df Pr(>Chisq)
-    ## <none>            7 -354.65 723.29                     
-    ## (1 | Block:ML)    6 -355.47 722.95 1.6554  1     0.1982
+    ## <none>            7 -354.94 723.88                     
+    ## (1 | Block:ML)    6 -355.46 722.92 1.0486  1     0.3058
 
 ``` r
 anova(SimLmm)
@@ -892,8 +724,8 @@ anova(SimLmm)
 
     ## Type III Analysis of Variance Table with Satterthwaite's method
     ##           Sum Sq    Mean Sq NumDF  DenDF F value Pr(>F)
-    ## TRT   2.9109e-05 2.9109e-05     1 77.631  0.5805 0.4484
-    ## Block 2.9617e-04 9.8724e-05     3 22.199  1.9687 0.1479
+    ## TRT   0.00002357 2.3571e-05     1 79.747  0.4399 0.5091
+    ## Block 0.00033833 1.1278e-04     3 22.261  2.1049 0.1283
 
 ``` r
 ranova(SimLmm)
@@ -904,17 +736,17 @@ ranova(SimLmm)
     ## Model:
     ## sim ~ TRT + Block + (1 | Block:ML)
     ##                npar logLik     AIC    LRT Df Pr(>Chisq)
-    ## <none>            7 319.98 -625.96                     
-    ## (1 | Block:ML)    6 318.89 -625.79 2.1764  1     0.1401
+    ## <none>            7 318.62 -623.24                     
+    ## (1 | Block:ML)    6 317.94 -623.89 1.3513  1      0.245
 
 ``` r
 anova(EvenLmm)
 ```
 
     ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##           Sum Sq    Mean Sq NumDF  DenDF F value   Pr(>F)   
-    ## TRT   4.6400e-08 4.6370e-08     1 89.780  0.2445 0.622164   
-    ## Block 3.4367e-06 1.1455e-06     3 34.653  6.0411 0.002016 **
+    ##           Sum Sq    Mean Sq NumDF DenDF F value   Pr(>F)   
+    ## TRT   2.2628e-07 2.2628e-07     1    95  1.1782 0.280475   
+    ## Block 2.9697e-06 9.8990e-07     3    95  5.1542 0.002408 **
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -926,9 +758,9 @@ ranova(EvenLmm)
     ## 
     ## Model:
     ## even ~ TRT + Block + (1 | Block:ML)
-    ##                npar logLik   AIC     LRT Df Pr(>Chisq)
-    ## <none>            7 591.53 -1169                      
-    ## (1 | Block:ML)    6 591.48 -1171 0.08574  1     0.7697
+    ##                npar logLik     AIC LRT Df Pr(>Chisq)
+    ## <none>            7 591.89 -1169.8                  
+    ## (1 | Block:ML)    6 591.89 -1171.8   0  1          1
 
 # ANOVA Test for treatment within I. purpurea (Table 1)
 
@@ -949,10 +781,10 @@ anova(aov.Richness)
     FALSE Analysis of Variance Table
     FALSE 
     FALSE Response: rich
-    FALSE           Df Sum Sq Mean Sq F value    Pr(>F)    
-    FALSE TRT        1    489   489.3  0.5375 0.4652822    
-    FALSE Block      3  17153  5717.7  6.2813 0.0006192 ***
-    FALSE Residuals 95  86476   910.3                      
+    FALSE           Df Sum Sq Mean Sq F value   Pr(>F)   
+    FALSE TRT        1    962   961.9  1.0381 0.310860   
+    FALSE Block      3  14694  4897.8  5.2858 0.002052 **
+    FALSE Residuals 95  88028   926.6                    
     FALSE ---
     FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -964,9 +796,9 @@ anova(aov.simpsonInv)
     FALSE 
     FALSE Response: InvSimp
     FALSE           Df Sum Sq Mean Sq F value  Pr(>F)  
-    FALSE TRT        1    0.2    0.16  0.0018 0.96612  
-    FALSE Block      3 1019.7  339.91  3.8562 0.01187 *
-    FALSE Residuals 95 8373.8   88.14                  
+    FALSE TRT        1    2.5    2.54  0.0288 0.86562  
+    FALSE Block      3 1031.6  343.85  3.9020 0.01122 *
+    FALSE Residuals 95 8371.5   88.12                  
     FALSE ---
     FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -978,9 +810,9 @@ anova(aov.simpson)
     FALSE 
     FALSE Response: sim
     FALSE           Df    Sum Sq    Mean Sq F value  Pr(>F)  
-    FALSE TRT        1 0.0000255 2.5540e-05  0.4244 0.51632  
-    FALSE Block      3 0.0004895 1.6315e-04  2.7112 0.04933 *
-    FALSE Residuals 95 0.0057168 6.0177e-05                  
+    FALSE TRT        1 0.0000171 1.7100e-05  0.2785 0.59889  
+    FALSE Block      3 0.0005091 1.6970e-04  2.7643 0.04617 *
+    FALSE Residuals 95 0.0058321 6.1391e-05                  
     FALSE ---
     FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -991,16 +823,188 @@ anova(aov.evenness)
     FALSE Analysis of Variance Table
     FALSE 
     FALSE Response: even
-    FALSE           Df     Sum Sq    Mean Sq F value    Pr(>F)    
-    FALSE TRT        1 3.4700e-08 3.4720e-08  0.1792 0.6729822    
-    FALSE Block      3 3.7634e-06 1.2545e-06  6.4766 0.0004908 ***
-    FALSE Residuals 95 1.8401e-05 1.9369e-07                      
+    FALSE           Df     Sum Sq    Mean Sq F value   Pr(>F)   
+    FALSE TRT        1 1.9700e-07 1.9704e-07  1.0259 0.313685   
+    FALSE Block      3 2.9697e-06 9.8990e-07  5.1542 0.002408 **
+    FALSE Residuals 95 1.8245e-05 1.9206e-07                    
     FALSE ---
     FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
 # No significant differences
 ```
+
+# Community Composition
+
+## Beta Diversity
+
+``` r
+# Beta diversity pcoa Bray-Curtis DNA only 
+physeq.pcoa <-
+  ordinate(
+    physeq = physeq.scale,
+    method = "PCoA",
+    distance = "bray"
+  )
+
+physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
+
+physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
+
+SampData <- data.frame(sample_data(physeq))
+
+colnames(SampData)[1] <- "Duplicates"
+
+SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
+
+physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData,by="Duplicates"))
+
+bray_values <- physeq.pcoa$values
+bray_rel_eigens <- bray_values$Relative_eig
+
+bray_rel_eigen1 <- bray_rel_eigens[1]
+bray_rel_eigen1_percent <- round(bray_rel_eigen1 * 100, digits = 1)
+
+bray_rel_eigen2 <- bray_rel_eigens[2]
+bray_rel_eigen2_percent <- round(bray_rel_eigen2 * 100, digits = 1)
+
+bray_rel_eigen3 <- bray_rel_eigens[3]
+bray_rel_eigen3_percent <- round(bray_rel_eigen3 * 100, digits = 1)
+
+bray_rel_eigen4 <- bray_rel_eigens[4]
+bray_rel_eigen4_percent <- round(bray_rel_eigen4 * 100, digits = 1)
+
+bray_rel_eigen5 <- bray_rel_eigens[5]
+bray_rel_eigen5_percent <- round(bray_rel_eigen5 * 100, digits = 1)
+
+# Prep axis labels & title
+bray_axis1 <- paste("PCoA 1:",bray_rel_eigen1_percent, "%")
+bray_axis2 <- paste("PCoA 2:",bray_rel_eigen2_percent, "%")
+bray_axis3 <- paste("PCoA 3:",bray_rel_eigen3_percent, "%")
+bray_axis4 <- paste("PCoA 4:",bray_rel_eigen4_percent, "%")
+PCoA_title <- paste("Bray-Curtis, ",ntaxa(physeq.scale), "OTUs")
+
+
+pcoa_exp_trt <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = TRT, fill = TRT)) +
+  xlab(bray_axis1) + 
+  ylab(bray_axis2) +
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
+  scale_color_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
+  Tx +
+  theme(axis.text.x = element_text(angle = 45), axis.text = element_text(color="black", size = 15,vjust = 0.5,hjust = 1))
+#  scale_fill_discrete(name = "Treatment", labels = c("Alone", "Competition")) +
+ # scale_color_discrete(name = "Treatment", labels = c("Alone", "Competition"))
+
+
+
+pcoa_exp_trtA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = TRT,fill = TRT)) +
+  xlab(bray_axis3) + 
+  ylab(bray_axis4) + 
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
+  scale_color_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
+  Tx
+
+
+pcoa_exp_sp <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = Species,fill = Species)) +
+  xlab("") + 
+  ylab(bray_axis2) +
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+ scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+   stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
+  Tx
+
+
+pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill = Species)) +
+  xlab("") + 
+  ylab(bray_axis4) +
+  geom_point(alpha = 0.9) + 
+  theme_classic() +
+  scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
+  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
+  Tx
+
+A <- ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T, Labels = c("C", "D"),font.label = list(size = 15, color = "black", face =
+  "plain"),hjust = -8,vjust = 1)
+
+B <- ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T, labels = c("A", "B"),font.label = list(size = 15, color = "black", face =
+  "plain"),hjust = -8,vjust = 1)
+
+MainFig <- ggarrange(B, A, nrow = 2)
+
+annotate_figure(MainFig,
+                top = text_grob(PCoA_title, face = "plain", size = 25, lineheight = 2)
+)
+```
+
+![](README_files/figure-gfm/PCoA%20Treatment%20and%20Species%20comparisoin%20Bray%20Curtis%20Estimate-1.png)<!-- -->
+
+``` r
+physeq.pcoa.df$TrtSp <- paste(physeq.pcoa.df$TRT, physeq.pcoa.df$Species, sep="")
+
+p <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.3, color = ~TrtSp) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis2),
+                     zaxis = list(title = bray_axis3)))
+
+
+p1 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis2),
+                     zaxis = list(title = bray_axis4)))
+
+p3 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = bray_axis1),
+                     yaxis = list(title = bray_axis3),
+                     zaxis = list(title = bray_axis4)))
+```
+
+# PERMANOVA (Table 2)
+
+``` r
+## All experiment, add variable treatment, then species
+sampledf <- data.frame(sample_data(physeq.scale))
+
+physeq.purp = subset_samples(physeq.scale, Species == "Ip")
+
+treatment <- sampledf %>% 
+  filter(Species == "Ip") %>% 
+  pull(TRT)
+
+block <- sampledf %>% 
+  filter(Species == "Ip") %>% 
+  pull(Block)
+
+adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
+```
+
+    FALSE 
+    FALSE Call:
+    FALSE adonis(formula = otu_table(physeq.purp) %>% t ~ treatment + block,      method = "bray") 
+    FALSE 
+    FALSE Permutation: free
+    FALSE Number of permutations: 999
+    FALSE 
+    FALSE Terms added sequentially (first to last)
+    FALSE 
+    FALSE           Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)    
+    FALSE treatment  1    0.0258 0.025835  0.8460 0.00796  0.551    
+    FALSE block      3    0.3189 0.106312  3.4813 0.09826  0.001 ***
+    FALSE Residuals 95    2.9011 0.030538         0.89378           
+    FALSE Total     99    3.2459                  1.00000           
+    FALSE ---
+    FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # Correlations with root traits
 
@@ -1039,22 +1043,22 @@ summary(SimpPC1)
     ## 
     ## Residuals:
     ##       Min        1Q    Median        3Q       Max 
-    ## -0.025913 -0.004089  0.001551  0.005449  0.010946 
+    ## -0.027453 -0.003862  0.001500  0.005865  0.011300 
     ## 
     ## Coefficients:
     ##              Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  0.977714   0.003803 257.090   <2e-16 ***
-    ## PC1          0.001396   0.001236   1.130    0.264    
-    ## Block2      -0.004774   0.010191  -0.468    0.641    
-    ## Block3      -0.009040   0.010696  -0.845    0.402    
-    ## Block4      -0.001657   0.002590  -0.640    0.525    
-    ## TRTInter    -0.004250   0.002428  -1.751    0.086 .  
+    ## (Intercept)  0.977989   0.003869 252.755   <2e-16 ***
+    ## PC1          0.001447   0.001258   1.150   0.2554    
+    ## Block2      -0.005401   0.010369  -0.521   0.6047    
+    ## Block3      -0.009643   0.010882  -0.886   0.3797    
+    ## Block4      -0.002049   0.002635  -0.777   0.4405    
+    ## TRTInter    -0.004216   0.002470  -1.707   0.0939 .  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.008047 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1316, Adjusted R-squared:  0.04647 
-    ## F-statistic: 1.546 on 5 and 51 DF,  p-value: 0.1923
+    ## Residual standard error: 0.008187 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1337, Adjusted R-squared:  0.04877 
+    ## F-statistic: 1.574 on 5 and 51 DF,  p-value: 0.1841
 
 ``` r
 SimpInvPC1 <- lm(InvSimp ~ PC1 + Comp + TRT + Block, RootAlphaPurp) 
@@ -1067,26 +1071,26 @@ summary(SimpInvPC1)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -15.1824  -6.8687  -0.0265   6.3398  19.2896 
+    ## -14.0281  -6.9591   0.3038   6.3289  18.8379 
     ## 
     ## Coefficients: (1 not defined because of singularities)
     ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)        42.913      4.388   9.779 5.24e-13 ***
-    ## PC1                 1.164      1.431   0.814    0.420    
-    ## CompPA 4.12 Ihed   -2.807      3.624  -0.775    0.442    
-    ## CompPA 4.15 Ihed   -0.445      3.658  -0.122    0.904    
-    ## CompPA 4.2 Ihed    -9.861      4.166  -2.367    0.022 *  
-    ## CompPA 4.3 Ihed    -3.453      4.029  -0.857    0.396    
+    ## (Intercept)       42.7370     4.3928   9.729 6.18e-13 ***
+    ## PC1                1.0167     1.4322   0.710   0.4812    
+    ## CompPA 4.12 Ihed  -2.5142     3.6273  -0.693   0.4916    
+    ## CompPA 4.15 Ihed  -0.2098     3.6612  -0.057   0.9545    
+    ## CompPA 4.2 Ihed   -9.5479     4.1700  -2.290   0.0265 *  
+    ## CompPA 4.3 Ihed   -3.6759     4.0327  -0.912   0.3666    
     ## TRTInter               NA         NA      NA       NA    
-    ## Block2             -2.257     11.804  -0.191    0.849    
-    ## Block3             -5.930     12.381  -0.479    0.634    
-    ## Block4             -2.485      2.987  -0.832    0.410    
+    ## Block2            -1.2232    11.8157  -0.104   0.9180    
+    ## Block3            -5.0956    12.3933  -0.411   0.6828    
+    ## Block4            -2.9551     2.9900  -0.988   0.3280    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.223 on 48 degrees of freedom
-    ## Multiple R-squared:  0.2152, Adjusted R-squared:  0.08438 
-    ## F-statistic: 1.645 on 8 and 48 DF,  p-value: 0.137
+    ## Residual standard error: 9.233 on 48 degrees of freedom
+    ## Multiple R-squared:  0.2126, Adjusted R-squared:  0.08133 
+    ## F-statistic:  1.62 on 8 and 48 DF,  p-value: 0.1441
 
 ``` r
 RichPC1 <- lm(rich ~ PC1 + Block + TRT, RootAlphaPurp) 
@@ -1099,22 +1103,22 @@ summary(RichPC1)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -69.028 -16.083   5.175  20.745  51.125 
+    ## -68.694 -17.875   1.742  20.104  51.312 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 461.3236    13.9640  33.037   <2e-16 ***
-    ## PC1           3.3914     4.5387   0.747    0.458    
-    ## Block2       -7.9641    37.4211  -0.213    0.832    
-    ## Block3       -3.3032    39.2724  -0.084    0.933    
-    ## Block4        0.3686     9.5104   0.039    0.969    
-    ## TRTInter    -14.7918     8.9143  -1.659    0.103    
+    ## (Intercept)  461.869     14.307  32.283   <2e-16 ***
+    ## PC1            3.379      4.650   0.727   0.4707    
+    ## Block2        -7.192     38.340  -0.188   0.8519    
+    ## Block3        -2.043     40.236  -0.051   0.9597    
+    ## Block4         1.186      9.744   0.122   0.9036    
+    ## TRTInter     -17.545      9.133  -1.921   0.0603 .  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 29.55 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1565, Adjusted R-squared:  0.07382 
-    ## F-statistic: 1.893 on 5 and 51 DF,  p-value: 0.1119
+    ## Residual standard error: 30.27 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1664, Adjusted R-squared:  0.08472 
+    ## F-statistic: 2.037 on 5 and 51 DF,  p-value: 0.08903
 
 ``` r
 EvenPC1 <- lm(even ~ PC1 + Block + TRT , RootAlphaPurp) 
@@ -1127,22 +1131,22 @@ summary(EvenPC1)
     ## 
     ## Residuals:
     ##        Min         1Q     Median         3Q        Max 
-    ## -8.393e-04 -2.697e-04  1.163e-05  2.727e-04  1.151e-03 
+    ## -8.015e-04 -3.058e-04  1.160e-06  2.792e-04  9.880e-04 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  1.035e-02  2.014e-04  51.383   <2e-16 ***
-    ## PC1         -1.488e-06  6.547e-05  -0.023    0.982    
-    ## Block2      -1.341e-04  5.398e-04  -0.248    0.805    
-    ## Block3      -3.566e-04  5.665e-04  -0.629    0.532    
-    ## Block4      -1.274e-04  1.372e-04  -0.929    0.357    
-    ## TRTInter     1.062e-04  1.286e-04   0.826    0.413    
+    ## (Intercept)  1.033e-02  2.037e-04  50.696   <2e-16 ***
+    ## PC1         -6.197e-06  6.620e-05  -0.094    0.926    
+    ## Block2      -1.131e-04  5.458e-04  -0.207    0.837    
+    ## Block3      -3.416e-04  5.728e-04  -0.596    0.554    
+    ## Block4      -1.537e-04  1.387e-04  -1.108    0.273    
+    ## TRTInter     1.765e-04  1.300e-04   1.358    0.180    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.0004262 on 51 degrees of freedom
-    ## Multiple R-squared:  0.101,  Adjusted R-squared:  0.01288 
-    ## F-statistic: 1.146 on 5 and 51 DF,  p-value: 0.3484
+    ## Residual standard error: 0.0004309 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1239, Adjusted R-squared:  0.03796 
+    ## F-statistic: 1.442 on 5 and 51 DF,  p-value: 0.2253
 
 ``` r
 SimpPC2 <- lm(sim ~ PC2 + Block + TRT, RootAlphaPurp) 
@@ -1155,22 +1159,22 @@ summary(SimpPC2)
     ## 
     ## Residuals:
     ##       Min        1Q    Median        3Q       Max 
-    ## -0.025979 -0.003929  0.001515  0.005217  0.012015 
+    ## -0.027561 -0.003682  0.001345  0.005432  0.011845 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  0.9720777  0.0028672 339.029   <2e-16 ***
-    ## PC2         -0.0008864  0.0006205  -1.428    0.159    
-    ## Block2       0.0062110  0.0045358   1.369    0.177    
-    ## Block3       0.0039608  0.0031538   1.256    0.215    
-    ## Block4       0.0005031  0.0031648   0.159    0.874    
-    ## TRTInter    -0.0029566  0.0024273  -1.218    0.229    
+    ## (Intercept)  0.9721778  0.0029179 333.173   <2e-16 ***
+    ## PC2         -0.0009071  0.0006315  -1.436    0.157    
+    ## Block2       0.0059736  0.0046160   1.294    0.201    
+    ## Block3       0.0038107  0.0032096   1.187    0.241    
+    ## Block4       0.0001549  0.0032208   0.048    0.962    
+    ## TRTInter    -0.0028856  0.0024702  -1.168    0.248    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.007989 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1441, Adjusted R-squared:  0.06022 
-    ## F-statistic: 1.718 on 5 and 51 DF,  p-value: 0.1474
+    ## Residual standard error: 0.00813 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1458, Adjusted R-squared:  0.06203 
+    ## F-statistic: 1.741 on 5 and 51 DF,  p-value: 0.1421
 
 ``` r
 SimpInvPC2 <- lm(InvSimp ~ PC2 + Comp + TRT + Block, RootAlphaPurp) 
@@ -1182,27 +1186,27 @@ summary(SimpInvPC2)
     ## lm(formula = InvSimp ~ PC2 + Comp + TRT + Block, data = RootAlphaPurp)
     ## 
     ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -14.895  -6.622  -0.226   4.403  21.241 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -13.8113  -6.6027  -0.0319   5.2411  20.5597 
     ## 
     ## Coefficients: (1 not defined because of singularities)
     ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)       38.5229     3.3477  11.507  2.1e-15 ***
-    ## PC2               -0.6194     0.7306  -0.848   0.4008    
-    ## CompPA 4.12 Ihed  -2.1387     3.6027  -0.594   0.5556    
-    ## CompPA 4.15 Ihed   0.5527     3.6153   0.153   0.8791    
-    ## CompPA 4.2 Ihed   -8.8425     4.2941  -2.059   0.0449 *  
-    ## CompPA 4.3 Ihed   -2.1189     4.0761  -0.520   0.6056    
+    ## (Intercept)       38.8561     3.3502  11.598 1.59e-15 ***
+    ## PC2               -0.5592     0.7312  -0.765   0.4481    
+    ## CompPA 4.12 Ihed  -1.9226     3.6054  -0.533   0.5963    
+    ## CompPA 4.15 Ihed   0.6735     3.6180   0.186   0.8531    
+    ## CompPA 4.2 Ihed   -8.6322     4.2973  -2.009   0.0502 .  
+    ## CompPA 4.3 Ihed   -2.4873     4.0792  -0.610   0.5449    
     ## TRTInter               NA         NA      NA       NA    
-    ## Block2             6.7845     5.4154   1.253   0.2163    
-    ## Block3             4.6992     3.7826   1.242   0.2201    
-    ## Block4            -1.0441     3.7024  -0.282   0.7791    
+    ## Block2             6.6866     5.4195   1.234   0.2233    
+    ## Block3             4.2155     3.7854   1.114   0.2710    
+    ## Block4            -1.6399     3.7052  -0.443   0.6600    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.218 on 48 degrees of freedom
-    ## Multiple R-squared:  0.2161, Adjusted R-squared:  0.08545 
-    ## F-statistic: 1.654 on 8 and 48 DF,  p-value: 0.1346
+    ## Residual standard error: 9.225 on 48 degrees of freedom
+    ## Multiple R-squared:  0.2139, Adjusted R-squared:  0.08286 
+    ## F-statistic: 1.632 on 8 and 48 DF,  p-value: 0.1405
 
 ``` r
 RichPC2 <- lm(rich ~ PC2 + Block + TRT, RootAlphaPurp) 
@@ -1215,22 +1219,22 @@ summary(RichPC2)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -63.830 -12.931   5.487  16.077  45.898 
+    ## -65.527 -11.917   3.751  21.397  48.599 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  441.161     10.229  43.128  < 2e-16 ***
-    ## PC2           -4.650      2.214  -2.101  0.04063 *  
-    ## Block2        20.640     16.182   1.275  0.20793    
-    ## Block3        32.252     11.252   2.866  0.00602 ** 
-    ## Block4        13.312     11.291   1.179  0.24386    
-    ## TRTInter      -9.473      8.660  -1.094  0.27910    
+    ## (Intercept)  438.929     10.272  42.732  < 2e-16 ***
+    ## PC2           -5.734      2.223  -2.579  0.01282 *  
+    ## Block2        22.156     16.249   1.363  0.17872    
+    ## Block3        35.137     11.298   3.110  0.00306 ** 
+    ## Block4        17.473     11.338   1.541  0.12946    
+    ## TRTInter     -11.287      8.696  -1.298  0.20012    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 28.5 on 51 degrees of freedom
-    ## Multiple R-squared:  0.2152, Adjusted R-squared:  0.1382 
-    ## F-statistic: 2.797 on 5 and 51 DF,  p-value: 0.02625
+    ## Residual standard error: 28.62 on 51 degrees of freedom
+    ## Multiple R-squared:  0.255,  Adjusted R-squared:  0.182 
+    ## F-statistic: 3.491 on 5 and 51 DF,  p-value: 0.008644
 
 ``` r
 car::Anova(mod = lm(rich ~ PC2 + Block + TRT*PC2, RootAlphaPurp), type = "III")
@@ -1240,18 +1244,18 @@ car::Anova(mod = lm(rich ~ PC2 + Block + TRT*PC2, RootAlphaPurp), type = "III")
     ## 
     ## Response: rich
     ##              Sum Sq Df   F value  Pr(>F)    
-    ## (Intercept) 1335941  1 1655.7132 < 2e-16 ***
-    ## PC2            3721  1    4.6111 0.03664 *  
-    ## Block          7027  3    2.9031 0.04385 *  
-    ## TRT             300  1    0.3724 0.54447    
-    ## PC2:TRT        1081  1    1.3403 0.25248    
-    ## Residuals     40343 50                      
+    ## (Intercept) 1331420  1 1609.8076 < 2e-16 ***
+    ## PC2            3433  1    4.1509 0.04692 *  
+    ## Block          8117  3    3.2714 0.02865 *  
+    ## TRT             750  1    0.9064 0.34565    
+    ## PC2:TRT         416  1    0.5030 0.48150    
+    ## Residuals     41353 50                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
 EvenPC2 <- lm(even ~ PC2 + Block + TRT , RootAlphaPurp) 
-summary(EvenPC2) # significant root term
+summary(EvenPC2) 
 ```
 
     ## 
@@ -1260,39 +1264,22 @@ summary(EvenPC2) # significant root term
     ## 
     ## Residuals:
     ##        Min         1Q     Median         3Q        Max 
-    ## -7.922e-04 -2.511e-04 -1.532e-05  2.504e-04  9.836e-04 
+    ## -7.790e-04 -2.985e-04 -1.367e-05  2.307e-04  1.030e-03 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  1.048e-02  1.497e-04  69.988  < 2e-16 ***
-    ## PC2          4.844e-05  3.240e-05   1.495  0.14110    
-    ## Block2      -1.823e-04  2.369e-04  -0.770  0.44497    
-    ## Block3      -4.460e-04  1.647e-04  -2.708  0.00919 ** 
-    ## Block4      -2.761e-04  1.653e-04  -1.671  0.10093    
-    ## TRTInter     6.340e-05  1.267e-04   0.500  0.61907    
+    ## (Intercept)  1.053e-02  1.474e-04  71.425  < 2e-16 ***
+    ## PC2          7.252e-05  3.190e-05   2.273  0.02725 *  
+    ## Block2      -2.146e-04  2.332e-04  -0.920  0.36176    
+    ## Block3      -5.085e-04  1.621e-04  -3.136  0.00284 ** 
+    ## Block4      -3.746e-04  1.627e-04  -2.303  0.02541 *  
+    ## TRTInter     1.110e-04  1.248e-04   0.890  0.37769    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.0004172 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1387, Adjusted R-squared:  0.05431 
-    ## F-statistic: 1.643 on 5 and 51 DF,  p-value: 0.1655
-
-``` r
-car::Anova(mod = lm(even ~ PC2 + Block + TRT*PC2, RootAlphaPurp), type = "III")
-```
-
-    ## Anova Table (Type III tests)
-    ## 
-    ## Response: even
-    ##                 Sum Sq Df   F value  Pr(>F)    
-    ## (Intercept) 0.00078193  1 4775.4796 < 2e-16 ***
-    ## PC2         0.00000107  1    6.5643 0.01346 *  
-    ## Block       0.00000125  3    2.5527 0.06593 .  
-    ## TRT         0.00000001  1    0.0638 0.80164    
-    ## PC2:TRT     0.00000069  1    4.2014 0.04565 *  
-    ## Residuals   0.00000819 50                      
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## Residual standard error: 0.0004107 on 51 degrees of freedom
+    ## Multiple R-squared:  0.2043, Adjusted R-squared:  0.1263 
+    ## F-statistic: 2.619 on 5 and 51 DF,  p-value: 0.03493
 
 ``` r
 SimpPC3 <- lm(sim ~ PC3 + Block + TRT, RootAlphaPurp) 
@@ -1305,22 +1292,22 @@ summary(SimpPC3)
     ## 
     ## Residuals:
     ##       Min        1Q    Median        3Q       Max 
-    ## -0.026158 -0.003069  0.001113  0.005599  0.012072 
+    ## -0.027765 -0.002862  0.001317  0.006049  0.012040 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  0.9736291  0.0024555 396.510   <2e-16 ***
-    ## PC3          0.0009426  0.0007443   1.266    0.211    
-    ## Block2       0.0065060  0.0045945   1.416    0.163    
-    ## Block3       0.0028786  0.0030188   0.954    0.345    
-    ## Block4      -0.0024420  0.0025380  -0.962    0.341    
-    ## TRTInter    -0.0030511  0.0024356  -1.253    0.216    
+    ## (Intercept)  0.9737709  0.0024996 389.573   <2e-16 ***
+    ## PC3          0.0009578  0.0007577   1.264    0.212    
+    ## Block2       0.0062684  0.0046770   1.340    0.186    
+    ## Block3       0.0027008  0.0030730   0.879    0.384    
+    ## Block4      -0.0028575  0.0025835  -1.106    0.274    
+    ## TRTInter    -0.0029872  0.0024794  -1.205    0.234    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.008022 on 51 degrees of freedom
-    ## Multiple R-squared:  0.137,  Adjusted R-squared:  0.05241 
-    ## F-statistic:  1.62 on 5 and 51 DF,  p-value: 0.1717
+    ## Residual standard error: 0.008166 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1382, Adjusted R-squared:  0.05373 
+    ## F-statistic: 1.636 on 5 and 51 DF,  p-value: 0.1673
 
 ``` r
 SimpInvPC3 <- lm(InvSimp ~ PC3 + Comp + TRT + Block, RootAlphaPurp) 
@@ -1333,26 +1320,26 @@ summary(SimpInvPC3)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -14.3626  -7.0512   0.1407   4.7450  19.6930 
+    ## -13.3897  -7.2801   0.0318   5.5277  19.0761 
     ## 
     ## Coefficients: (1 not defined because of singularities)
     ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)       39.6753     2.8728  13.810   <2e-16 ***
-    ## PC3                0.5283     0.8924   0.592   0.5567    
-    ## CompPA 4.12 Ihed  -1.7504     3.7705  -0.464   0.6446    
-    ## CompPA 4.15 Ihed   0.1599     3.5968   0.044   0.9647    
-    ## CompPA 4.2 Ihed   -9.2276     4.2662  -2.163   0.0356 *  
-    ## CompPA 4.3 Ihed   -2.4949     4.0441  -0.617   0.5402    
+    ## (Intercept)       39.8540     2.8711  13.881   <2e-16 ***
+    ## PC3                0.5259     0.8919   0.590   0.5582    
+    ## CompPA 4.12 Ihed  -1.5109     3.7682  -0.401   0.6902    
+    ## CompPA 4.15 Ihed   0.3203     3.5946   0.089   0.9294    
+    ## CompPA 4.2 Ihed   -8.9321     4.2637  -2.095   0.0415 *  
+    ## CompPA 4.3 Ihed   -2.7888     4.0417  -0.690   0.4935    
     ## TRTInter               NA         NA      NA       NA    
-    ## Block2             6.7244     5.4540   1.233   0.2236    
-    ## Block3             4.0393     3.6544   1.105   0.2745    
-    ## Block4            -3.0488     2.9402  -1.037   0.3050    
+    ## Block2             6.6726     5.4507   1.224   0.2269    
+    ## Block3             3.6502     3.6522   0.999   0.3226    
+    ## Block4            -3.4573     2.9385  -1.177   0.2452    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.253 on 48 degrees of freedom
-    ## Multiple R-squared:  0.2101, Adjusted R-squared:  0.07848 
-    ## F-statistic: 1.596 on 8 and 48 DF,  p-value: 0.151
+    ## Residual standard error: 9.247 on 48 degrees of freedom
+    ## Multiple R-squared:   0.21,  Adjusted R-squared:  0.07836 
+    ## F-statistic: 1.595 on 8 and 48 DF,  p-value: 0.1513
 
 ``` r
 RichPC3 <- lm(rich ~ PC3 + Block + TRT, RootAlphaPurp) 
@@ -1365,22 +1352,22 @@ summary(RichPC3)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -70.428 -14.877   4.729  20.250  52.317 
+    ## -70.160 -16.679   2.978  20.134  52.500 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  451.607      9.045  49.927   <2e-16 ***
-    ## PC3            2.029      2.742   0.740   0.4628    
-    ## Block2        19.167     16.925   1.132   0.2627    
-    ## Block3        25.558     11.120   2.298   0.0257 *  
-    ## Block4        -1.478      9.349  -0.158   0.8750    
-    ## TRTInter     -12.067      8.972  -1.345   0.1846    
+    ## (Intercept) 452.2049     9.2684  48.790   <2e-16 ***
+    ## PC3           1.9983     2.8096   0.711    0.480    
+    ## Block2       19.8187    17.3422   1.143    0.258    
+    ## Block3       26.7079    11.3946   2.344    0.023 *  
+    ## Block4       -0.6489     9.5797  -0.068    0.946    
+    ## TRTInter    -14.8465     9.1935  -1.615    0.113    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 29.55 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1563, Adjusted R-squared:  0.07362 
-    ## F-statistic:  1.89 on 5 and 51 DF,  p-value: 0.1124
+    ## Residual standard error: 30.28 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1661, Adjusted R-squared:  0.08432 
+    ## F-statistic: 2.031 on 5 and 51 DF,  p-value: 0.08978
 
 ``` r
 EvenPC3 <- lm(even ~ PC3 + Block + TRT , RootAlphaPurp) 
@@ -1393,22 +1380,22 @@ summary(EvenPC3)
     ## 
     ## Residuals:
     ##        Min         1Q     Median         3Q        Max 
-    ## -8.463e-04 -2.835e-04  7.430e-06  2.711e-04  1.154e-03 
+    ## -8.037e-04 -3.090e-04 -1.690e-06  2.763e-04  9.947e-04 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  1.035e-02  1.305e-04  79.346   <2e-16 ***
-    ## PC3          2.680e-06  3.955e-05   0.068   0.9462    
-    ## Block2      -1.423e-04  2.441e-04  -0.583   0.5624    
-    ## Block3      -3.680e-04  1.604e-04  -2.294   0.0259 *  
-    ## Block4      -1.274e-04  1.348e-04  -0.945   0.3491    
-    ## TRTInter     1.075e-04  1.294e-04   0.831   0.4098    
+    ## (Intercept)  1.034e-02  1.319e-04  78.365   <2e-16 ***
+    ## PC3          2.841e-06  3.999e-05   0.071   0.9436    
+    ## Block2      -1.559e-04  2.468e-04  -0.632   0.5304    
+    ## Block3      -3.921e-04  1.622e-04  -2.418   0.0192 *  
+    ## Block4      -1.518e-04  1.364e-04  -1.113   0.2708    
+    ## TRTInter     1.763e-04  1.309e-04   1.347   0.1839    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.0004262 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1011, Adjusted R-squared:  0.01296 
-    ## F-statistic: 1.147 on 5 and 51 DF,  p-value: 0.348
+    ## Residual standard error: 0.000431 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1238, Adjusted R-squared:  0.03789 
+    ## F-statistic: 1.441 on 5 and 51 DF,  p-value: 0.2256
 
 ``` r
 SimpPC4 <- lm(sim ~ PC4 + Block + TRT, RootAlphaPurp) 
@@ -1421,22 +1408,22 @@ summary(SimpPC4)
     ## 
     ## Residuals:
     ##       Min        1Q    Median        3Q       Max 
-    ## -0.019168 -0.004139  0.001441  0.004914  0.012811 
+    ## -0.020413 -0.004944  0.001874  0.005665  0.012687 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  0.9761853  0.0023658 412.618  < 2e-16 ***
-    ## PC4          0.0023845  0.0008906   2.677  0.00996 ** 
-    ## Block2       0.0016908  0.0045397   0.372  0.71109    
-    ## Block3       0.0009068  0.0029253   0.310  0.75783    
-    ## Block4      -0.0042090  0.0025193  -1.671  0.10090    
-    ## TRTInter    -0.0029812  0.0022768  -1.309  0.19626    
+    ## (Intercept)  0.9764140  0.0024003 406.792  < 2e-16 ***
+    ## PC4          0.0024831  0.0009036   2.748  0.00827 ** 
+    ## Block2       0.0012787  0.0046058   0.278  0.78242    
+    ## Block3       0.0006558  0.0029679   0.221  0.82601    
+    ## Block4      -0.0047031  0.0025559  -1.840  0.07158 .  
+    ## TRTInter    -0.0028974  0.0023099  -1.254  0.21544    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.007628 on 51 degrees of freedom
-    ## Multiple R-squared:  0.2196, Adjusted R-squared:  0.1431 
-    ## F-statistic:  2.87 on 5 and 51 DF,  p-value: 0.02334
+    ## Residual standard error: 0.007739 on 51 degrees of freedom
+    ## Multiple R-squared:  0.2259, Adjusted R-squared:   0.15 
+    ## F-statistic: 2.976 on 5 and 51 DF,  p-value: 0.01969
 
 ``` r
 car::Anova(mod = lm(sim ~ PC4 + Block + TRT*PC4, RootAlphaPurp), type = "III")
@@ -1446,14 +1433,44 @@ car::Anova(mod = lm(sim ~ PC4 + Block + TRT*PC4, RootAlphaPurp), type = "III")
     ## 
     ## Response: sim
     ##             Sum Sq Df    F value Pr(>F)    
-    ## (Intercept) 9.1135  1 1.5623e+05 <2e-16 ***
-    ## PC4         0.0000  1 1.4100e-01 0.7088    
-    ## Block       0.0002  3 1.3255e+00 0.2765    
-    ## TRT         0.0001  1 9.2140e-01 0.3417    
-    ## PC4:TRT     0.0001  1 8.7570e-01 0.3539    
-    ## Residuals   0.0029 50                      
+    ## (Intercept) 9.1182  1 1.5163e+05 <2e-16 ***
+    ## PC4         0.0000  1 1.9700e-01 0.6591    
+    ## Block       0.0003  3 1.4874e+00 0.2293    
+    ## TRT         0.0001  1 8.4520e-01 0.3623    
+    ## PC4:TRT     0.0000  1 7.9930e-01 0.3756    
+    ## Residuals   0.0030 50                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+# Repeat & remove outlier
+SimpPC4_out <- lm(sim ~ PC4 + Block + TRT, RootAlphaPurp %>% filter(sim > 0.94)) 
+summary(SimpPC4_out)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = sim ~ PC4 + Block + TRT, data = RootAlphaPurp %>% 
+    ##     filter(sim > 0.94))
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.017811 -0.003811  0.001589  0.004450  0.011490 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  0.9747198  0.0022354 436.044   <2e-16 ***
+    ## PC4          0.0008668  0.0009460   0.916    0.364    
+    ## Block2       0.0035840  0.0042372   0.846    0.402    
+    ## Block3       0.0016636  0.0027118   0.613    0.542    
+    ## Block4      -0.0021819  0.0024349  -0.896    0.374    
+    ## TRTInter    -0.0026408  0.0020996  -1.258    0.214    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.00703 on 50 degrees of freedom
+    ## Multiple R-squared:  0.102,  Adjusted R-squared:  0.01223 
+    ## F-statistic: 1.136 on 5 and 50 DF,  p-value: 0.3537
 
 ``` r
 SimpInvPC4 <- lm(InvSimp ~ PC4 + Comp + TRT + Block, RootAlphaPurp) 
@@ -1466,26 +1483,26 @@ summary(SimpInvPC4)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -13.7870  -6.8851  -0.0433   5.8343  22.2947 
+    ## -13.1982  -7.7521   0.3428   6.3656  21.7090 
     ## 
     ## Coefficients: (1 not defined because of singularities)
     ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)       41.4934     2.8111  14.761   <2e-16 ***
-    ## PC4                1.8610     1.0910   1.706   0.0945 .  
-    ## CompPA 4.12 Ihed  -2.3082     3.5110  -0.657   0.5141    
-    ## CompPA 4.15 Ihed   0.1353     3.5051   0.039   0.9694    
-    ## CompPA 4.2 Ihed   -8.3286     4.1539  -2.005   0.0506 .  
-    ## CompPA 4.3 Ihed   -1.5098     3.9682  -0.380   0.7053    
+    ## (Intercept)       41.6988     2.8055  14.863   <2e-16 ***
+    ## PC4                1.9003     1.0889   1.745   0.0873 .  
+    ## CompPA 4.12 Ihed  -2.0636     3.5041  -0.589   0.5587    
+    ## CompPA 4.15 Ihed   0.2956     3.4983   0.084   0.9330    
+    ## CompPA 4.2 Ihed   -8.0009     4.1457  -1.930   0.0595 .  
+    ## CompPA 4.3 Ihed   -1.7723     3.9605  -0.448   0.6565    
     ## TRTInter               NA         NA      NA       NA    
-    ## Block2             3.1842     5.5728   0.571   0.5704    
-    ## Block3             2.5632     3.5835   0.715   0.4779    
-    ## Block4            -4.4394     2.9895  -1.485   0.1441    
+    ## Block2             3.0685     5.5619   0.552   0.5837    
+    ## Block3             2.1513     3.5765   0.602   0.5503    
+    ## Block4            -4.8794     2.9836  -1.635   0.1085    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.017 on 48 degrees of freedom
-    ## Multiple R-squared:  0.2498, Adjusted R-squared:  0.1248 
-    ## F-statistic: 1.998 on 8 and 48 DF,  p-value: 0.06685
+    ## Residual standard error: 9 on 48 degrees of freedom
+    ## Multiple R-squared:  0.2518, Adjusted R-squared:  0.1271 
+    ## F-statistic: 2.019 on 8 and 48 DF,  p-value: 0.06403
 
 ``` r
 RichPC4 <- lm(rich ~ PC4 + Block + TRT, RootAlphaPurp) 
@@ -1497,23 +1514,23 @@ summary(RichPC4)
     ## lm(formula = rich ~ PC4 + Block + TRT, data = RootAlphaPurp)
     ## 
     ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -66.473 -15.325   2.131  18.811  52.732 
+    ##    Min     1Q Median     3Q    Max 
+    ## -65.92 -15.72   0.98  20.30  53.09 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  455.077      9.168  49.638   <2e-16 ***
-    ## PC4            2.458      3.451   0.712   0.4796    
-    ## Block2        13.109     17.592   0.745   0.4596    
-    ## Block3        23.157     11.336   2.043   0.0463 *  
-    ## Block4        -3.060      9.763  -0.313   0.7552    
-    ## TRTInter     -12.755      8.823  -1.446   0.1544    
+    ## (Intercept)  456.445      9.346  48.836   <2e-16 ***
+    ## PC4            3.503      3.518   0.996   0.3241    
+    ## Block2        12.109     17.934   0.675   0.5026    
+    ## Block3        23.597     11.557   2.042   0.0464 *  
+    ## Block4        -3.106      9.953  -0.312   0.7563    
+    ## TRTInter     -15.185      8.995  -1.688   0.0975 .  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 29.56 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1557, Adjusted R-squared:  0.0729 
-    ## F-statistic: 1.881 on 5 and 51 DF,  p-value: 0.1141
+    ## Residual standard error: 30.14 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1739, Adjusted R-squared:  0.09287 
+    ## F-statistic: 2.147 on 5 and 51 DF,  p-value: 0.07469
 
 ``` r
 EvenPC4 <- lm(even ~ PC4 + Block + TRT , RootAlphaPurp) 
@@ -1526,24 +1543,24 @@ summary(EvenPC4)
     ## 
     ## Residuals:
     ##        Min         1Q     Median         3Q        Max 
-    ## -8.471e-04 -2.314e-04  3.760e-06  2.935e-04  1.019e-03 
+    ## -7.993e-04 -2.799e-04  2.209e-05  2.921e-04  9.660e-04 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  1.039e-02  1.307e-04  79.554   <2e-16 ***
-    ## PC4          5.380e-05  4.919e-05   1.094   0.2792    
-    ## Block2      -2.317e-04  2.507e-04  -0.924   0.3597    
-    ## Block3      -4.060e-04  1.615e-04  -2.513   0.0152 *  
-    ## Block4      -1.715e-04  1.391e-04  -1.233   0.2233    
-    ## TRTInter     1.225e-04  1.257e-04   0.974   0.3346    
+    ## (Intercept)  1.036e-02  1.333e-04  77.714   <2e-16 ***
+    ## PC4          2.615e-05  5.018e-05   0.521   0.6045    
+    ## Block2      -2.010e-04  2.558e-04  -0.786   0.4357    
+    ## Block3      -4.111e-04  1.648e-04  -2.494   0.0159 *  
+    ## Block4      -1.729e-04  1.420e-04  -1.218   0.2288    
+    ## TRTInter     1.824e-04  1.283e-04   1.422   0.1611    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.0004213 on 51 degrees of freedom
-    ## Multiple R-squared:  0.1216, Adjusted R-squared:  0.0355 
-    ## F-statistic: 1.412 on 5 and 51 DF,  p-value: 0.2357
+    ## Residual standard error: 0.0004298 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1283, Adjusted R-squared:  0.04289 
+    ## F-statistic: 1.502 on 5 and 51 DF,  p-value: 0.2057
 
-## Plotting significant linear associations (Table 3)
+## Plotting significant linear associations
 
 ``` r
 # Richness and root architecture
@@ -1613,8 +1630,8 @@ anova(SimpLMM)
 
     ## Type III Analysis of Variance Table with Satterthwaite's method
     ##           Sum Sq    Mean Sq NumDF DenDF F value  Pr(>F)  
-    ## TRT   0.00004598 0.00004598     1    95  0.7641 0.38426  
-    ## Block 0.00048946 0.00016315     3    95  2.7112 0.04933 *
+    ## TRT   0.00003472 3.4721e-05     1    95  0.5656 0.45388  
+    ## Block 0.00050911 1.6970e-04     3    95  2.7643 0.04617 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1626,9 +1643,9 @@ ranova(SimpLMM)
     ## 
     ## Model:
     ## sim ~ TRT + Block + (1 | ML)
-    ##          npar logLik     AIC        LRT Df Pr(>Chisq)
-    ## <none>      7 318.89 -623.79                         
-    ## (1 | ML)    6 318.89 -625.79 5.6843e-13  1          1
+    ##          npar logLik     AIC         LRT Df Pr(>Chisq)
+    ## <none>      7 317.94 -621.89                          
+    ## (1 | ML)    6 317.94 -623.89 -4.5475e-13  1          1
 
 ``` r
 ### Inverse Simpson
@@ -1643,8 +1660,8 @@ anova(SimpInvLMM)
 
     ## Type III Analysis of Variance Table with Satterthwaite's method
     ##        Sum Sq Mean Sq NumDF DenDF F value  Pr(>F)  
-    ## TRT      3.57    3.57     1    95  0.0405 0.84103  
-    ## Block 1019.72  339.91     3    95  3.8562 0.01187 *
+    ## TRT      0.48    0.48     1    95  0.0055 0.94112  
+    ## Block 1031.56  343.85     3    95  3.9020 0.01122 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1657,8 +1674,8 @@ ranova(SimpInvLMM)
     ## Model:
     ## InvSimp ~ TRT + Block + (1 | ML)
     ##          npar  logLik    AIC LRT Df Pr(>Chisq)
-    ## <none>      7 -355.47 724.95                  
-    ## (1 | ML)    6 -355.47 722.95   0  1          1
+    ## <none>      7 -355.46 724.92                  
+    ## (1 | ML)    6 -355.46 722.92   0  1          1
 
 ``` r
 ### Inverse Simpson
@@ -1667,9 +1684,9 @@ anova(RichLMM)
 ```
 
     ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##        Sum Sq Mean Sq NumDF  DenDF F value    Pr(>F)    
-    ## TRT     810.5   810.5     1 91.227  0.9006 0.3451189    
-    ## Block 16734.2  5578.1     3 92.197  6.1985 0.0006969 ***
+    ##        Sum Sq Mean Sq NumDF  DenDF F value   Pr(>F)   
+    ## TRT    1393.7  1393.7     1 91.101  1.5271 0.219729   
+    ## Block 14143.2  4714.4     3 92.228  5.1656 0.002407 **
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1681,9 +1698,9 @@ ranova(RichLMM)
     ## 
     ## Model:
     ## rich ~ TRT + Block + (1 | ML)
-    ##          npar  logLik    AIC      LRT Df Pr(>Chisq)
-    ## <none>      7 -466.34 946.68                       
-    ## (1 | ML)    6 -466.38 944.75 0.074917  1     0.7843
+    ##          npar  logLik    AIC     LRT Df Pr(>Chisq)
+    ## <none>      7 -467.16 948.31                      
+    ## (1 | ML)    6 -467.22 946.44 0.12747  1     0.7211
 
 ``` r
 LeafData <- read.csv("../DataSets/SizeFitData.csv")
@@ -1890,12 +1907,12 @@ head(RootFitAlpha)
     ## 5 PA4.11Ip Inter     1 Inter       0.6619616      93AP      Ip
     ## 6 PA4.11Ip Inter     1 Inter       0.6619616       21P      Ip
     ##                    Combos rich  InvSimp       sim     shan        even
-    ## 1                    none  438 32.14901 0.9688948 4.540882 0.010367310
-    ## 2                    none  469 40.49775 0.9753073 4.743175 0.010113379
-    ## 3                    none  470 49.95141 0.9799805 4.811543 0.010237326
-    ## 4                    none  438 30.34271 0.9670432 4.490600 0.010252510
-    ## 5 PA 4.11 Ip-PA 4.15 Ihed  428 34.68229 0.9711668 4.592985 0.010731273
-    ## 6  PA 4.11 Ip-PA 4.3 Ihed  490 41.12687 0.9756850 4.734381 0.009662001
+    ## 1                    none  434 31.43535 0.9681887 4.534697 0.010448610
+    ## 2                    none  478 41.08728 0.9756616 4.753743 0.009945068
+    ## 3                    none  466 48.22287 0.9792630 4.791226 0.010281601
+    ## 4                    none  437 30.30030 0.9669970 4.491512 0.010278060
+    ## 5 PA 4.11 Ip-PA 4.15 Ihed  427 35.29942 0.9716709 4.593859 0.010758451
+    ## 6  PA 4.11 Ip-PA 4.3 Ihed  489 42.06259 0.9762259 4.752692 0.009719206
     ##          PC1        PC2        PC3        PC4
     ## 1 -0.6979465 -1.3274069  0.7756816 -0.7552061
     ## 2 -0.6979465 -1.3274069  0.7756816 -0.7552061
@@ -2032,22 +2049,22 @@ summary(lm(RelativeFitness ~ Block +rich+rich2, FitAlpha %>% filter(TRT == "Alon
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.76778 -0.15718  0.02043  0.15764  0.96640 
+    ## -0.80608 -0.16098  0.00677  0.17969  0.91777 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept) -4.782e+00  1.484e+01  -0.322   0.7510  
-    ## Block2       2.161e-01  2.815e-01   0.768   0.4526  
-    ## Block3       6.251e-01  3.275e-01   1.909   0.0724 .
-    ## Block4       6.203e-01  2.563e-01   2.420   0.0263 *
-    ## rich         2.174e-02  6.557e-02   0.332   0.7441  
-    ## rich2       -2.192e-05  7.260e-05  -0.302   0.7661  
+    ## (Intercept)  6.384e+00  1.682e+01   0.379   0.7088  
+    ## Block2       2.126e-01  2.649e-01   0.803   0.4326  
+    ## Block3       4.705e-01  3.024e-01   1.556   0.1372  
+    ## Block4       6.100e-01  2.469e-01   2.470   0.0237 *
+    ## rich        -2.997e-02  7.405e-02  -0.405   0.6904  
+    ## rich2        3.768e-05  8.153e-05   0.462   0.6495  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.4483 on 18 degrees of freedom
-    ## Multiple R-squared:  0.3389, Adjusted R-squared:  0.1552 
-    ## F-statistic: 1.845 on 5 and 18 DF,  p-value: 0.1546
+    ## Residual standard error: 0.4318 on 18 degrees of freedom
+    ## Multiple R-squared:  0.3867, Adjusted R-squared:  0.2164 
+    ## F-statistic:  2.27 on 5 and 18 DF,  p-value: 0.09127
 
 ``` r
 summary(lm(RelativeFitness ~ Block +rich+rich2, FitAlpha %>% filter(TRT != "Alone")))
@@ -2060,22 +2077,22 @@ summary(lm(RelativeFitness ~ Block +rich+rich2, FitAlpha %>% filter(TRT != "Alon
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.40008 -0.11500 -0.03417  0.06389  0.67945 
+    ## -0.38834 -0.11485 -0.01772  0.06251  0.67553 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -3.912e+00  3.525e+00  -1.110    0.271    
-    ## Block2       7.256e-02  6.792e-02   1.068    0.289    
-    ## Block3       7.810e-01  7.060e-02  11.063  < 2e-16 ***
-    ## Block4       3.080e-01  7.056e-02   4.365  4.5e-05 ***
-    ## rich         2.162e-02  1.618e-02   1.337    0.186    
-    ## rich2       -2.521e-05  1.848e-05  -1.364    0.177    
+    ## (Intercept) -4.172e+00  3.263e+00  -1.278    0.205    
+    ## Block2       7.177e-02  6.761e-02   1.062    0.292    
+    ## Block3       7.769e-01  6.995e-02  11.107  < 2e-16 ***
+    ## Block4       3.054e-01  7.026e-02   4.346 4.82e-05 ***
+    ## rich         2.284e-02  1.496e-02   1.527    0.131    
+    ## rich2       -2.663e-05  1.707e-05  -1.560    0.123    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2015 on 67 degrees of freedom
-    ## Multiple R-squared:  0.7129, Adjusted R-squared:  0.6915 
-    ## F-statistic: 33.27 on 5 and 67 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.2006 on 67 degrees of freedom
+    ## Multiple R-squared:  0.7156, Adjusted R-squared:  0.6943 
+    ## F-statistic: 33.71 on 5 and 67 DF,  p-value: < 2.2e-16
 
 ``` r
 richness_sel <- lm(RelativeFitness ~ TRT*Block +rich, FitAlpha)
@@ -2088,25 +2105,25 @@ summary(richness_sel) # No evidence of indirect selection
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.70710 -0.12919 -0.02788  0.09149  0.98736 
+    ## -0.71931 -0.13206 -0.04529  0.12517  0.97971 
     ## 
     ## Coefficients:
     ##                   Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      5.460e-01  4.567e-01   1.196 0.235057    
-    ## TRTInter         1.137e-01  1.304e-01   0.872 0.385400    
-    ## Block2           1.486e-01  1.588e-01   0.936 0.352025    
-    ## Block3           6.352e-01  1.670e-01   3.803 0.000264 ***
-    ## Block4           5.845e-01  1.518e-01   3.851 0.000223 ***
-    ## rich             6.147e-05  9.665e-04   0.064 0.949433    
-    ## TRTInter:Block2 -6.287e-02  1.828e-01  -0.344 0.731724    
-    ## TRTInter:Block3  1.243e-01  1.875e-01   0.663 0.509046    
-    ## TRTInter:Block4 -2.569e-01  1.781e-01  -1.442 0.152767    
+    ## (Intercept)      0.3412789  0.4489876   0.760 0.449222    
+    ## TRTInter         0.1232141  0.1304234   0.945 0.347387    
+    ## Block2           0.1579627  0.1580477   0.999 0.320311    
+    ## Block3           0.6239940  0.1661699   3.755 0.000310 ***
+    ## Block4           0.5893259  0.1513870   3.893 0.000192 ***
+    ## rich             0.0005081  0.0009493   0.535 0.593839    
+    ## TRTInter:Block2 -0.0729686  0.1823258  -0.400 0.689972    
+    ## TRTInter:Block3  0.1227196  0.1872063   0.656 0.513836    
+    ## TRTInter:Block4 -0.2617882  0.1777344  -1.473 0.144341    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2719 on 88 degrees of freedom
-    ## Multiple R-squared:  0.5681, Adjusted R-squared:  0.5289 
-    ## F-statistic: 14.47 on 8 and 88 DF,  p-value: 2.82e-13
+    ## Residual standard error: 0.2715 on 88 degrees of freedom
+    ## Multiple R-squared:  0.5695, Adjusted R-squared:  0.5304 
+    ## F-statistic: 14.55 on 8 and 88 DF,  p-value: 2.467e-13
 
 ``` r
 anova(richness_sel)
@@ -2116,11 +2133,11 @@ anova(richness_sel)
     ## 
     ## Response: RelativeFitness
     ##           Df Sum Sq Mean Sq F value    Pr(>F)    
-    ## TRT        1 0.1156 0.11565  1.5644    0.2143    
-    ## Block      3 8.0999 2.69998 36.5237 1.991e-15 ***
-    ## rich       1 0.0007 0.00074  0.0100    0.9206    
-    ## TRT:Block  3 0.3420 0.11401  1.5423    0.2092    
-    ## Residuals 88 6.5053 0.07392                      
+    ## TRT        1 0.1156 0.11565  1.5695    0.2136    
+    ## Block      3 8.0999 2.69998 36.6409 1.842e-15 ***
+    ## rich       1 0.0128 0.01276  0.1732    0.6783    
+    ## TRT:Block  3 0.3508 0.11694  1.5870    0.1982    
+    ## Residuals 88 6.4845 0.07369                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2151,22 +2168,22 @@ summary(lm(RelativeFitness ~ Block +InvSimp+InSim2, FitAlpha %>% filter(TRT == "
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.72794 -0.16171 -0.07476  0.15952  0.99323 
+    ## -0.72488 -0.14886 -0.04733  0.14805  0.99197 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept)  1.2245446  2.4778488   0.494   0.6271  
-    ## Block2       0.1437664  0.2678070   0.537   0.5980  
-    ## Block3       0.6026939  0.2865032   2.104   0.0497 *
-    ## Block4       0.5638220  0.2665017   2.116   0.0486 *
-    ## InvSimp     -0.0384988  0.1289182  -0.299   0.7686  
-    ## InSim2       0.0005537  0.0016845   0.329   0.7462  
+    ## (Intercept)  0.8393042  2.4296123   0.345   0.7338  
+    ## Block2       0.1485885  0.2694609   0.551   0.5881  
+    ## Block3       0.6201396  0.2900918   2.138   0.0465 *
+    ## Block4       0.5778902  0.2648341   2.182   0.0426 *
+    ## InvSimp     -0.0160280  0.1260111  -0.127   0.9002  
+    ## InSim2       0.0002334  0.0016387   0.142   0.8883  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.4511 on 18 degrees of freedom
-    ## Multiple R-squared:  0.3307, Adjusted R-squared:  0.1448 
-    ## F-statistic: 1.779 on 5 and 18 DF,  p-value: 0.1681
+    ## Residual standard error: 0.4528 on 18 degrees of freedom
+    ## Multiple R-squared:  0.3256, Adjusted R-squared:  0.1382 
+    ## F-statistic: 1.738 on 5 and 18 DF,  p-value: 0.177
 
 ``` r
 summary(lm(RelativeFitness ~ Block +InvSimp+InSim2, FitAlpha %>% filter(TRT != "Alone")))
@@ -2179,22 +2196,22 @@ summary(lm(RelativeFitness ~ Block +InvSimp+InSim2, FitAlpha %>% filter(TRT != "
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.39102 -0.10578 -0.02046  0.06653  0.72093 
+    ## -0.39213 -0.11007 -0.02050  0.06454  0.71716 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  0.8783595  0.2616631   3.357   0.0013 ** 
-    ## Block2       0.0960596  0.0688532   1.395   0.1676    
-    ## Block3       0.7748040  0.0707763  10.947  < 2e-16 ***
-    ## Block4       0.3239341  0.0699966   4.628 1.75e-05 ***
-    ## InvSimp     -0.0084139  0.0131073  -0.642   0.5231    
-    ## InSim2       0.0000797  0.0001594   0.500   0.6188    
+    ## (Intercept)  8.528e-01  2.654e-01   3.214  0.00201 ** 
+    ## Block2       9.440e-02  6.875e-02   1.373  0.17427    
+    ## Block3       7.751e-01  7.055e-02  10.986  < 2e-16 ***
+    ## Block4       3.224e-01  7.012e-02   4.597 1.95e-05 ***
+    ## InvSimp     -6.992e-03  1.337e-02  -0.523  0.60266    
+    ## InSim2       6.198e-05  1.640e-04   0.378  0.70666    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2033 on 67 degrees of freedom
-    ## Multiple R-squared:  0.7076, Adjusted R-squared:  0.6858 
-    ## F-statistic: 32.43 on 5 and 67 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.2035 on 67 degrees of freedom
+    ## Multiple R-squared:  0.7073, Adjusted R-squared:  0.6854 
+    ## F-statistic: 32.38 on 5 and 67 DF,  p-value: < 2.2e-16
 
 ``` r
 Invn_sel <- lm(RelativeFitness ~ TRT*Block + InvSimp + Block, FitAlpha)
@@ -2208,25 +2225,25 @@ summary(Invn_sel) # No evidence of indirect selection
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.70446 -0.13892 -0.02628  0.10480  0.99079 
+    ## -0.70503 -0.14215 -0.02584  0.10658  0.99114 
     ## 
     ## Coefficients:
     ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      0.621953   0.163469   3.805 0.000262 ***
-    ## TRTInter         0.108704   0.129364   0.840 0.403021    
-    ## Block2           0.143200   0.157134   0.911 0.364617    
-    ## Block3           0.639571   0.164617   3.885 0.000198 ***
-    ## Block4           0.581061   0.151280   3.841 0.000231 ***
-    ## InvSimp         -0.001223   0.003073  -0.398 0.691607    
-    ## TRTInter:Block2 -0.053758   0.182185  -0.295 0.768633    
-    ## TRTInter:Block3  0.132316   0.188405   0.702 0.484348    
-    ## TRTInter:Block4 -0.256252   0.177547  -1.443 0.152490    
+    ## (Intercept)      0.633031   0.163751   3.866 0.000212 ***
+    ## TRTInter         0.108178   0.129252   0.837 0.404889    
+    ## Block2           0.141277   0.157210   0.899 0.371291    
+    ## Block3           0.640501   0.164571   3.892 0.000193 ***
+    ## Block4           0.579859   0.151270   3.833 0.000237 ***
+    ## InvSimp         -0.001500   0.003071  -0.488 0.626428    
+    ## TRTInter:Block2 -0.051356   0.182252  -0.282 0.778769    
+    ## TRTInter:Block3  0.133148   0.188112   0.708 0.480934    
+    ## TRTInter:Block4 -0.256353   0.177467  -1.445 0.152146    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2717 on 88 degrees of freedom
-    ## Multiple R-squared:  0.5689, Adjusted R-squared:  0.5297 
-    ## F-statistic: 14.52 on 8 and 88 DF,  p-value: 2.621e-13
+    ## Residual standard error: 0.2715 on 88 degrees of freedom
+    ## Multiple R-squared:  0.5693, Adjusted R-squared:  0.5301 
+    ## F-statistic: 14.54 on 8 and 88 DF,  p-value: 2.523e-13
 
 ``` r
 ggplot(FitAlpha) +
@@ -2255,22 +2272,22 @@ summary(lm(RelativeFitness ~ Block + sim + sim2, FitAlpha %>% filter(TRT == "Alo
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.73337 -0.16327 -0.04302  0.15161  0.97669 
+    ## -0.72245 -0.15050 -0.02453  0.14432  0.98295 
     ## 
     ## Coefficients:
-    ##               Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept)   505.8054  2683.2055   0.189   0.8526  
-    ## Block2          0.1527     0.2674   0.571   0.5751  
-    ## Block3          0.6235     0.2801   2.226   0.0390 *
-    ## Block4          0.5805     0.2646   2.194   0.0416 *
-    ## sim         -1044.6519  5528.5995  -0.189   0.8522  
-    ## sim2          539.9678  2847.8159   0.190   0.8517  
+    ##              Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  185.7703  2769.9476   0.067   0.9473  
+    ## Block2         0.1520     0.2688   0.565   0.5787  
+    ## Block3         0.6314     0.2814   2.244   0.0377 *
+    ## Block4         0.5850     0.2636   2.219   0.0395 *
+    ## sim         -383.4087  5706.0154  -0.067   0.9472  
+    ## sim2         198.4254  2938.5243   0.068   0.9469  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.4523 on 18 degrees of freedom
-    ## Multiple R-squared:  0.327,  Adjusted R-squared:  0.1401 
-    ## F-statistic: 1.749 on 5 and 18 DF,  p-value: 0.1745
+    ## Residual standard error: 0.4531 on 18 degrees of freedom
+    ## Multiple R-squared:  0.3247, Adjusted R-squared:  0.1372 
+    ## F-statistic: 1.731 on 5 and 18 DF,  p-value: 0.1784
 
 ``` r
 summary(lm(RelativeFitness ~ Block + sim + sim2, FitAlpha %>% filter(TRT != "Alone")))
@@ -2283,22 +2300,22 @@ summary(lm(RelativeFitness ~ Block + sim + sim2, FitAlpha %>% filter(TRT != "Alo
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.39577 -0.12630 -0.02806  0.06455  0.70350 
+    ## -0.39944 -0.12749 -0.02963  0.06538  0.70052 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -140.09666  179.23344  -0.782    0.437    
-    ## Block2         0.09012    0.06877   1.310    0.195    
-    ## Block3         0.78114    0.06978  11.194  < 2e-16 ***
-    ## Block4         0.32065    0.06990   4.587 2.02e-05 ***
-    ## sim          293.89560  371.35441   0.791    0.431    
-    ## sim2        -153.34409  192.34029  -0.797    0.428    
+    ## (Intercept) -163.39346  171.28679  -0.954    0.344    
+    ## Block2         0.08865    0.06850   1.294    0.200    
+    ## Block3         0.78100    0.06940  11.253  < 2e-16 ***
+    ## Block4         0.32009    0.06979   4.586 2.03e-05 ***
+    ## sim          342.11116  355.00265   0.964    0.339    
+    ## sim2        -178.28712  183.92949  -0.969    0.336    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2029 on 67 degrees of freedom
-    ## Multiple R-squared:  0.7089, Adjusted R-squared:  0.6871 
-    ## F-statistic: 32.63 on 5 and 67 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.2026 on 67 degrees of freedom
+    ## Multiple R-squared:  0.7099, Adjusted R-squared:  0.6882 
+    ## F-statistic: 32.78 on 5 and 67 DF,  p-value: < 2.2e-16
 
 ``` r
 sim_sel <- lm(RelativeFitness ~ TRT*Block + sim, FitAlpha)
@@ -2311,25 +2328,25 @@ summary(sim_sel) # NS
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.70247 -0.13828 -0.02239  0.09839  0.99092 
+    ## -0.70300 -0.13974 -0.02201  0.09864  0.99092 
     ## 
     ## Coefficients:
     ##                 Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      2.03179    3.59005   0.566 0.572868    
-    ## TRTInter         0.10572    0.13009   0.813 0.418603    
-    ## Block2           0.14276    0.15719   0.908 0.366234    
-    ## Block3           0.63813    0.16451   3.879 0.000202 ***
-    ## Block4           0.57980    0.15143   3.829 0.000241 ***
-    ## sim             -1.49634    3.68361  -0.406 0.685571    
-    ## TRTInter:Block2 -0.05152    0.18279  -0.282 0.778718    
-    ## TRTInter:Block3  0.13233    0.18836   0.703 0.484193    
-    ## TRTInter:Block4 -0.25406    0.17761  -1.430 0.156132    
+    ## (Intercept)      2.08771    3.55641   0.587 0.558688    
+    ## TRTInter         0.10593    0.12992   0.815 0.417094    
+    ## Block2           0.14195    0.15727   0.903 0.369198    
+    ## Block3           0.63833    0.16450   3.880 0.000201 ***
+    ## Block4           0.57940    0.15145   3.826 0.000243 ***
+    ## sim             -1.55368    3.64892  -0.426 0.671299    
+    ## TRTInter:Block2 -0.05088    0.18283  -0.278 0.781456    
+    ## TRTInter:Block3  0.13200    0.18817   0.701 0.484844    
+    ## TRTInter:Block4 -0.25461    0.17756  -1.434 0.155126    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 0.2716 on 88 degrees of freedom
-    ## Multiple R-squared:  0.5689, Adjusted R-squared:  0.5297 
-    ## F-statistic: 14.52 on 8 and 88 DF,  p-value: 2.613e-13
+    ## Multiple R-squared:  0.569,  Adjusted R-squared:  0.5298 
+    ## F-statistic: 14.52 on 8 and 88 DF,  p-value: 2.593e-13
 
 ``` r
 ggplot(FitAlpha) +
@@ -2358,22 +2375,22 @@ summary(lm(RelativeFitness ~ Block + even + even2 , FitAlpha %>% filter(TRT == "
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.76353 -0.14814  0.01831  0.17144  0.95393 
+    ## -0.85960 -0.20018  0.00371  0.17956  0.91880 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept) -1.897e+01  3.613e+01  -0.525   0.6060  
-    ## Block2       2.438e-01  2.866e-01   0.851   0.4062  
-    ## Block3       6.496e-01  3.251e-01   1.998   0.0610 .
-    ## Block4       6.212e-01  2.528e-01   2.457   0.0244 *
-    ## even         3.934e+03  7.017e+03   0.561   0.5820  
-    ## even2       -1.978e+05  3.411e+05  -0.580   0.5692  
+    ## (Intercept)  1.195e+01  3.982e+01   0.300   0.7675  
+    ## Block2       2.294e-01  2.599e-01   0.883   0.3890  
+    ## Block3       4.721e-01  2.847e-01   1.658   0.1147  
+    ## Block4       5.963e-01  2.456e-01   2.428   0.0259 *
+    ## even        -1.867e+03  7.813e+03  -0.239   0.8138  
+    ## even2        7.376e+04  3.833e+05   0.192   0.8496  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.4459 on 18 degrees of freedom
-    ## Multiple R-squared:  0.3459, Adjusted R-squared:  0.1642 
-    ## F-statistic: 1.904 on 5 and 18 DF,  p-value: 0.1437
+    ## Residual standard error: 0.4246 on 18 degrees of freedom
+    ## Multiple R-squared:  0.4071, Adjusted R-squared:  0.2424 
+    ## F-statistic: 2.472 on 5 and 18 DF,  p-value: 0.07149
 
 ``` r
 summary(lm(RelativeFitness ~ Block + even + even2, FitAlpha %>% filter(TRT != "Alone"))) # Significant quadratic term for evenness on fitnes (super low slope tho)
@@ -2386,22 +2403,22 @@ summary(lm(RelativeFitness ~ Block + even + even2, FitAlpha %>% filter(TRT != "A
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.42744 -0.11072 -0.02726  0.06120  0.67277 
+    ## -0.41978 -0.11110 -0.01497  0.08058  0.67279 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -2.024e+01  8.853e+00  -2.286   0.0254 *  
-    ## Block2       1.083e-01  6.675e-02   1.622   0.1094    
-    ## Block3       7.765e-01  6.784e-02  11.446  < 2e-16 ***
-    ## Block4       3.155e-01  6.789e-02   4.647 1.63e-05 ***
-    ## even         4.008e+03  1.694e+03   2.367   0.0208 *  
-    ## even2       -1.916e+05  8.095e+04  -2.368   0.0208 *  
+    ## (Intercept) -2.003e+01  8.585e+00  -2.334   0.0226 *  
+    ## Block2       1.023e-01  6.608e-02   1.548   0.1264    
+    ## Block3       7.702e-01  6.764e-02  11.388  < 2e-16 ***
+    ## Block4       3.111e-01  6.810e-02   4.569 2.16e-05 ***
+    ## even         3.961e+03  1.641e+03   2.414   0.0185 *  
+    ## even2       -1.890e+05  7.838e+04  -2.411   0.0187 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.1966 on 67 degrees of freedom
-    ## Multiple R-squared:  0.7266, Adjusted R-squared:  0.7062 
-    ## F-statistic: 35.61 on 5 and 67 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.1963 on 67 degrees of freedom
+    ## Multiple R-squared:  0.7274, Adjusted R-squared:  0.7071 
+    ## F-statistic: 35.76 on 5 and 67 DF,  p-value: < 2.2e-16
 
 ``` r
 even_sel <- lm(RelativeFitness ~ TRT*Block + TRT*even2 + even, FitAlpha) # if we include block by treatment interaction there is marginal significance for a treatment by evenness squared effect
@@ -2414,9 +2431,11 @@ anova(even_sel, even_sel2) # Based on RSS--second model/simpler one is a bit bet
     ## 
     ## Model 1: RelativeFitness ~ TRT * Block + TRT * even2 + even
     ## Model 2: RelativeFitness ~ Block + TRT * even2 + even
-    ##   Res.Df    RSS Df Sum of Sq      F Pr(>F)
-    ## 1     86 6.1700                           
-    ## 2     89 6.5506 -3  -0.38065 1.7685 0.1592
+    ##   Res.Df    RSS Df Sum of Sq      F  Pr(>F)  
+    ## 1     86 5.9104                              
+    ## 2     89 6.5628 -3   -0.6524 3.1643 0.02855 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
 anova(even_sel) # NS
@@ -2426,13 +2445,13 @@ anova(even_sel) # NS
     ## 
     ## Response: RelativeFitness
     ##           Df Sum Sq Mean Sq F value    Pr(>F)    
-    ## TRT        1 0.1156 0.11565  1.6120   0.20764    
-    ## Block      3 8.0999 2.69998 37.6336 1.247e-15 ***
-    ## even2      1 0.0011 0.00114  0.0159   0.90000    
-    ## even       1 0.2834 0.28339  3.9500   0.05005 .  
-    ## TRT:Block  3 0.2995 0.09982  1.3913   0.25094    
-    ## TRT:even2  1 0.0941 0.09414  1.3122   0.25518    
-    ## Residuals 86 6.1700 0.07174                      
+    ## TRT        1 0.1156 0.11565  1.6828  0.198026    
+    ## Block      3 8.0999 2.69998 39.2863 4.363e-16 ***
+    ## even2      1 0.0516 0.05161  0.7509  0.388607    
+    ## even       1 0.0364 0.03638  0.5293  0.468869    
+    ## TRT:Block  3 0.3686 0.12288  1.7880  0.155487    
+    ## TRT:even2  1 0.4811 0.48105  6.9996  0.009692 ** 
+    ## Residuals 86 5.9104 0.06873                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2510,17 +2529,21 @@ step$anova
     ## 
     ## Final Model:
     ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    ##     InvSimScaled + EvenScaled + TRT:Block + TRT:PC1 + TRT:PC3 + 
-    ##     TRT:richScaled + TRT:EvenScaled + Block:PC1 + Block:PC2 + 
-    ##     Block:PC3 + Block:PC4 + Block:richScaled + Block:InvSimScaled + 
+    ##     InvSimScaled + EvenScaled + TRT:richScaled + Block:PC1 + 
+    ##     Block:PC2 + Block:PC4 + Block:richScaled + Block:InvSimScaled + 
     ##     Block:EvenScaled
     ## 
     ## 
-    ##                 Step Df     Deviance Resid. Df Resid. Dev       AIC
-    ## 1                                           54   3.067904 -249.0105
-    ## 2          - TRT:PC4  1 0.0003925392        55   3.068297 -250.9981
-    ## 3 - TRT:InvSimScaled  1 0.0010519640        56   3.069349 -252.9648
-    ## 4          - TRT:PC2  1 0.0178515210        57   3.087200 -254.4023
+    ##                 Step Df    Deviance Resid. Df Resid. Dev       AIC
+    ## 1                                          54   3.297351 -242.0144
+    ## 2 - TRT:InvSimScaled  1 0.002711687        55   3.300062 -243.9347
+    ## 3          - TRT:PC4  1 0.003105322        56   3.303168 -245.8434
+    ## 4          - TRT:PC2  1 0.013989404        57   3.317157 -247.4335
+    ## 5          - TRT:PC3  1 0.056177982        58   3.373335 -247.8045
+    ## 6        - TRT:Block  3 0.154840232        61   3.528175 -249.4512
+    ## 7   - TRT:EvenScaled  1 0.033234583        62   3.561410 -250.5418
+    ## 8        - Block:PC3  3 0.180266978        65   3.741677 -251.7522
+    ## 9          - TRT:PC1  1 0.070962567        66   3.812639 -251.9298
 
 ``` r
 model<-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
@@ -2539,30 +2562,30 @@ car::Anova(model, type="III") # Report the type three sums of squares~
     ## Anova Table (Type III tests)
     ## 
     ## Response: RelativeFitness
-    ##                     Sum Sq Df F value    Pr(>F)    
-    ## (Intercept)        0.24510  1  4.5253 0.0377369 *  
-    ## TRT                0.00101  1  0.0187 0.8918013    
-    ## Block              0.74100  3  4.5604 0.0062253 ** 
-    ## PC1                0.00615  1  0.1136 0.7373097    
-    ## PC2                0.00000  1  0.0000 0.9972442    
-    ## PC3                0.00055  1  0.0102 0.9198950    
-    ## PC4                0.08862  1  1.6361 0.2060388    
-    ## richScaled         0.05296  1  0.9778 0.3269241    
-    ## InvSimScaled       0.00621  1  0.1147 0.7360484    
-    ## EvenScaled         0.02861  1  0.5283 0.4703179    
-    ## TRT:Block          0.22565  3  1.3887 0.2555041    
-    ## TRT:PC1            0.08757  1  1.6168 0.2087063    
-    ## TRT:PC3            0.11924  1  2.2016 0.1433789    
-    ## TRT:richScaled     0.68469  1 12.6416 0.0007669 ***
-    ## TRT:EvenScaled     0.38296  1  7.0707 0.0101540 *  
-    ## Block:PC1          0.94583  3  5.8211 0.0015312 ** 
-    ## Block:PC2          0.22324  3  1.3739 0.2599481    
-    ## Block:PC3          0.34665  3  2.1335 0.1059988    
-    ## Block:PC4          0.93296  3  5.7419 0.0016695 ** 
-    ## Block:richScaled   0.76481  3  4.7070 0.0052740 ** 
-    ## Block:InvSimScaled 0.77204  3  4.7515 0.0050158 ** 
-    ## Block:EvenScaled   0.81627  3  5.0237 0.0036945 ** 
-    ## Residuals          3.08720 57                      
+    ##                    Sum Sq Df F value    Pr(>F)    
+    ## (Intercept)        0.1813  1  3.1151 0.0829261 .  
+    ## TRT                0.0157  1  0.2692 0.6058680    
+    ## Block              0.7129  3  4.0836 0.0107317 *  
+    ## PC1                0.0342  1  0.5877 0.4464823    
+    ## PC2                0.0082  1  0.1404 0.7092886    
+    ## PC3                0.0008  1  0.0138 0.9067979    
+    ## PC4                0.0791  1  1.3598 0.2484366    
+    ## richScaled         0.0173  1  0.2967 0.5880598    
+    ## InvSimScaled       0.0004  1  0.0075 0.9313327    
+    ## EvenScaled         0.0002  1  0.0030 0.9568681    
+    ## TRT:Block          0.2049  3  1.1738 0.3277565    
+    ## TRT:PC1            0.1326  1  2.2793 0.1366337    
+    ## TRT:PC3            0.0562  1  0.9653 0.3300002    
+    ## TRT:richScaled     0.2928  1  5.0320 0.0287860 *  
+    ## TRT:EvenScaled     0.0777  1  1.3358 0.2525962    
+    ## Block:PC1          0.8474  3  4.8536 0.0044709 ** 
+    ## Block:PC2          0.2576  3  1.4753 0.2308904    
+    ## Block:PC3          0.2561  3  1.4670 0.2331593    
+    ## Block:PC4          1.1515  3  6.5954 0.0006649 ***
+    ## Block:richScaled   0.5966  3  3.4173 0.0232423 *  
+    ## Block:InvSimScaled 0.5618  3  3.2181 0.0293533 *  
+    ## Block:EvenScaled   0.6109  3  3.4991 0.0211239 *  
+    ## Residuals          3.3172 57                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2580,56 +2603,56 @@ summary(model)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.56598 -0.09578  0.00822  0.08666  0.43809 
+    ## -0.49654 -0.09763  0.01365  0.09599  0.47450 
     ## 
     ## Coefficients:
-    ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)          0.6392370  0.3004961   2.127 0.037737 *  
-    ## TRTInter             0.0424486  0.3106733   0.137 0.891801    
-    ## Block2              -0.0673500  0.3430442  -0.196 0.845050    
-    ## Block3               1.0014387  0.3799815   2.635 0.010803 *  
-    ## Block4               0.6150408  0.3262660   1.885 0.064519 .  
-    ## PC1                 -0.0359859  0.1067641  -0.337 0.737310    
-    ## PC2                  0.0002985  0.0860441   0.003 0.997244    
-    ## PC3                 -0.0224075  0.2218291  -0.101 0.919895    
-    ## PC4                  0.3063960  0.2395371   1.279 0.206039    
-    ## richScaled           0.4925408  0.4981033   0.989 0.326924    
-    ## InvSimScaled         0.0809904  0.2390914   0.339 0.736048    
-    ## EvenScaled           0.3025203  0.4162312   0.727 0.470318    
-    ## TRTInter:Block2      0.2330727  0.3647153   0.639 0.525348    
-    ## TRTInter:Block3     -0.2592813  0.3938341  -0.658 0.512963    
-    ## TRTInter:Block4     -0.2772685  0.3409214  -0.813 0.419435    
-    ## TRTInter:PC1         0.1220293  0.0959709   1.272 0.208706    
-    ## TRTInter:PC3         0.2364852  0.1593813   1.484 0.143379    
-    ## TRTInter:richScaled -0.9246592  0.2600638  -3.556 0.000767 ***
-    ## TRTInter:EvenScaled -0.6920045  0.2602429  -2.659 0.010154 *  
-    ## Block2:PC1          -0.1719978  0.1476103  -1.165 0.248785    
-    ## Block3:PC1           0.1572861  0.1331693   1.181 0.242468    
-    ## Block4:PC1          -0.2417372  0.1361833  -1.775 0.081223 .  
-    ## Block2:PC2          -0.1453858  0.1188121  -1.224 0.226114    
-    ## Block3:PC2           0.0375128  0.1349632   0.278 0.782058    
-    ## Block4:PC2          -0.1642986  0.1133752  -1.449 0.152773    
-    ## Block2:PC3          -0.2493708  0.2676602  -0.932 0.355437    
-    ## Block3:PC3          -0.4001045  0.2686927  -1.489 0.141979    
-    ## Block4:PC3          -0.5651317  0.2416262  -2.339 0.022872 *  
-    ## Block2:PC4          -0.1301215  0.2689076  -0.484 0.630318    
-    ## Block3:PC4          -0.8433792  0.2838053  -2.972 0.004332 ** 
-    ## Block4:PC4          -0.3562023  0.2707383  -1.316 0.193552    
-    ## Block2:richScaled    0.1514140  0.6146058   0.246 0.806289    
-    ## Block3:richScaled   -0.1556220  0.6000539  -0.259 0.796302    
-    ## Block4:richScaled    1.5956764  0.5597162   2.851 0.006061 ** 
-    ## Block2:InvSimScaled  0.0052766  0.3072940   0.017 0.986360    
-    ## Block3:InvSimScaled  0.1526490  0.2999660   0.509 0.612795    
-    ## Block4:InvSimScaled -0.8472454  0.3183182  -2.662 0.010086 *  
-    ## Block2:EvenScaled    0.1549927  0.4569147   0.339 0.735694    
-    ## Block3:EvenScaled   -0.0098227  0.4857665  -0.020 0.983938    
-    ## Block4:EvenScaled    1.4085267  0.4564406   3.086 0.003130 ** 
+    ##                     Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)          0.52615    0.29811   1.765  0.08293 . 
+    ## TRTInter             0.15810    0.30471   0.519  0.60587   
+    ## Block2               0.04877    0.32605   0.150  0.88161   
+    ## Block3               0.91575    0.35930   2.549  0.01353 * 
+    ## Block4               0.66711    0.32098   2.078  0.04219 * 
+    ## PC1                 -0.07673    0.10010  -0.767  0.44648   
+    ## PC2                  0.03186    0.08504   0.375  0.70929   
+    ## PC3                  0.02631    0.22369   0.118  0.90680   
+    ## PC4                  0.26781    0.22967   1.166  0.24844   
+    ## richScaled           0.26580    0.48793   0.545  0.58806   
+    ## InvSimScaled         0.02068    0.23890   0.087  0.93133   
+    ## EvenScaled           0.02131    0.39233   0.054  0.95687   
+    ## TRTInter:Block2      0.10631    0.34635   0.307  0.75999   
+    ## TRTInter:Block3     -0.21020    0.37365  -0.563  0.57594   
+    ## TRTInter:Block4     -0.35654    0.33461  -1.066  0.29112   
+    ## TRTInter:PC1         0.14505    0.09607   1.510  0.13663   
+    ## TRTInter:PC3         0.15937    0.16221   0.983  0.33000   
+    ## TRTInter:richScaled -0.57273    0.25532  -2.243  0.02879 * 
+    ## TRTInter:EvenScaled -0.29567    0.25582  -1.156  0.25260   
+    ## Block2:PC1          -0.13807    0.13485  -1.024  0.31020   
+    ## Block3:PC1           0.17929    0.12345   1.452  0.15191   
+    ## Block4:PC1          -0.16788    0.12715  -1.320  0.19201   
+    ## Block2:PC2          -0.17160    0.11705  -1.466  0.14814   
+    ## Block3:PC2           0.03278    0.13890   0.236  0.81429   
+    ## Block4:PC2          -0.16215    0.11344  -1.429  0.15836   
+    ## Block2:PC3          -0.21900    0.26023  -0.842  0.40354   
+    ## Block3:PC3          -0.34845    0.26467  -1.317  0.19327   
+    ## Block4:PC3          -0.47937    0.24121  -1.987  0.05170 . 
+    ## Block2:PC4          -0.04392    0.25558  -0.172  0.86416   
+    ## Block3:PC4          -0.81588    0.26961  -3.026  0.00371 **
+    ## Block4:PC4          -0.39335    0.25880  -1.520  0.13406   
+    ## Block2:richScaled    0.20016    0.62161   0.322  0.74863   
+    ## Block3:richScaled   -0.36966    0.58524  -0.632  0.53015   
+    ## Block4:richScaled    1.34560    0.56207   2.394  0.01998 * 
+    ## Block2:InvSimScaled -0.01345    0.31255  -0.043  0.96581   
+    ## Block3:InvSimScaled  0.26252    0.30760   0.853  0.39698   
+    ## Block4:InvSimScaled -0.70144    0.34142  -2.054  0.04452 * 
+    ## Block2:EvenScaled    0.18169    0.44342   0.410  0.68352   
+    ## Block3:EvenScaled   -0.23577    0.45699  -0.516  0.60790   
+    ## Block4:EvenScaled    1.14761    0.43686   2.627  0.01105 * 
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2327 on 57 degrees of freedom
-    ## Multiple R-squared:  0.7951, Adjusted R-squared:  0.6548 
-    ## F-statistic:  5.67 on 39 and 57 DF,  p-value: 2.347e-09
+    ## Residual standard error: 0.2412 on 57 degrees of freedom
+    ## Multiple R-squared:  0.7798, Adjusted R-squared:  0.6291 
+    ## F-statistic: 5.176 on 39 and 57 DF,  p-value: 1.293e-08
 
 ``` r
 # summary(ANCOVA)
@@ -2637,6 +2660,52 @@ summary(model)
 
 
 
+summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = RelativeFitness ~ rich, data = RootFitAlpha %>% 
+    ##     filter(TRT == "Alone"))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.5824 -0.3509 -0.1523  0.2511  1.0696 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept) -1.313978   1.400070  -0.939    0.358
+    ## rich         0.004895   0.003069   1.595    0.125
+    ## 
+    ## Residual standard error: 0.4722 on 22 degrees of freedom
+    ## Multiple R-squared:  0.1037, Adjusted R-squared:  0.06291 
+    ## F-statistic: 2.544 on 1 and 22 DF,  p-value: 0.125
+
+``` r
+summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Competition
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = RelativeFitness ~ rich, data = RootFitAlpha %>% 
+    ##     filter(TRT != "Alone"))
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.55517 -0.29823 -0.00738  0.21166  1.16446 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept) -0.322197   0.569532  -0.566   0.5734  
+    ## rich         0.002953   0.001275   2.317   0.0234 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.3523 on 71 degrees of freedom
+    ## Multiple R-squared:  0.07029,    Adjusted R-squared:  0.0572 
+    ## F-statistic: 5.368 on 1 and 71 DF,  p-value: 0.0234
+
+``` r
 # Plot
 EvenPlot1<-ggplot() +
   geom_point(data=RootFitAlpha %>% filter(TRT == "Alone"), aes(EvenScaled,RelativeFitness), size = 3, alpha=0.5) +
@@ -2810,11 +2879,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7568 
+    ##       Significance: 0.7636 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0735 0.0972 0.1174 0.1407 
+    ## 0.0729 0.0975 0.1179 0.1435 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2831,11 +2900,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0687 
+    ##       Significance: 0.071 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0589 0.0765 0.0916 0.1121 
+    ## 0.0595 0.0777 0.0937 0.1109 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2852,11 +2921,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1222 
+    ##       Significance: 0.1325 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0783 0.1027 0.1220 0.1469 
+    ## 0.0829 0.1064 0.1274 0.1491 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2873,10 +2942,10 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7714 
+    ##       Significance: 0.7618 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0756 0.0965 0.1160 0.1412 
+    ## 0.0735 0.0954 0.1155 0.1411 
     ## Permutation: free
     ## Number of permutations: 9999
