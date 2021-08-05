@@ -11,19 +11,10 @@ Sara Colom
   - [Load Libraries](#load-libraries)
   - [Read in Data](#read-in-data)
       - [Sequence depth and pruning](#sequence-depth-and-pruning)
-      - [Test for differently abundant
-        OTUs](#test-for-differently-abundant-otus)
-          - [Visualize the different groups at the family
-            level](#visualize-the-different-groups-at-the-family-level)
-      - [Testing if different at the phylum
-        level](#testing-if-different-at-the-phylum-level)
-      - [Family level](#family-level)
       - [Alpha Diversity](#alpha-diversity)
-      - [Alpha Diversity](#alpha-diversity-1)
           - [Note: Measures of
             alpha-diversity](#note-measures-of-alpha-diversity)
       - [Test for differences](#test-for-differences)
-  - [Alpha Diversity distribution](#alpha-diversity-distribution)
   - [Linear mixed models](#linear-mixed-models)
   - [ANOVA Test for treatment within I. purpurea (Table
     1)](#anova-test-for-treatment-within-i-purpurea-table-1)
@@ -46,6 +37,7 @@ Sara Colom
       - [Selection on Simpson](#selection-on-simpson)
       - [Selection on Evenness](#selection-on-evenness)
   - [ANCOVA](#ancova)
+  - [Figure 2](#figure-2)
   - [MANTEL (Table 4)](#mantel-table-4)
 
 ## Sample sizes
@@ -55,8 +47,8 @@ Sara Colom
 | Species      | Treatment   | N  |
 | ------------ | ----------- | -- |
 | I. purpurea  | Alone       | 27 |
-| I. purpurea  | Competition | 78 |
-| I. hederacea | Competition | 78 |
+| I. purpurea  | Competition | 73 |
+| I. hederacea | Competition | 73 |
 
 ### Table number of maternal line per species
 
@@ -95,32 +87,21 @@ library(lmerTest)
 source("miSeq.R")
 
 # Aesthetics
-Tx<-theme(axis.text.y = element_text(size = 20),
+Tx<-theme(axis.text.y = element_text(size = 12),
           axis.title.y = element_text(size = 20)) +
           theme(axis.text.x = element_text(vjust = 1, hjust=1, angle=0, size = 20),
-          axis.title.x = element_text(angle=0, size = 20),
+          axis.title.x = element_text(angle=0, size = 12),
           plot.title=element_text(size = 25,hjust=0))
 
-# Margins
-Margin<-theme(
-  panel.background = element_rect(fill = "white"),
-  plot.margin = margin(2, 2, 2, 2, "cm"),
-  plot.background = element_rect(
-    fill = "white",
-    colour = "black",
-    size = 1
-  )
-)
-
 # Aesthetics
-Tx2<-theme(axis.text.y = element_text(size = 20),
-          axis.title.y = element_text(size = 25)) +
+Tx2<-theme(axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 12)) +
           theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 25),
           axis.title.x = element_text(size = 25),
           plot.title=element_text(size = 25,hjust=0))
 
-GoldGrey=c("#F1CE63", "#79706E")
-GreenBlue=c("#59A14F", "#4E79A7")
+GoldGrey <- c("#F1CE63", "#79706E")
+GreenBlue <- c("#59A14F", "#4E79A7")
 ```
 
 # Read in Data
@@ -293,166 +274,6 @@ physeq1
     ## sample_data() Sample Data:       [ 173 samples by 9 sample variables ]
     ## tax_table()   Taxonomy Table:    [ 1098 taxa by 6 taxonomic ranks ]
 
-``` r
-physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray")
-
-# # # # # # # # # # # # # # # # # # # # # 
-# Subsample for within I. purpurea only
-# # # # # # # # # # # # # # # # # # # # # 
-
-physeq.Purp <- subset_samples(physeq.scale, Species == "Ip")
-sampledf.Purp<- data.frame(sample_data(physeq.Purp))
-
-# Calculate bray curtis for summer samples only
-physeq.Purp.bray <- phyloseq::distance(physeq = physeq.Purp, method = "bray")
-```
-
-## Test for differently abundant OTUs
-
-### Visualize the different groups at the family level
-
-``` r
-# Check for 'core' microbiome members as the phylum level which taxa are present
-# at 1 % overall abundance and at least 75% of samples 
-
-PhylumGlom <- tax_glom(physeq.Purp,taxrank = "Phylum")
-FamGlom <- tax_glom(physeq.Purp,taxrank = "Family")
-ClassGlom <- tax_glom(physeq.Purp,taxrank = "Class")
-
-
-coreTaxa <- filter_taxa(PhylumGlom, function(x) sum(x > 1) > (0.75 * length(x)), TRUE)
-
-coreTaxaFamily <- filter_taxa(FamGlom, function(x) sum(x > 1) > (0.75 * length(x)), TRUE)
-
-## Plot at phylum level
-
-
-physeq1_phylumAlone <- coreTaxa  %>%
-  subset_samples(TRT == "Alone")%>%
-  transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
-  psmelt()      
-
-
-physeq1_phylumComp <- coreTaxa  %>%
-  subset_samples(TRT != "Alone")%>%
-  transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
-  psmelt()       
-
-physeq1_phylum <- rbind(physeq1_phylumAlone,physeq1_phylumComp)
-
-# Melt to long format
-physeq1_phylum <- physeq1_phylum[order(physeq1_phylum$Phylum), ] 
-
-#colnames(physeq1_phylum)[13]="Phylum"
-
-# Sort data frame alphabetically by phylum
-# Set colors for plotting
-phylum_colors <- c(
-  "#CBD588", "#5F7FC7", "orange", "#DA5724", "#508578", "#CD9BCD",
-   "#AD6F3B", "#673770", "#D14285", "#652926", "#C84248", 
-  "#8569D5", "#5E738F", "#D1A33D", "#8A7C64", "#599861"
-)
-
-
-#colnames(physeq1_phylum)[which(names(physeq1_phylum)%in%"Rank2")]="Phylum"
-
-# Plot 
-ggplot(physeq1_phylum, aes(x = TRT, y = Abundance, fill = Phylum)) + 
-  geom_bar(stat = "identity",position='dodge') +
-  #scale_fill_manual(values = phylum_colors) +
-  theme(axis.title.x = element_blank()) + 
-  ylab("Relative Abundance (Phyla > 75 %) \n") +
-  ggtitle("Phylum Composition  \n Bacterial Communities by Sampling per Treatment") +
-  theme_classic() +
-  ylab("Relative Abundance")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
-
-## Testing if different at the phylum level
-
-``` r
-PhlyaList <- as.list(unique(physeq1_phylum$Phylum))
-
-KrusMicrTest <- function(Microbe){
-  Result = kruskal.test(Abundance ~ TRT, data = physeq1_phylum[which(physeq1_phylum$Phylum == Microbe),]) 
-
-ResDf <- data.frame("ChiSq" = Result$statistic, "Pval"=Result$p.value, "Phylum" = paste(Microbe))  
-  return(ResDf)  
-}
-
-AllResults <- lapply(PhlyaList, KrusMicrTest)
-KruskalRes <- do.call('rbind', AllResults)
-```
-
-## Family level
-
-``` r
-# Family level
-physeq1_FamilyAlone <- coreTaxaFamily  %>%
-  subset_samples(TRT == "Alone")%>%
-  transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
-  psmelt()                                      # Melt to long format
-
-physeq1_FamilyComp <- coreTaxaFamily  %>%
-  subset_samples(TRT != "Alone")%>%
-  transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
-  psmelt()       
-
-physeq1_Family <- rbind(physeq1_FamilyAlone,physeq1_FamilyComp)
-
-
-FamList <- as.list(unique(physeq1_Family$Family))
-
-KrusMicrTest<-function(Microbe){
-  Result <- kruskal.test(Abundance ~ TRT, data = physeq1_Family[which(physeq1_Family$Family == Microbe), ]) 
-
-ResDf <- data.frame("ChiSq" = Result$statistic, "Pval"= Result$p.value, "Family" = paste(Microbe))  
-  return(ResDf)  
-}
-
-AllResultsFamily <- lapply(FamList, KrusMicrTest)
-KruskalResFamily <- do.call('rbind', AllResultsFamily)
-
-KruskalResFamily %>% 
-  filter(Pval < 0.055)
-```
-
-    ##                                  ChiSq        Pval          Family
-    ## Kruskal-Wallis chi-squared54  5.192655 0.022682540   Subgroup_2_fa
-    ## Kruskal-Wallis chi-squared69  3.904351 0.048161234     Gaiellaceae
-    ## Kruskal-Wallis chi-squared139 3.752445 0.052730323  Lineage_IIa_fa
-    ## Kruskal-Wallis chi-squared177 4.186783 0.040740338          SM2D12
-    ## Kruskal-Wallis chi-squared180 4.509080 0.033715377        AKYG1722
-    ## Kruskal-Wallis chi-squared181 3.904351 0.048161234 Microtrichaceae
-    ## Kruskal-Wallis chi-squared207 8.682062 0.003213572           A0839
-
-``` r
-# Do false discovery rate for mulitple corrections
-
-KruskalResFamily$AdjPval <- p.adjust(KruskalResFamily$Pval, method = "fdr", n = 213)
-```
-
-## Alpha Diversity
-
-``` r
-hist(sample_sums(physeq1))
-```
-
-![](README_files/figure-gfm/alpha%20diversity-1.png)<!-- -->
-
-``` r
-# Remove sample with less than 20K reads, this looks WAAAY off
-# Rarify first
-ps.rarefied <- rarefy_even_depth(physeq1, rngseed = 1, sample.size = min(sample_sums(physeq1)), replace = F)
-
-plot_richness(ps.rarefied,x = "TRT",measures = c("Observed", "Shannon")) +
-  geom_boxplot() +
-  theme_classic()
-```
-
-![](README_files/figure-gfm/alpha%20diversity-2.png)<!-- -->
-
 ## Alpha Diversity
 
 #### Note: Measures of alpha-diversity
@@ -504,7 +325,7 @@ InvSimp <- simp
 length(rich)
 ```
 
-    ## [1] 173
+    FALSE [1] 173
 
 ``` r
 Sample_ID <- sample_names(physeq1)
@@ -518,7 +339,7 @@ alpha <- data.frame(Sample_ID,ML, Block, TRT, Species, Combos, rich, InvSimp, si
 
 alpha$even <- alpha$shan/alpha$rich
 
-# DO VIOLIN PLOT HERE!!!
+# Visualize data distribution w Violin plots
 
 
 p <- ggplot(alpha %>% filter(TRT == "Inter"), aes(x = Species, y = rich)) +
@@ -563,97 +384,9 @@ v <- ggplot(alpha %>% filter(TRT == "Inter"), aes(x = Species, y = even)) +
 ggarrange(p, q, t, v, common.legend = T, ncol = 2, nrow = 2)
 ```
 
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-``` r
-      ### Treatment
-
-pT <- ggplot(alpha %>% filter(Species == "Ip"), aes(x = TRT, y = rich)) +
-  geom_violin(trim = FALSE, aes(fill = TRT), alpha = 0.3) + 
-  geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize = 1, aes(color = TRT,fill = TRT)) +
-  theme_classic() +
-  scale_color_manual(values = c("#B2DF8A", "#fee090")) +
-  scale_fill_manual(values = c("#B2DF8A", "#fee090")) +
-  ggtitle("Mean Treatment Richness")
-
-
-qT <- ggplot(alpha %>% filter(Species == "Ip"), aes(x = TRT, y = InvSimp)) +
-  geom_violin(trim = FALSE, aes(fill = TRT), alpha = 0.3) + 
-  geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize=1, aes(color = TRT, fill = TRT)) +
-  theme_classic() +
-  scale_color_manual(values = c("#B2DF8A", "#fee090")) +
-  scale_fill_manual(values = c("#B2DF8A", "#fee090")) +
-  ggtitle("Mean Treatment Inverse Simpson") +
-  ylab(" ")
-
-ggarrange(pT, qT, common.legend = T)
-```
-
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-    ## `stat_bindot()` using `bins = 30`. Pick better value with `binwidth`.
-
-![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 ## Test for differences
-
-# Alpha Diversity distribution
-
-``` r
-# first check for normality. To test for normalcy statistically, we can run the Shapiro-Wilk test of normality.
-
-shapiro.test(alpha$rich) # Not normal
-```
-
-    FALSE 
-    FALSE   Shapiro-Wilk normality test
-    FALSE 
-    FALSE data:  alpha$rich
-    FALSE W = 0.98984, p-value = 0.2539
-
-``` r
-shapiro.test(alpha$even) # Normal
-```
-
-    FALSE 
-    FALSE   Shapiro-Wilk normality test
-    FALSE 
-    FALSE data:  alpha$even
-    FALSE W = 0.98648, p-value = 0.09413
-
-``` r
-shapiro.test(alpha$sim) # Normal
-```
-
-    FALSE 
-    FALSE   Shapiro-Wilk normality test
-    FALSE 
-    FALSE data:  alpha$sim
-    FALSE W = 0.90115, p-value = 2.331e-09
-
-``` r
-histogram(alpha$rich,xlab = "Richness") # Note richness though, not normal, looks close to normal.
-```
-
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-``` r
-histogram(alpha$InvSimp, xlab = "Inverse-Simpson")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
-
-``` r
-histogram(alpha$sim, xlab = "Simpson")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
 
 # Linear mixed models
 
@@ -839,6 +572,20 @@ anova(aov.evenness)
 ## Beta Diversity
 
 ``` r
+physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray")
+
+# # # # # # # # # # # # # # # # # # # # # 
+# Subsample for within I. purpurea only
+# # # # # # # # # # # # # # # # # # # # # 
+
+physeq.Purp <- subset_samples(physeq.scale, Species == "Ip")
+sampledf.Purp<- data.frame(sample_data(physeq.Purp))
+
+# Calculate bray curtis for I.purpurea samples only
+physeq.Purp.bray <- phyloseq::distance(physeq = physeq.Purp, method = "bray")
+```
+
+``` r
 # Beta diversity pcoa Bray-Curtis DNA only 
 physeq.pcoa <-
   ordinate(
@@ -858,116 +605,6 @@ colnames(SampData)[1] <- "Duplicates"
 SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
 
 physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData,by="Duplicates"))
-
-bray_values <- physeq.pcoa$values
-bray_rel_eigens <- bray_values$Relative_eig
-
-bray_rel_eigen1 <- bray_rel_eigens[1]
-bray_rel_eigen1_percent <- round(bray_rel_eigen1 * 100, digits = 1)
-
-bray_rel_eigen2 <- bray_rel_eigens[2]
-bray_rel_eigen2_percent <- round(bray_rel_eigen2 * 100, digits = 1)
-
-bray_rel_eigen3 <- bray_rel_eigens[3]
-bray_rel_eigen3_percent <- round(bray_rel_eigen3 * 100, digits = 1)
-
-bray_rel_eigen4 <- bray_rel_eigens[4]
-bray_rel_eigen4_percent <- round(bray_rel_eigen4 * 100, digits = 1)
-
-bray_rel_eigen5 <- bray_rel_eigens[5]
-bray_rel_eigen5_percent <- round(bray_rel_eigen5 * 100, digits = 1)
-
-# Prep axis labels & title
-bray_axis1 <- paste("PCoA 1:",bray_rel_eigen1_percent, "%")
-bray_axis2 <- paste("PCoA 2:",bray_rel_eigen2_percent, "%")
-bray_axis3 <- paste("PCoA 3:",bray_rel_eigen3_percent, "%")
-bray_axis4 <- paste("PCoA 4:",bray_rel_eigen4_percent, "%")
-PCoA_title <- paste("Bray-Curtis, ",ntaxa(physeq.scale), "OTUs")
-
-
-pcoa_exp_trt <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = TRT, fill = TRT)) +
-  xlab(bray_axis1) + 
-  ylab(bray_axis2) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
-  scale_color_manual(values = c("#00B050", "grey"), "Treatment", labels = c("Alone", "Competition")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
-  Tx +
-  theme(axis.text.x = element_text(angle = 45), axis.text = element_text(color="black", size = 15,vjust = 0.5,hjust = 1))
-#  scale_fill_discrete(name = "Treatment", labels = c("Alone", "Competition")) +
- # scale_color_discrete(name = "Treatment", labels = c("Alone", "Competition"))
-
-
-
-pcoa_exp_trtA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = TRT,fill = TRT)) +
-  xlab(bray_axis3) + 
-  ylab(bray_axis4) + 
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
-  scale_color_manual(values = GoldGrey, "Treatment", labels = c("Alone", "Competition")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = TRT)) +
-  Tx
-
-
-pcoa_exp_sp <- ggplot(physeq.pcoa.df, aes(Axis.1, Axis.2, color = Species,fill = Species)) +
-  xlab("") + 
-  ylab(bray_axis2) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
- scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-   stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
-  Tx
-
-
-pcoa_exp_spA <- ggplot(physeq.pcoa.df, aes(Axis.3, Axis.4, color = Species,fill = Species)) +
-  xlab("") + 
-  ylab(bray_axis4) +
-  geom_point(alpha = 0.9) + 
-  theme_classic() +
-  scale_fill_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  scale_color_manual(values = GreenBlue, "Species", labels = c("I. hederacea", "I. purpurea")) +
-  stat_ellipse(geom = "polygon", alpha = 1/6, aes(fill = Species)) +
-  Tx
-
-A <- ggarrange(pcoa_exp_trt,pcoa_exp_trtA,common.legend = T, Labels = c("C", "D"),font.label = list(size = 15, color = "black", face =
-  "plain"),hjust = -8,vjust = 1)
-
-B <- ggarrange(pcoa_exp_sp,pcoa_exp_spA,common.legend = T, labels = c("A", "B"),font.label = list(size = 15, color = "black", face =
-  "plain"),hjust = -8,vjust = 1)
-
-MainFig <- ggarrange(B, A, nrow = 2)
-
-annotate_figure(MainFig,
-                top = text_grob(PCoA_title, face = "plain", size = 25, lineheight = 2)
-)
-```
-
-![](README_files/figure-gfm/PCoA%20Treatment%20and%20Species%20comparisoin%20Bray%20Curtis%20Estimate-1.png)<!-- -->
-
-``` r
-physeq.pcoa.df$TrtSp <- paste(physeq.pcoa.df$TRT, physeq.pcoa.df$Species, sep="")
-
-p <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.3, color = ~TrtSp) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis2),
-                     zaxis = list(title = bray_axis3)))
-
-
-p1 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis2),
-                     zaxis = list(title = bray_axis4)))
-
-p3 <- plot_ly(physeq.pcoa.df, x = ~Axis.1, y = ~Axis.2, z = ~Axis.4, color = ~Species) %>%
-  add_markers() %>%
-  layout(scene = list(xaxis = list(title = bray_axis1),
-                     yaxis = list(title = bray_axis3),
-                     zaxis = list(title = bray_axis4)))
 ```
 
 # PERMANOVA (Table 2)
@@ -1565,54 +1202,44 @@ summary(EvenPC4)
 ``` r
 # Richness and root architecture
 P2.rich <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC2,rich), alpha = 0.5, size = 5) +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2,rich), fullrange = TRUE) +
+  geom_point(data = RootAlphaPurp, aes(PC2, rich), alpha = 0.5, size = 3, color = "brown") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, rich), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
   theme_classic() +
   ylab("Richness") +
   xlab("") +
-  Tx2
-#+ 
-  #annotate("text", x = -1, y = 500, label = "paste(italic(R) ^ 2, \" = 0.15\")", parse = TRUE,hjust=0, size=5) + 
- # annotate("text", x = -1, y = 490, label = "paste(italic(B), \" = -4.65 +/-1.81\")", parse = TRUE,hjust=0, size=5) +
- # annotate("text", x = -1, y = 480, label = "paste(italic(P), \" = 0.01\")", parse = TRUE,hjust=0, size=5)
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
 
 # Evenness and root architecture
 P2.even <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC2, even), alpha = 0.5, size = 5) +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, even), fullrange = TRUE) +
+  geom_point(data = RootAlphaPurp, aes(PC2, even), alpha = 0.5, size = 3, color = "brown") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, even), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
   theme_classic() +
   ylab("Evenness") +
   xlab("") +
-  Tx2#+ 
-  #annotate("text", x = -4.5, y = .0114, label = "paste(italic(R) ^ 2, \" = 0.12\")", parse = TRUE,hjust=0, size=5) + 
-#  annotate("text", x = -4.5, y = .0112, label = "paste(italic(B), \" = -7.29E-5 +/-3.28E-5\")", parse = TRUE,hjust=0, size=5) +
- # annotate("text", x = -4.5, y =.011, label = "paste(italic(P), \" = 0.04\")", parse = TRUE,hjust=0, size=5)
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
 
 
 # Root morphology on species diversity Simpson metric
 
 P4.Sim <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC4, sim), alpha = 0.5, size = 5) +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC4, sim), fullrange = TRUE) +
+  geom_point(data = RootAlphaPurp, aes(PC4, sim), alpha = 0.5, size = 3, color = "brown") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC4, sim), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
   theme_classic() +
   ylab("Simpson") +
-  xlab("") +
-  Tx2#+
-  #annotate("text", x = -5, y = .988, label = "paste(italic(R) ^ 2, \" = 0.18\")", parse = TRUE,hjust=0, size=5) + 
-  #annotate("text", x = -5, y = .985, label = "paste(italic(B), \" = 2.22E-4 +/-6.99E-4\")", parse = TRUE,hjust=0, size=5) +
- # annotate("text", x =-5, y = .982, label = "paste(italic(P), \" < 0.01\")", parse = TRUE,hjust=0, size=5)
-
-
-P4.simIn <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC4, InvSimp), alpha = 0.5, size = 5) +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC4, InvSimp), fullrange = TRUE) +
-  theme_classic() +
-  ylab("Inverse Simpson") +
-  xlab("") +
-  Tx2#+
- # annotate("text", x = -5, y = 60, label = "paste(italic(R) ^ 2, \" = 0.12\")", parse = TRUE,hjust=0, size=5) + 
- # annotate("text", x = -5, y = 57, label = "paste(italic(B), \" = 2.08 +/-1.05\")", parse = TRUE,hjust=0, size=5) +
- # annotate("text", x =-5, y = 54, label = "paste(italic(P), \" = 0.02\")", parse = TRUE,hjust=0, size=5)
+  xlab("Root Morphology (PC4)") +
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
 
 ## Linear mixed models (not reported)
@@ -1874,7 +1501,7 @@ ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
   facet_grid(~Block)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 # Combine with root data
@@ -1957,74 +1584,37 @@ PC4_Box=ggplot(RootAveraged, aes(x = "", y = PC4)) +
   theme_classic() +
   Tx+ 
   coord_flip()
+```
 
+Figure 1
+
+``` r
 #ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-AB <- cowplot::plot_grid(P2.rich,P2.even, align = "hv", ncol = 2, Labels = c("A", "B"), label_size = 22 ,hjust = -11,vjust = 1, Label_x = -0.16)
+AB <- ggarrange(P2.rich, P2.even, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14))
 ```
 
     ## `geom_smooth()` using formula 'y ~ x'
     ## `geom_smooth()` using formula 'y ~ x'
-
-    ## Warning in as_grob.default(plot): Cannot convert object of class character into
-    ## a grob.
-
-    ## Warning in as_grob.default(plot): Cannot convert object of class numeric into a
-    ## grob.
-
-    ## Warning: Graphs cannot be vertically aligned unless the axis parameter is set.
-    ## Placing graphs unaligned.
-
-    ## Warning: Graphs cannot be horizontally aligned unless the axis parameter is set.
-    ## Placing graphs unaligned.
-
-``` r
-ab <- cowplot::plot_grid(P4.Sim,P4.simIn, align = "hv", ncol = 2, Labels =c("A", "B"), label_size =22 ,hjust = -11,vjust=1, Label_x = -0.17)
-```
-
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-
-    ## Warning in as_grob.default(plot): Cannot convert object of class character into
-    ## a grob.
-
-    ## Warning in as_grob.default(plot): Cannot convert object of class numeric into a
-    ## grob.
-
-    ## Warning: Graphs cannot be vertically aligned unless the axis parameter is set.
-    ## Placing graphs unaligned.
-
-    ## Warning: Graphs cannot be horizontally aligned unless the axis parameter is set.
-    ## Placing graphs unaligned.
-
-``` r
-P4.simIn +
-  xlab("Root morphology (PC4)")
-```
-
-    ## `geom_smooth()` using formula 'y ~ x'
-
-![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
-
-``` r
-# Common x title
-
-x.grob <- textGrob("Root morphology (PC4)", 
-                   gp=gpar(col="black", fontsize = 25), rot=0)
-
-gridExtra::grid.arrange(gridExtra::arrangeGrob(ab,bottom = x.grob, padding = unit(0.5,units = 'in'), nrow=1))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
 
 ``` r
 # Common x title
 x.grob1 <- textGrob("Root architecture (PC2)", 
                    gp = gpar(col="black", fontsize = 25), rot = 0)
 
-gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.5,units = 'in'), nrow=1))
+gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.05,units = 'in'), nrow=1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+Figure 2
+
+``` r
+P4.Sim
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ## Selection on microbe variables
 
@@ -2589,78 +2179,11 @@ car::Anova(model, type="III") # Report the type three sums of squares~
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-``` r
-summary(model)
-```
-
-    ## 
-    ## Call:
-    ## lm(formula = RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + 
-    ##     PC4 + richScaled + InvSimScaled + EvenScaled + TRT:Block + 
-    ##     TRT:PC1 + TRT:PC3 + TRT:richScaled + TRT:EvenScaled + Block:PC1 + 
-    ##     Block:PC2 + Block:PC3 + Block:PC4 + Block:richScaled + Block:InvSimScaled + 
-    ##     Block:EvenScaled, data = RootFitAlpha)
-    ## 
-    ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.49654 -0.09763  0.01365  0.09599  0.47450 
-    ## 
-    ## Coefficients:
-    ##                     Estimate Std. Error t value Pr(>|t|)   
-    ## (Intercept)          0.52615    0.29811   1.765  0.08293 . 
-    ## TRTInter             0.15810    0.30471   0.519  0.60587   
-    ## Block2               0.04877    0.32605   0.150  0.88161   
-    ## Block3               0.91575    0.35930   2.549  0.01353 * 
-    ## Block4               0.66711    0.32098   2.078  0.04219 * 
-    ## PC1                 -0.07673    0.10010  -0.767  0.44648   
-    ## PC2                  0.03186    0.08504   0.375  0.70929   
-    ## PC3                  0.02631    0.22369   0.118  0.90680   
-    ## PC4                  0.26781    0.22967   1.166  0.24844   
-    ## richScaled           0.26580    0.48793   0.545  0.58806   
-    ## InvSimScaled         0.02068    0.23890   0.087  0.93133   
-    ## EvenScaled           0.02131    0.39233   0.054  0.95687   
-    ## TRTInter:Block2      0.10631    0.34635   0.307  0.75999   
-    ## TRTInter:Block3     -0.21020    0.37365  -0.563  0.57594   
-    ## TRTInter:Block4     -0.35654    0.33461  -1.066  0.29112   
-    ## TRTInter:PC1         0.14505    0.09607   1.510  0.13663   
-    ## TRTInter:PC3         0.15937    0.16221   0.983  0.33000   
-    ## TRTInter:richScaled -0.57273    0.25532  -2.243  0.02879 * 
-    ## TRTInter:EvenScaled -0.29567    0.25582  -1.156  0.25260   
-    ## Block2:PC1          -0.13807    0.13485  -1.024  0.31020   
-    ## Block3:PC1           0.17929    0.12345   1.452  0.15191   
-    ## Block4:PC1          -0.16788    0.12715  -1.320  0.19201   
-    ## Block2:PC2          -0.17160    0.11705  -1.466  0.14814   
-    ## Block3:PC2           0.03278    0.13890   0.236  0.81429   
-    ## Block4:PC2          -0.16215    0.11344  -1.429  0.15836   
-    ## Block2:PC3          -0.21900    0.26023  -0.842  0.40354   
-    ## Block3:PC3          -0.34845    0.26467  -1.317  0.19327   
-    ## Block4:PC3          -0.47937    0.24121  -1.987  0.05170 . 
-    ## Block2:PC4          -0.04392    0.25558  -0.172  0.86416   
-    ## Block3:PC4          -0.81588    0.26961  -3.026  0.00371 **
-    ## Block4:PC4          -0.39335    0.25880  -1.520  0.13406   
-    ## Block2:richScaled    0.20016    0.62161   0.322  0.74863   
-    ## Block3:richScaled   -0.36966    0.58524  -0.632  0.53015   
-    ## Block4:richScaled    1.34560    0.56207   2.394  0.01998 * 
-    ## Block2:InvSimScaled -0.01345    0.31255  -0.043  0.96581   
-    ## Block3:InvSimScaled  0.26252    0.30760   0.853  0.39698   
-    ## Block4:InvSimScaled -0.70144    0.34142  -2.054  0.04452 * 
-    ## Block2:EvenScaled    0.18169    0.44342   0.410  0.68352   
-    ## Block3:EvenScaled   -0.23577    0.45699  -0.516  0.60790   
-    ## Block4:EvenScaled    1.14761    0.43686   2.627  0.01105 * 
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 0.2412 on 57 degrees of freedom
-    ## Multiple R-squared:  0.7798, Adjusted R-squared:  0.6291 
-    ## F-statistic: 5.176 on 39 and 57 DF,  p-value: 1.293e-08
+Within treatment linear regression, regress untransformed richness onto
+relative fitness
 
 ``` r
-# summary(ANCOVA)
-
-
-
-
-summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
+summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
 ```
 
     ## 
@@ -2682,7 +2205,7 @@ summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alo
     ## F-statistic: 2.544 on 1 and 22 DF,  p-value: 0.125
 
 ``` r
-summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Competition
+summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Competition
 ```
 
     ## 
@@ -2705,102 +2228,30 @@ summary(lm(RelativeFitness~rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Com
     ## Multiple R-squared:  0.07029,    Adjusted R-squared:  0.0572 
     ## F-statistic: 5.368 on 1 and 71 DF,  p-value: 0.0234
 
+# Figure 2
+
+Plot results
+
 ``` r
-# Plot
-EvenPlot1<-ggplot() +
-  geom_point(data=RootFitAlpha %>% filter(TRT == "Alone"), aes(EvenScaled,RelativeFitness), size = 3, alpha=0.5) +
-#    geom_smooth(data=RootFitAlpha %>% filter(TRT == "Alone"), aes(even,RelativeFitness),method = "lm", fullrange = TRUE, se=FALSE) +
-  geom_abline(slope=-0.47, intercept = 1.18,color="blue", size = 2) +
-  theme_classic() +
-  xlab("Evenness") +
-  Tx+
-  theme(axis.text.x = element_text(angle=45), axis.text = element_text(color="black", size=15,vjust = 0.5,hjust=1)) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5))
-
-
-EvenPlot2<-ggplot() +
-  geom_point(data=RootFitAlpha %>% filter(TRT=="Inter"), aes(EvenScaled,RelativeFitness), size = 3, alpha=0.5) +
-#    geom_smooth(data=RootFitAlpha %>% filter(TRT=="Inter"), aes(EvenScaled,RelativeFitness),method = "lm", fullrange = TRUE, se=FALSE) +
-    geom_abline(slope=-0.28, intercept = 1.03,color="blue", size = 2) +
-
-  theme_classic() +
-  xlab("Evenness") +
-  Tx+
-  theme(axis.text.x = element_text(angle=45), axis.text = element_text(color="black", size=15,vjust = 0.5,hjust=1)) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5))
-
 ggplot() +
-  geom_point(data=RootFitAlpha, aes(EvenScaled,RelativeFitness,color=TRT), size = 3, alpha=0.5) +
+  geom_point(data = RootFitAlpha, aes(rich,RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
 #    geom_smooth(data=RootFitAlpha %>% filter(TRT=="Inter"), aes(EvenScaled,RelativeFitness),method = "lm", fullrange = TRUE, se=FALSE) +
-    geom_abline(slope=-0.47, intercept = 1.18,color="red", size = 2, Linetype="dashed") +
+    geom_abline(slope = 0.004895, intercept = -1.313978, color="darkgreen", size = 1.2, linetype="dashed") +
 
-    geom_abline(slope=-0.28, intercept = 1.03,color="black", size = 2) +
+    geom_abline(slope = 0.002953, intercept = -0.322197,color="brown", size = 1.2) +
 
   theme_classic() +
-  xlab("Evenness") +
-  Tx2+
-  theme(axis.text.x = element_text(angle=45), axis.text = element_text(color="black", size=15,vjust = 0.5,hjust=1)) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + scale_color_manual(values = c("red", "black"), "Treatment", labels = c("Alone", "Competition"))
+  xlab("Richness") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + 
+  scale_color_manual(values = c("darkgreen", "brown"), "Treatment", labels = c("Alone", "Competition")) +
+  theme(axis.text = element_text(color="black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
-
-    ## Warning: Ignoring unknown parameters: Linetype
 
 ![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
-
-``` r
-#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-cowplot::plot_grid(EvenPlot1,EvenPlot2, align = "hv", ncol = 2, Labels =c("A", "B"), label_size =22 ,hjust = -9,vjust=2, Label_x = -0.16)
-```
-
-    ## Warning in as_grob.default(plot): Cannot convert object of class character into
-    ## a grob.
-
-    ## Warning in as_grob.default(plot): Cannot convert object of class numeric into a
-    ## grob.
-
-    ## Warning: Graphs cannot be vertically aligned unless the axis parameter is set.
-    ## Placing graphs unaligned.
-
-    ## Warning: Graphs cannot be horizontally aligned unless the axis parameter is set.
-    ## Placing graphs unaligned.
-
-![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
-
-``` r
-Block1<-ggplot() +
-  geom_point(data=RootFitAlpha %>% filter(Block=="1"), aes(even,RelativeFitness), size = 3, alpha=0.5) +
-    geom_smooth(data=RootFitAlpha %>% filter(Block=="1"), aes(even,RelativeFitness), se=FALSE,method = "lm", fullrange = TRUE) +
-    theme_classic() +
-  xlab("Eveness") +
-  Tx+
-  theme(axis.text.x = element_text(angle=45), axis.text = element_text(color="black", size=15,vjust = 0.5,hjust=1))
-   
-Block2<-ggplot() +
-  geom_point(data=RootFitAlpha %>% filter(Block=="2"), aes(even,RelativeFitness), size = 3, alpha=0.5) +
-    geom_smooth(data=RootFitAlpha %>% filter(Block=="2"), aes(even,RelativeFitness), se=FALSE,method = "lm", fullrange = TRUE) +
-    theme_classic() +
-  xlab("Eveness") +
-  Tx+
-  theme(axis.text.x = element_text(angle=45), axis.text = element_text(color="black", size=15,vjust = 0.5,hjust=1))
-
-
-Block3<-ggplot() +
-  geom_point(data=RootFitAlpha %>% filter(Block=="3"), aes(even,RelativeFitness), size = 3, alpha=0.5) +
-    geom_smooth(data=RootFitAlpha %>% filter(Block=="3"), aes(even,RelativeFitness), se=FALSE,method = "lm", fullrange = TRUE) +
-    theme_classic() +
-  xlab("Eveness") +
-  Tx+
-  theme(axis.text.x = element_text(angle=45), axis.text = element_text(color="black", size=15,vjust = 0.5,hjust=1))
-
-
-Block4<-ggplot() +
-  geom_point(data=RootFitAlpha %>% filter(Block=="4"), aes(even,RelativeFitness), size = 3, alpha=0.5) +
-    geom_smooth(data=RootFitAlpha %>% filter(Block=="4"), aes(even,RelativeFitness),method = "lm", fullrange = TRUE) +
-    theme_classic() +
-  xlab("Eveness") +
-  Tx+
-  theme(axis.text.x = element_text(angle=45), axis.text = element_text(color="black", size=15,vjust = 0.5,hjust=1))
-```
 
 # MANTEL (Table 4)
 
