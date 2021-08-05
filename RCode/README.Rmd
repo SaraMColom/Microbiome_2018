@@ -790,7 +790,7 @@ PC4_Box=ggplot(RootAveraged, aes(x = "", y = PC4)) +
   coord_flip()
 ```
 
-Figure 1
+# Figure 1
 
 ```{r}
 #ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
@@ -806,101 +806,11 @@ gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = u
 ```
 
 
-Figure 2
+# Figure 2
 ```{r}
 P4.Sim
 ```
 
-
-## Selection on microbe variables
-
-```{r}
-# Quadratic microbe term
-FitAlpha$even2 <- (FitAlpha$even*FitAlpha$even)
-FitAlpha$rich2 <- (FitAlpha$rich*FitAlpha$rich)
-FitAlpha$InSim2 <- (FitAlpha$InvSimp*FitAlpha$InvSimp)
-FitAlpha$sim2 <- (FitAlpha$sim*FitAlpha$sim)
-
-```
-
-### Selection on richness
-```{r cor on richness}
-summary(lm(RelativeFitness ~ Block +rich+rich2, FitAlpha %>% filter(TRT == "Alone")))
-summary(lm(RelativeFitness ~ Block +rich+rich2, FitAlpha %>% filter(TRT != "Alone")))
-
-richness_sel <- lm(RelativeFitness ~ TRT*Block +rich, FitAlpha)
-summary(richness_sel) # No evidence of indirect selection
-anova(richness_sel)
-
-
-ggplot(FitAlpha) +
-  geom_point(aes(RelativeFitness, rich), alpha = 0.5, size = 5) +
-  geom_smooth(method = "lm", aes(RelativeFitness, rich), fullrange = TRUE) +
-  theme_classic() +
-  ylab("Relative fitness") +
-  xlab("Richness") +
-  Tx2
-
-```
-
-
-### Selection on Inverse Simpson
-```{r cor on Inverse Simpson}
-summary(lm(RelativeFitness ~ Block +InvSimp+InSim2, FitAlpha %>% filter(TRT == "Alone")))
-
-summary(lm(RelativeFitness ~ Block +InvSimp+InSim2, FitAlpha %>% filter(TRT != "Alone")))
-
-Invn_sel <- lm(RelativeFitness ~ TRT*Block + InvSimp + Block, FitAlpha)
-summary(Invn_sel) # No evidence of indirect selection
-
-ggplot(FitAlpha) +
-  geom_point(aes(RelativeFitness, InvSimp), alpha = 0.5, size = 5) +
-  geom_smooth(method = "lm", aes(RelativeFitness, InvSimp), fullrange = TRUE) +
-  theme_classic() +
-  ylab("Relative fitness") +
-  xlab("Inverse Simpson") +
-  Tx2
-```
-
-## Selection on Simpson
-```{r cor on Simpson }
-summary(lm(RelativeFitness ~ Block + sim + sim2, FitAlpha %>% filter(TRT == "Alone")))
-
-summary(lm(RelativeFitness ~ Block + sim + sim2, FitAlpha %>% filter(TRT != "Alone")))
-
-sim_sel <- lm(RelativeFitness ~ TRT*Block + sim, FitAlpha)
-summary(sim_sel) # NS
-
-ggplot(FitAlpha) +
-  geom_point(aes(RelativeFitness, sim), alpha = 0.5, size = 5) +
-  geom_smooth(method = "lm", aes(RelativeFitness, sim), fullrange = TRUE) +
-  theme_classic() +
-  ylab("Relative fitness") +
-  xlab("Simpson") +
-  Tx2
-```
-
-## Selection on Evenness
-```{r cor on Evenness}
-
-summary(lm(RelativeFitness ~ Block + even + even2 , FitAlpha %>% filter(TRT == "Alone")))
-
-summary(lm(RelativeFitness ~ Block + even + even2, FitAlpha %>% filter(TRT != "Alone"))) # Significant quadratic term for evenness on fitnes (super low slope tho)
-
-even_sel <- lm(RelativeFitness ~ TRT*Block + TRT*even2 + even, FitAlpha) # if we include block by treatment interaction there is marginal significance for a treatment by evenness squared effect
-even_sel2 <- lm(RelativeFitness ~ Block + TRT*even2 + even, FitAlpha) # if we include block by treatment interaction there is marginal significance for a treatment by evenness squared effect
-
-anova(even_sel, even_sel2) # Based on RSS--second model/simpler one is a bit better
-anova(even_sel) # NS
-
-ggplot(FitAlpha) +
-  geom_point(aes(RelativeFitness, even), alpha = 0.5, size = 5) +
-  stat_smooth(method = "lm",formula = y ~poly(x, 2), aes(RelativeFitness,even)) +
-  theme_classic() +
-  ylab("Relative fitness") +
-  xlab("Evenness") +
-  Tx2
-```
 
 ```{r}
 
@@ -965,7 +875,7 @@ summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # C
 
 ```
 
-# Figure 2
+# Figure 3
 
 Plot results
 ```{r}
