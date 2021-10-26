@@ -1691,9 +1691,8 @@ step$anova
 
 ``` r
 model<-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    InvSimScaled + EvenScaled + TRT:Block + TRT:PC1 + TRT:PC3 + 
-    TRT:richScaled + TRT:EvenScaled + Block:PC1 + Block:PC2 + 
-    Block:PC3 + Block:PC4 + Block:richScaled + Block:InvSimScaled + 
+    InvSimScaled + EvenScaled + TRT:richScaled + Block:PC1 +
+    Block:PC2 + Block:PC4 + Block:richScaled + Block:InvSimScaled +
     Block:EvenScaled, RootFitAlpha
 )
 
@@ -1707,29 +1706,24 @@ car::Anova(model, type="III") # Report the type three sums of squares~
     ## 
     ## Response: RelativeFitness
     ##                    Sum Sq Df F value    Pr(>F)    
-    ## (Intercept)        0.1813  1  3.1151 0.0829261 .  
-    ## TRT                0.0157  1  0.2692 0.6058680    
-    ## Block              0.7129  3  4.0836 0.0107317 *  
-    ## PC1                0.0342  1  0.5877 0.4464823    
-    ## PC2                0.0082  1  0.1404 0.7092886    
-    ## PC3                0.0008  1  0.0138 0.9067979    
-    ## PC4                0.0791  1  1.3598 0.2484366    
-    ## richScaled         0.0173  1  0.2967 0.5880598    
-    ## InvSimScaled       0.0004  1  0.0075 0.9313327    
-    ## EvenScaled         0.0002  1  0.0030 0.9568681    
-    ## TRT:Block          0.2049  3  1.1738 0.3277565    
-    ## TRT:PC1            0.1326  1  2.2793 0.1366337    
-    ## TRT:PC3            0.0562  1  0.9653 0.3300002    
-    ## TRT:richScaled     0.2928  1  5.0320 0.0287860 *  
-    ## TRT:EvenScaled     0.0777  1  1.3358 0.2525962    
-    ## Block:PC1          0.8474  3  4.8536 0.0044709 ** 
-    ## Block:PC2          0.2576  3  1.4753 0.2308904    
-    ## Block:PC3          0.2561  3  1.4670 0.2331593    
-    ## Block:PC4          1.1515  3  6.5954 0.0006649 ***
-    ## Block:richScaled   0.5966  3  3.4173 0.0232423 *  
-    ## Block:InvSimScaled 0.5618  3  3.2181 0.0293533 *  
-    ## Block:EvenScaled   0.6109  3  3.4991 0.0211239 *  
-    ## Residuals          3.3172 57                      
+    ## (Intercept)        2.0870  1 36.1276 8.880e-08 ***
+    ## TRT                0.0263  1  0.4544 0.5025934    
+    ## Block              2.9290  3 16.9013 2.984e-08 ***
+    ## PC1                0.0850  1  1.4721 0.2293409    
+    ## PC2                0.0005  1  0.0087 0.9261099    
+    ## PC3                0.1351  1  2.3380 0.1310266    
+    ## PC4                0.1702  1  2.9467 0.0907430 .  
+    ## richScaled         0.0013  1  0.0228 0.8803362    
+    ## InvSimScaled       0.0064  1  0.1106 0.7404662    
+    ## EvenScaled         0.0182  1  0.3152 0.5764312    
+    ## TRT:richScaled     0.7793  1 13.4896 0.0004823 ***
+    ## Block:PC1          1.2698  3  7.3269 0.0002592 ***
+    ## Block:PC2          0.2796  3  1.6136 0.1946056    
+    ## Block:PC4          1.1446  3  6.6046 0.0005699 ***
+    ## Block:richScaled   0.6721  3  3.8781 0.0128877 *  
+    ## Block:InvSimScaled 0.6380  3  3.6814 0.0162728 *  
+    ## Block:EvenScaled   0.6116  3  3.5289 0.0195094 *  
+    ## Residuals          3.8126 66                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 

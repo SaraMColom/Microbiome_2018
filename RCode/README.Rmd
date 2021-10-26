@@ -48,15 +48,19 @@ library(multcompView)
 library(ggpubr)
 library(ggcorrplot)
 library(RColorBrewer)
-library(plotly)
+library(broom)
 library(ggthemes)
 library(corrplot)
 library(Hmisc)
 library(emmeans)
 library(lmerTest)
-
+library(interactions)
+library(jtools)
+library(MASS)
+library(stringr)
 
 source("miSeq.R")
+source("functions.R")
 
 # Aesthetics
 Tx<-theme(axis.text.y = element_text(size = 12),
@@ -661,7 +665,8 @@ Fitness = read.csv("../DataSets/FitPA4.csv")
 
 library(dplyr)
 # Calculate relative fitness
-  # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
+# First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
+
 MeanSeedNumber <- aggregate(SeedNumber ~ Trt + Species, Fitness, mean)
 
 colnames(MeanSeedNumber) <- c("Trt", "Species", "MeanSeedNumber")
@@ -745,7 +750,7 @@ ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
 # Combine with root data
 library(dplyr)
 
-RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML),FUN=mean) 
+RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML), FUN = mean) 
 
 colnames(RootAveraged) <- c("Trt", "ML", "PC1", "PC2", "PC3", "PC4")
 head(RootAveraged)
@@ -753,9 +758,6 @@ head(RootAveraged)
 RootFitAlpha <- merge(FitAlpha, RootAveraged)
 head(RootFitAlpha)
 
-#RootFitLeafAlpha=merge(RootFitAlpha, LeafData[c("Sample_ID", "Leaf.Number")],by="Sample_ID")
-
-#RootFitLeafAlpha$Leaf.Number=as.numeric(as.character(RootFitLeafAlpha$Leaf.Number))
 
 
 # CombinE root,fitness/bray estimates
@@ -823,14 +825,9 @@ RootFitAlpha$Comp <- sub(".*\\-", "", RootFitAlpha$Combos)
 
 # ANCOVA
 
+Evaluate selection on microbiome community structure variables separatley. Use MASS for selection of best model.
+
 ```{r}
-
-
-#RootFitAlpha<-merge(SizePurp, RootFitAlpha)
-
-library(interactions)
-library(jtools)
-
 # Scale the microbial variables
 RootFitAlpha$richScaled<-scale(RootFitAlpha$rich)
 RootFitAlpha$SimScaled<-scale(RootFitAlpha$sim)
@@ -840,47 +837,183 @@ RootFitAlpha$EvenScaled<-scale(RootFitAlpha$even)
 
 # ANCOVA MUltivariate Linear Regressions
 
+# Inverse Simpson diversity
 
-ANCOVA<-(lm(RelativeFitness~TRT + Block+ TRT:Block + PC1*TRT+PC2*TRT+PC3*TRT+PC4*TRT+richScaled*TRT+InvSimScaled*TRT+EvenScaled*TRT+PC1*Block + PC2*Block + PC3*Block + PC4*Block+richScaled*Block+InvSimScaled*Block+EvenScaled*Block, RootFitAlpha)) # Full model reported
+ANCOVA_sim <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + InvSimScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + InvSimScaled*Block, RootFitAlpha)) # Full model reported
 
-# Step wise backward regression
-library(MASS)
 
-step<-stepAIC(ANCOVA,direction = "backward",trace=FALSE)
+step <- stepAIC(ANCOVA_sim, direction = "backward", trace = FALSE)
+
 step$anova
 
 
 
-model<-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    InvSimScaled + EvenScaled + TRT:Block + TRT:PC1 + TRT:PC3 + 
-    TRT:richScaled + TRT:EvenScaled + Block:PC1 + Block:PC2 + 
-    Block:PC3 + Block:PC4 + Block:richScaled + Block:InvSimScaled + 
-    Block:EvenScaled, RootFitAlpha
+model_sim <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + InvSimScaled + 
+    TRT:Block + TRT:PC3 + TRT:InvSimScaled + Block:PC1 + Block:PC3 + 
+    Block:PC4, RootFitAlpha
 )
 
 
-# anova(model) # Type I sum of squres--sequence order matters, interactions not accounted
+# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
+ancova_res_sim <- car::Anova(model_sim, type="III") %>% 
+  tidy() %>%   # Report the type three sums of squares
+  tidy_more() %>% 
+  mutate(Term = str_replace(Term, "InvSimScaled", "Inverse Simpson")) %>% 
+  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
+  
 
-car::Anova(model, type="III") # Report the type three sums of squares~
+ancova_res_sim
+```
+
+
+Evaluate species richness on fitness
+```{r}
+
+ANCOVA_rich <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + richScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + richScaled*Block, RootFitAlpha)) # Full model reported
+
+
+step <- stepAIC(ANCOVA_rich, direction = "backward", trace = FALSE)
+
+step$anova
+
+
+
+model_rich <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
+    TRT:Block + TRT:richScaled + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha
+)
+
+
+# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
+ancova_res_rich <- car::Anova(model_rich, type="III") %>% 
+  tidy() %>%   # Report the type three sums of squares
+  tidy_more() %>% 
+  mutate(Term = str_replace(Term, "richScaled", "Species richness")) %>% 
+  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
+  
+
+ancova_res_rich
 
 ```
 
 
-Within treatment linear regression, regress untransformed richness onto relative fitness
+Evaluate species evenness on fitness
+```{r}
+ANCOVA_even <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + EvenScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + EvenScaled*Block, RootFitAlpha)) # Full model reported
+
+
+step <- stepAIC(ANCOVA_even, direction = "backward", trace = FALSE)
+
+step$anova
+
+
+
+model_even <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
+    TRT:EvenScaled + Block:PC1 + Block:PC4, RootFitAlpha
+)
+
+
+# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
+ancova_res_even <- car::Anova(model_even, type="III") %>% 
+  tidy() %>%   # Report the type three sums of squares
+  tidy_more() %>% 
+  mutate(Term = str_replace(Term, "EvenScaled", "Species evenness")) %>% 
+  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
+  
+
+ancova_res_even
+
+```
+
+Within treatment linear regression, regress sp. richness onto relative fitness
+
+```{r}
+
+# Richness scaled and covariates
+
+lr_scaled_rich <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled 
+    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
+    tidy() %>% 
+    tidy_more2()
+
+
+lr_scaled_rich2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
+    Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
+    tidy() %>% 
+    tidy_more2()
+
+
+lr_scaled_rich
+
+lr_scaled_rich2
+```
+
+Raw value of richness simple LR
 
 ```{r}
 summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
 
-summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Competition
+summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
+```
 
+
+Within treatment linear regression, regress sp. evenness onto relative fitness
+
+```{r}
+
+# Run full model
+
+lr_scaled_even <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
+  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
+  tidy() %>% 
+  tidy_more2()
+
+lr_scaled_even2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
+    Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
+    tidy() %>% 
+    tidy_more2()
+
+lr_scaled_even
+
+lr_scaled_even2
+```
+
+
+Simple LR and raw value of evenness
+```{r}
+summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
+
+summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
 ```
 
 # Figure 3
 
 Plot results
 ```{r}
+
+slp1 <- lr_scaled_rich %>% filter(Term == "richScaled") %>% pull(estimate)
+slp2 <- lr_scaled_rich2 %>% filter(Term == "richScaled") %>% pull(estimate)
+inter1 <- lr_scaled_rich %>% filter(Term == "(Intercept)") %>% pull(estimate)
+inter2 <- lr_scaled_rich2 %>% filter(Term == "(Intercept)") %>% pull(estimate)  
+
 ggplot() +
-  geom_point(data = RootFitAlpha, aes(rich,RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
+  geom_point(data = RootFitAlpha, aes(richScaled, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
+  geom_abline(slope = slp1, intercept = inter1, color="darkgreen", size = 1.2, linetype="dashed") +
+  geom_abline(slope = slp2, intercept = inter2, color="brown", size = 1.2) +
+  theme_classic() +
+  xlab("Richness") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + 
+  scale_color_manual(values = c("darkgreen", "brown"), "Treatment", labels = c("Alone", "Competition")) +
+  theme(axis.text = element_text(color="black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
+
+```
+
+```{r}
+ggplot() +
+  geom_point(data = RootFitAlpha, aes(even, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
 #    geom_smooth(data=RootFitAlpha %>% filter(TRT=="Inter"), aes(EvenScaled,RelativeFitness),method = "lm", fullrange = TRUE, se=FALSE) +
     geom_abline(slope = 0.004895, intercept = -1.313978, color="darkgreen", size = 1.2, linetype="dashed") +
 
@@ -897,7 +1030,6 @@ ggplot() +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 
 ```
-
 
 
 
