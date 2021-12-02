@@ -23,8 +23,8 @@ Sara Colom
   - [PERMANOVA (Table 2)](#permanova-table-2)
   - [Correlations with root traits](#correlations-with-root-traits)
       - [Prep root data](#prep-root-data)
-      - [Within species (root traits and
-        alphadiv)](#within-species-root-traits-and-alphadiv)
+      - [Table 3. Within species (root traits and
+        alphadiv)](#table-3-within-species-root-traits-and-alphadiv)
       - [Plotting significant linear
         associations](#plotting-significant-linear-associations)
       - [Linear mixed models (not
@@ -34,6 +34,7 @@ Sara Colom
   - [ANCOVA](#ancova)
   - [Figure 3](#figure-3)
   - [MANTEL (Table 4)](#mantel-table-4)
+  - [Export ANCOVA tables](#export-ancova-tables)
 
 ## Sample sizes
 
@@ -71,15 +72,19 @@ library(multcompView)
 library(ggpubr)
 library(ggcorrplot)
 library(RColorBrewer)
-library(plotly)
+library(broom)
 library(ggthemes)
 library(corrplot)
 library(Hmisc)
 library(emmeans)
 library(lmerTest)
-
+library(interactions)
+library(jtools)
+library(MASS)
+library(stringr)
 
 source("miSeq.R")
+source("functions.R")
 
 # Aesthetics
 Tx<-theme(axis.text.y = element_text(size = 12),
@@ -648,7 +653,7 @@ RootData <- read.csv("../DataSets/RootTraits_PCs.csv")
 RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")])
 ```
 
-## Within species (root traits and alphadiv)
+## Table 3. Within species (root traits and alphadiv)
 
 ``` r
 library(multcomp)
@@ -1335,7 +1340,8 @@ Fitness = read.csv("../DataSets/FitPA4.csv")
 
 library(dplyr)
 # Calculate relative fitness
-  # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
+# First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
+
 MeanSeedNumber <- aggregate(SeedNumber ~ Trt + Species, Fitness, mean)
 
 colnames(MeanSeedNumber) <- c("Trt", "Species", "MeanSeedNumber")
@@ -1502,7 +1508,7 @@ ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
 # Combine with root data
 library(dplyr)
 
-RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML),FUN=mean) 
+RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML), FUN = mean) 
 
 colnames(RootAveraged) <- c("Trt", "ML", "PC1", "PC2", "PC3", "PC4")
 head(RootAveraged)
@@ -1544,11 +1550,6 @@ head(RootFitAlpha)
     ## 6  0.4351958  0.6954043 -0.1859846  0.1076187
 
 ``` r
-#RootFitLeafAlpha=merge(RootFitAlpha, LeafData[c("Sample_ID", "Leaf.Number")],by="Sample_ID")
-
-#RootFitLeafAlpha$Leaf.Number=as.numeric(as.character(RootFitLeafAlpha$Leaf.Number))
-
-
 # CombinE root,fitness/bray estimates
 RootFitBray <- merge(BrayFit, RootAveraged)
 
@@ -1620,26 +1621,8 @@ RootFitAlpha$Comp <- sub(".*\\-", "", RootFitAlpha$Combos)
 
 # ANCOVA
 
-``` r
-#RootFitAlpha<-merge(SizePurp, RootFitAlpha)
-
-library(interactions)
-```
-
-    ## Warning: package 'interactions' was built under R version 4.0.5
-
-``` r
-library(jtools)
-```
-
-    ## Warning: package 'jtools' was built under R version 4.0.5
-
-    ## 
-    ## Attaching package: 'jtools'
-
-    ## The following object is masked from 'package:Hmisc':
-    ## 
-    ##     %nin%
+Evaluate selection on microbiome community structure variables
+separatley. Use MASS for selection of best model.
 
 ``` r
 # Scale the microbial variables
@@ -1651,13 +1634,13 @@ RootFitAlpha$EvenScaled<-scale(RootFitAlpha$even)
 
 # ANCOVA MUltivariate Linear Regressions
 
+# Inverse Simpson diversity
 
-ANCOVA<-(lm(RelativeFitness~TRT + Block+ TRT:Block + PC1*TRT+PC2*TRT+PC3*TRT+PC4*TRT+richScaled*TRT+InvSimScaled*TRT+EvenScaled*TRT+PC1*Block + PC2*Block + PC3*Block + PC4*Block+richScaled*Block+InvSimScaled*Block+EvenScaled*Block, RootFitAlpha)) # Full model reported
+ANCOVA_sim <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + InvSimScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + InvSimScaled*Block, RootFitAlpha)) # Full model reported
 
-# Step wise backward regression
-library(MASS)
 
-step<-stepAIC(ANCOVA,direction = "backward",trace=FALSE)
+step <- stepAIC(ANCOVA_sim, direction = "backward", trace = FALSE)
+
 step$anova
 ```
 
@@ -1666,69 +1649,279 @@ step$anova
     ## 
     ## Initial Model:
     ## RelativeFitness ~ TRT + Block + TRT:Block + PC1 * TRT + PC2 * 
-    ##     TRT + PC3 * TRT + PC4 * TRT + richScaled * TRT + InvSimScaled * 
-    ##     TRT + EvenScaled * TRT + PC1 * Block + PC2 * Block + PC3 * 
-    ##     Block + PC4 * Block + richScaled * Block + InvSimScaled * 
-    ##     Block + EvenScaled * Block
+    ##     TRT + PC3 * TRT + PC4 * TRT + InvSimScaled * TRT + PC1 * 
+    ##     Block + PC2 * Block + PC3 * Block + PC4 * Block + InvSimScaled * 
+    ##     Block
     ## 
     ## Final Model:
-    ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    ##     InvSimScaled + EvenScaled + TRT:richScaled + Block:PC1 + 
-    ##     Block:PC2 + Block:PC4 + Block:richScaled + Block:InvSimScaled + 
-    ##     Block:EvenScaled
+    ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + InvSimScaled + 
+    ##     TRT:Block + TRT:PC3 + TRT:InvSimScaled + Block:PC1 + Block:PC3 + 
+    ##     Block:PC4
     ## 
     ## 
-    ##                 Step Df    Deviance Resid. Df Resid. Dev       AIC
-    ## 1                                          54   3.297351 -242.0144
-    ## 2 - TRT:InvSimScaled  1 0.002711687        55   3.300062 -243.9347
-    ## 3          - TRT:PC4  1 0.003105322        56   3.303168 -245.8434
-    ## 4          - TRT:PC2  1 0.013989404        57   3.317157 -247.4335
-    ## 5          - TRT:PC3  1 0.056177982        58   3.373335 -247.8045
-    ## 6        - TRT:Block  3 0.154840232        61   3.528175 -249.4512
-    ## 7   - TRT:EvenScaled  1 0.033234583        62   3.561410 -250.5418
-    ## 8        - Block:PC3  3 0.180266978        65   3.741677 -251.7522
-    ## 9          - TRT:PC1  1 0.070962567        66   3.812639 -251.9298
+    ##                   Step Df   Deviance Resid. Df Resid. Dev       AIC
+    ## 1                                           64   4.120048 -240.4081
+    ## 2          - Block:PC2  3 0.09205004        67   4.212098 -244.2648
+    ## 3 - Block:InvSimScaled  3 0.07728452        70   4.289383 -248.5011
+    ## 4            - TRT:PC4  1 0.00144092        71   4.290824 -250.4685
+    ## 5            - TRT:PC2  1 0.02656276        72   4.317387 -251.8699
+    ## 6            - TRT:PC1  1 0.06064622        73   4.378033 -252.5168
 
 ``` r
-model<-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    InvSimScaled + EvenScaled + TRT:richScaled + Block:PC1 +
-    Block:PC2 + Block:PC4 + Block:richScaled + Block:InvSimScaled +
-    Block:EvenScaled, RootFitAlpha
+model_sim <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + InvSimScaled + 
+    TRT:Block + TRT:PC3 + TRT:InvSimScaled + Block:PC1 + Block:PC3 + 
+    Block:PC4, RootFitAlpha
 )
 
 
-# anova(model) # Type I sum of squres--sequence order matters, interactions not accounted
+# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
+ancova_res_sim <- car::Anova(model_sim, type="III") %>% 
+  tidy() %>%   # Report the type three sums of squares
+  tidy_more() %>% 
+  mutate(Term = str_replace(Term, "InvSimScaled", "Inverse Simpson")) %>% 
+  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
+  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
+  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
+  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
+  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
+  
 
-car::Anova(model, type="III") # Report the type three sums of squares~
+ancova_res_sim
 ```
 
-    ## Anova Table (Type III tests)
-    ## 
-    ## Response: RelativeFitness
-    ##                    Sum Sq Df F value    Pr(>F)    
-    ## (Intercept)        2.0870  1 36.1276 8.880e-08 ***
-    ## TRT                0.0263  1  0.4544 0.5025934    
-    ## Block              2.9290  3 16.9013 2.984e-08 ***
-    ## PC1                0.0850  1  1.4721 0.2293409    
-    ## PC2                0.0005  1  0.0087 0.9261099    
-    ## PC3                0.1351  1  2.3380 0.1310266    
-    ## PC4                0.1702  1  2.9467 0.0907430 .  
-    ## richScaled         0.0013  1  0.0228 0.8803362    
-    ## InvSimScaled       0.0064  1  0.1106 0.7404662    
-    ## EvenScaled         0.0182  1  0.3152 0.5764312    
-    ## TRT:richScaled     0.7793  1 13.4896 0.0004823 ***
-    ## Block:PC1          1.2698  3  7.3269 0.0002592 ***
-    ## Block:PC2          0.2796  3  1.6136 0.1946056    
-    ## Block:PC4          1.1446  3  6.6046 0.0005699 ***
-    ## Block:richScaled   0.6721  3  3.8781 0.0128877 *  
-    ## Block:InvSimScaled 0.6380  3  3.6814 0.0162728 *  
-    ## Block:EvenScaled   0.6116  3  3.5289 0.0195094 *  
-    ## Residuals          3.8126 66                      
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## # A tibble: 15 x 6
+    ##    Term                         SS    DF `F-value` p.value P         
+    ##    <chr>                     <dbl> <dbl>     <dbl>   <dbl> <chr>     
+    ##  1 (Intercept)               0.372     1     6.21    0.015 0.015 *   
+    ##  2 Treatment                 0.015     1     0.255   0.615 0.615     
+    ##  3 Block                     1.48      3     8.26    0     <0.001 ***
+    ##  4 Root topology             0.093     1     1.55    0.217 0.217     
+    ##  5 Root architecture         0.092     1     1.53    0.22  0.22      
+    ##  6 Root size                 0.144     1     2.41    0.125 0.125     
+    ##  7 Root morphology           0.038     1     0.628   0.431 0.431     
+    ##  8 Inverse Simpson           0.176     1     2.93    0.091 0.091     
+    ##  9 Treatment:Block           0.449     3     2.50    0.066 0.066     
+    ## 10 Treatment:Root size       0.161     1     2.68    0.106 0.106     
+    ## 11 Treatment:Inverse Simpson 0.201     1     3.35    0.071 0.071     
+    ## 12 Block:Root topology       0.519     3     2.89    0.041 0.041 *   
+    ## 13 Block:Root size           0.444     3     2.47    0.069 0.069     
+    ## 14 Block:Root morphology     0.918     3     5.10    0.003 0.003 **  
+    ## 15 Residuals                 4.38     73    NA      NA     <NA>
 
-Within treatment linear regression, regress untransformed richness onto
-relative fitness
+Evaluate species richness on fitness
+
+``` r
+ANCOVA_rich <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + richScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + richScaled*Block, RootFitAlpha)) # Full model reported
+
+
+step <- stepAIC(ANCOVA_rich, direction = "backward", trace = FALSE)
+
+step$anova
+```
+
+    ## Stepwise Model Path 
+    ## Analysis of Deviance Table
+    ## 
+    ## Initial Model:
+    ## RelativeFitness ~ TRT + Block + TRT:Block + PC1 * TRT + PC2 * 
+    ##     TRT + PC3 * TRT + PC4 * TRT + richScaled * TRT + PC1 * Block + 
+    ##     PC2 * Block + PC3 * Block + PC4 * Block + richScaled * Block
+    ## 
+    ## Final Model:
+    ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
+    ##     TRT:Block + TRT:richScaled + Block:PC1 + Block:PC3 + Block:PC4
+    ## 
+    ## 
+    ##                 Step Df    Deviance Resid. Df Resid. Dev       AIC
+    ## 1                                          64   3.984920 -243.6428
+    ## 2 - Block:richScaled  3 0.071168628        67   4.056089 -247.9257
+    ## 3        - Block:PC2  3 0.108938782        70   4.165027 -251.3548
+    ## 4          - TRT:PC4  1 0.005974457        71   4.171002 -253.2158
+    ## 5          - TRT:PC2  1 0.030023812        72   4.201026 -254.5201
+    ## 6          - TRT:PC3  1 0.040953922        73   4.241980 -255.5791
+    ## 7          - TRT:PC1  1 0.054596652        74   4.296576 -256.3386
+
+``` r
+model_rich <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
+    TRT:Block + TRT:richScaled + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha
+)
+
+
+# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
+ancova_res_rich <- car::Anova(model_rich, type="III") %>% 
+  tidy() %>%   # Report the type three sums of squares
+  tidy_more() %>% 
+  mutate(Term = str_replace(Term, "richScaled", "Species richness")) %>% 
+  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
+  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
+  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
+  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
+  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
+  
+
+ancova_res_rich
+```
+
+    ## # A tibble: 14 x 6
+    ##    Term                          SS    DF `F-value` p.value P       
+    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr>   
+    ##  1 (Intercept)                0.189     1     3.25    0.076 0.076   
+    ##  2 Treatment                  0.092     1     1.58    0.213 0.213   
+    ##  3 Block                      0.998     3     5.73    0.001 0.001 **
+    ##  4 Root topology              0.112     1     1.94    0.168 0.168   
+    ##  5 Root architecture          0.149     1     2.57    0.113 0.113   
+    ##  6 Root size                  0.042     1     0.728   0.396 0.396   
+    ##  7 Root morphology            0.028     1     0.479   0.491 0.491   
+    ##  8 Species richness           0.435     1     7.50    0.008 0.008 **
+    ##  9 Treatment:Block            0.364     3     2.09    0.109 0.109   
+    ## 10 Treatment:Species richness 0.401     1     6.90    0.01  0.01 *  
+    ## 11 Block:Root topology        0.493     3     2.83    0.044 0.044 * 
+    ## 12 Block:Root size            0.289     3     1.66    0.184 0.184   
+    ## 13 Block:Root morphology      0.962     3     5.52    0.002 0.002 **
+    ## 14 Residuals                  4.30     74    NA      NA     <NA>
+
+Evaluate species evenness on fitness
+
+``` r
+ANCOVA_even <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + EvenScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + EvenScaled*Block, RootFitAlpha)) # Full model reported
+
+
+step <- stepAIC(ANCOVA_even, direction = "backward", trace = FALSE)
+
+step$anova
+```
+
+    ## Stepwise Model Path 
+    ## Analysis of Deviance Table
+    ## 
+    ## Initial Model:
+    ## RelativeFitness ~ TRT + Block + TRT:Block + PC1 * TRT + PC2 * 
+    ##     TRT + PC3 * TRT + PC4 * TRT + EvenScaled * TRT + PC1 * Block + 
+    ##     PC2 * Block + PC3 * Block + PC4 * Block + EvenScaled * Block
+    ## 
+    ## Final Model:
+    ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
+    ##     TRT:EvenScaled + Block:PC1 + Block:PC4
+    ## 
+    ## 
+    ##                 Step Df     Deviance Resid. Df Resid. Dev       AIC
+    ## 1                                           64   4.084392 -241.2512
+    ## 2 - Block:EvenScaled  3 0.0754439014        67   4.159836 -245.4758
+    ## 3        - Block:PC2  3 0.0964256567        70   4.256261 -249.2530
+    ## 4          - TRT:PC4  1 0.0008096981        71   4.257071 -251.2346
+    ## 5        - Block:PC3  3 0.1934621254        74   4.450533 -252.9236
+    ## 6          - TRT:PC3  1 0.0298015561        75   4.480335 -254.2763
+    ## 7          - TRT:PC2  1 0.0187048705        76   4.499040 -255.8722
+    ## 8          - TRT:PC1  1 0.0869858758        77   4.586026 -256.0146
+    ## 9        - TRT:Block  3 0.2570341442        80   4.843060 -256.7249
+
+``` r
+model_even <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
+    TRT:EvenScaled + Block:PC1 + Block:PC4, RootFitAlpha
+)
+
+
+# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
+ancova_res_even <- car::Anova(model_even, type="III") %>% 
+  tidy() %>%   # Report the type three sums of squares
+  tidy_more() %>% 
+  mutate(Term = str_replace(Term, "EvenScaled", "Species evenness")) %>%
+  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
+  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
+  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
+  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
+  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
+  
+
+ancova_res_even
+```
+
+    ## # A tibble: 12 x 6
+    ##    Term                          SS    DF `F-value` p.value P         
+    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr>     
+    ##  1 (Intercept)                2.50      1    41.4     0     <0.001 ***
+    ##  2 Treatment                  0.011     1     0.179   0.673 0.673     
+    ##  3 Block                      4.53      3    24.9     0     <0.001 ***
+    ##  4 Root topology              0.06      1     0.986   0.324 0.324     
+    ##  5 Root architecture          0.124     1     2.05    0.156 0.156     
+    ##  6 Root size                  0.224     1     3.71    0.058 0.058     
+    ##  7 Root morphology            0.11      1     1.82    0.181 0.181     
+    ##  8 Species evenness           0.513     1     8.48    0.005 0.005 **  
+    ##  9 Treatment:Species evenness 0.445     1     7.34    0.008 0.008 **  
+    ## 10 Block:Root topology        0.726     3     4.00    0.01  0.01 *    
+    ## 11 Block:Root morphology      1.08      3     5.93    0.001 0.001 **  
+    ## 12 Residuals                  4.84     80    NA      NA     <NA>
+
+Within treatment linear regression, regress sp. richness onto relative
+fitness
+
+``` r
+# Richness scaled and covariates
+
+lr_scaled_rich <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled 
+    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
+    tidy() %>% 
+    tidy_more2()
+
+
+lr_scaled_rich2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
+    Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
+    tidy() %>% 
+    tidy_more2()
+
+
+lr_scaled_rich
+```
+
+    ## # A tibble: 18 x 6
+    ##    Term        estimate    SE `F-value` p.value P       
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>   
+    ##  1 (Intercept)   -4.42  3.33     -1.33    0.233 0.233   
+    ##  2 Block2         5.23  3.30      1.59    0.164 0.164   
+    ##  3 Block3         5.56  3.28      1.70    0.141 0.141   
+    ##  4 Block4         5.80  3.28      1.77    0.127 0.127   
+    ##  5 PC1           -0.598 0.359    -1.67    0.147 0.147   
+    ##  6 PC2           -0.053 0.048    -1.11    0.309 0.309   
+    ##  7 PC3            0.494 0.392     1.26    0.255 0.255   
+    ##  8 PC4           -5.24  3.62     -1.45    0.198 0.198   
+    ##  9 richScaled     0.138 0.063     2.20    0.07  0.07    
+    ## 10 Block2:PC1     0.537 0.336     1.60    0.161 0.161   
+    ## 11 Block3:PC1     1.12  0.355     3.15    0.02  0.02 *  
+    ## 12 Block4:PC1     0.169 0.365     0.464   0.659 0.659   
+    ## 13 Block2:PC3    -0.666 0.447    -1.49    0.187 0.187   
+    ## 14 Block3:PC3     0.175 0.419     0.418   0.691 0.691   
+    ## 15 Block4:PC3    -1.41  0.374    -3.77    0.009 0.009 **
+    ## 16 Block2:PC4     5.47  3.65      1.50    0.184 0.184   
+    ## 17 Block3:PC4     5.65  3.61      1.57    0.168 0.168   
+    ## 18 Block4:PC4     4.73  3.67      1.29    0.245 0.245
+
+``` r
+lr_scaled_rich2
+```
+
+    ## # A tibble: 18 x 6
+    ##    Term        estimate    SE `F-value` p.value P         
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>     
+    ##  1 (Intercept)    0.776 0.072    10.8     0     <0.001 ***
+    ##  2 Block2         0.027 0.086     0.309   0.759 0.759     
+    ##  3 Block3         0.712 0.086     8.28    0     <0.001 ***
+    ##  4 Block4         0.214 0.087     2.46    0.017 0.017 *   
+    ##  5 PC1           -0.154 0.119    -1.29    0.201 0.201     
+    ##  6 PC2           -0.046 0.058    -0.797   0.429 0.429     
+    ##  7 PC3           -0.129 0.141    -0.914   0.365 0.365     
+    ##  8 PC4            0.192 0.162     1.18    0.241 0.241     
+    ##  9 richScaled    -0.017 0.025    -0.655   0.515 0.515     
+    ## 10 Block2:PC1     0.061 0.133     0.456   0.65  0.65      
+    ## 11 Block3:PC1     0.207 0.134     1.54    0.129 0.129     
+    ## 12 Block4:PC1     0.331 0.135     2.45    0.018 0.018 *   
+    ## 13 Block2:PC3     0.277 0.169     1.64    0.107 0.107     
+    ## 14 Block3:PC3    -0.322 0.187    -1.72    0.09  0.09      
+    ## 15 Block4:PC3     0.007 0.174     0.043   0.966 0.966     
+    ## 16 Block2:PC4     0.097 0.213     0.457   0.65  0.65      
+    ## 17 Block3:PC4    -0.527 0.217    -2.43    0.018 0.018 *   
+    ## 18 Block4:PC4    -0.494 0.207    -2.38    0.021 0.021 *
+
+Raw value of richness simple LR
 
 ``` r
 summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
@@ -1753,7 +1946,7 @@ summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT == "Alone"))) # A
     ## F-statistic: 2.544 on 1 and 22 DF,  p-value: 0.125
 
 ``` r
-summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Competition
+summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
 ```
 
     ## 
@@ -1776,13 +1969,147 @@ summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # C
     ## Multiple R-squared:  0.07029,    Adjusted R-squared:  0.0572 
     ## F-statistic: 5.368 on 1 and 71 DF,  p-value: 0.0234
 
+Within treatment linear regression, regress sp. evenness onto relative
+fitness
+
+``` r
+# Run full model
+
+lr_scaled_even <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
+  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
+  tidy() %>% 
+  tidy_more2()
+
+lr_scaled_even2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
+    Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
+    tidy() %>% 
+    tidy_more2()
+
+lr_scaled_even
+```
+
+    ## # A tibble: 15 x 6
+    ##    Term        estimate    SE `F-value` p.value P    
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>
+    ##  1 (Intercept)   -0.324 3.51     -0.092   0.929 0.929
+    ##  2 Block2         1.19  3.52      0.337   0.744 0.744
+    ##  3 Block3         1.59  3.42      0.467   0.652 0.652
+    ##  4 Block4         1.11  3.42      0.324   0.754 0.754
+    ##  5 PC1           -0.215 0.47     -0.458   0.658 0.658
+    ##  6 PC2           -0.059 0.088    -0.668   0.521 0.521
+    ##  7 PC3           -0.072 0.236    -0.304   0.768 0.768
+    ##  8 PC4           -0.682 3.88     -0.175   0.865 0.865
+    ##  9 EvenScaled    -0.251 0.133    -1.88    0.092 0.092
+    ## 10 Block2:PC1     0.179 0.517     0.347   0.737 0.737
+    ## 11 Block3:PC1     0.456 0.528     0.864   0.41  0.41 
+    ## 12 Block4:PC1    -0.187 0.511    -0.367   0.722 0.722
+    ## 13 Block2:PC4     0.997 3.96      0.252   0.807 0.807
+    ## 14 Block3:PC4     0.516 3.97      0.13    0.9   0.9  
+    ## 15 Block4:PC4     0.24  3.97      0.06    0.953 0.953
+
+``` r
+lr_scaled_even2
+```
+
+    ## # A tibble: 15 x 6
+    ##    Term        estimate    SE `F-value` p.value P         
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>     
+    ##  1 (Intercept)    0.767 0.078     9.85    0     <0.001 ***
+    ##  2 Block2         0.07  0.094     0.746   0.459 0.459     
+    ##  3 Block3         0.667 0.091     7.31    0     <0.001 ***
+    ##  4 Block4         0.223 0.093     2.40    0.02  0.02 *    
+    ##  5 PC1           -0.132 0.132    -1.00    0.321 0.321     
+    ##  6 PC2           -0.022 0.063    -0.348   0.729 0.729     
+    ##  7 PC3           -0.082 0.086    -0.959   0.342 0.342     
+    ##  8 PC4            0.188 0.175     1.07    0.288 0.288     
+    ##  9 EvenScaled     0.004 0.026     0.156   0.876 0.876     
+    ## 10 Block2:PC1     0.033 0.147     0.226   0.822 0.822     
+    ## 11 Block3:PC1     0.182 0.147     1.24    0.221 0.221     
+    ## 12 Block4:PC1     0.308 0.148     2.08    0.042 0.042 *   
+    ## 13 Block2:PC4     0.108 0.232     0.463   0.645 0.645     
+    ## 14 Block3:PC4    -0.468 0.235    -2.00    0.051 0.051     
+    ## 15 Block4:PC4    -0.487 0.225    -2.16    0.035 0.035 *
+
+Simple LR and raw value of evenness
+
+``` r
+summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = RelativeFitness ~ even, data = RootFitAlpha %>% 
+    ##     filter(TRT == "Alone"))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.6257 -0.3240 -0.1184  0.2570  1.0273 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)    5.359      2.170    2.47   0.0218 *
+    ## even        -434.397    211.854   -2.05   0.0524 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.457 on 22 degrees of freedom
+    ## Multiple R-squared:  0.1604, Adjusted R-squared:  0.1223 
+    ## F-statistic: 4.204 on 1 and 22 DF,  p-value: 0.05242
+
+``` r
+summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = RelativeFitness ~ even, data = RootFitAlpha %>% 
+    ##     filter(TRT != "Alone"))
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.59190 -0.24316 -0.03449  0.20871  1.19081 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)    3.393      0.926   3.664 0.000475 ***
+    ## even        -231.101     89.114  -2.593 0.011536 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.3492 on 71 degrees of freedom
+    ## Multiple R-squared:  0.08653,    Adjusted R-squared:  0.07366 
+    ## F-statistic: 6.725 on 1 and 71 DF,  p-value: 0.01154
+
 # Figure 3
 
 Plot results
 
 ``` r
+slp1 <- lr_scaled_rich %>% filter(Term == "richScaled") %>% pull(estimate)
+slp2 <- lr_scaled_rich2 %>% filter(Term == "richScaled") %>% pull(estimate)
+inter1 <- lr_scaled_rich %>% filter(Term == "(Intercept)") %>% pull(estimate)
+inter2 <- lr_scaled_rich2 %>% filter(Term == "(Intercept)") %>% pull(estimate)  
+
 ggplot() +
-  geom_point(data = RootFitAlpha, aes(rich,RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
+  geom_point(data = RootFitAlpha, aes(richScaled, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
+  geom_abline(slope = slp1, intercept = inter1, color="darkgreen", size = 1.2, linetype="dashed") +
+  geom_abline(slope = slp2, intercept = inter2, color="brown", size = 1.2) +
+  theme_classic() +
+  xlab("Richness") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + 
+  scale_color_manual(values = c("darkgreen", "brown"), "Treatment", labels = c("Alone", "Competition")) +
+  theme(axis.text = element_text(color="black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+ggplot() +
+  geom_point(data = RootFitAlpha, aes(even, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
 #    geom_smooth(data=RootFitAlpha %>% filter(TRT=="Inter"), aes(EvenScaled,RelativeFitness),method = "lm", fullrange = TRUE, se=FALSE) +
     geom_abline(slope = 0.004895, intercept = -1.313978, color="darkgreen", size = 1.2, linetype="dashed") +
 
@@ -1799,7 +2126,7 @@ ggplot() +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 # MANTEL (Table 4)
 
@@ -1948,3 +2275,11 @@ OTU_pc4
     ## 0.0735 0.0954 0.1155 0.1411 
     ## Permutation: free
     ## Number of permutations: 9999
+
+# Export ANCOVA tables
+
+``` r
+tables <- list("rich" = ancova_res_rich, "even" = ancova_res_even, "invSim" = ancova_res_sim)
+
+writexl::write_xlsx(tables, "ancova_tables.xlsx")
+```

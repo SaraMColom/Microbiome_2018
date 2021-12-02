@@ -502,7 +502,7 @@ RootData <- read.csv("../DataSets/RootTraits_PCs.csv")
 RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")])
 ```
 
-## Within species (root traits and alphadiv)
+## Table 3. Within species (root traits and alphadiv)
 
 
 ```{r Preliminary exam on roots within species}
@@ -859,6 +859,10 @@ ancova_res_sim <- car::Anova(model_sim, type="III") %>%
   tidy() %>%   # Report the type three sums of squares
   tidy_more() %>% 
   mutate(Term = str_replace(Term, "InvSimScaled", "Inverse Simpson")) %>% 
+  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
+  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
+  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
+  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
   mutate(Term = str_replace(Term, "TRT", "Treatment")) 
   
 
@@ -888,6 +892,10 @@ ancova_res_rich <- car::Anova(model_rich, type="III") %>%
   tidy() %>%   # Report the type three sums of squares
   tidy_more() %>% 
   mutate(Term = str_replace(Term, "richScaled", "Species richness")) %>% 
+  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
+  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
+  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
+  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
   mutate(Term = str_replace(Term, "TRT", "Treatment")) 
   
 
@@ -916,7 +924,11 @@ model_even <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + EvenScal
 ancova_res_even <- car::Anova(model_even, type="III") %>% 
   tidy() %>%   # Report the type three sums of squares
   tidy_more() %>% 
-  mutate(Term = str_replace(Term, "EvenScaled", "Species evenness")) %>% 
+  mutate(Term = str_replace(Term, "EvenScaled", "Species evenness")) %>%
+  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
+  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
+  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
+  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
   mutate(Term = str_replace(Term, "TRT", "Treatment")) 
   
 
@@ -1128,4 +1140,11 @@ OTU_pc4
 ```
 
 
+# Export ANCOVA tables
+
+```{r}
+tables <- list("rich" = ancova_res_rich, "even" = ancova_res_even, "invSim" = ancova_res_sim)
+
+writexl::write_xlsx(tables, "ancova_tables.xlsx")
+```
 
