@@ -31,7 +31,7 @@ output:
 
 # Load Libraries
 
-```{r load_libs, include=T,warning=F,comment=F,message=F}
+```{r load_libs, include=T, warning=F, comment=F, message=F}
 library(phyloseq)
 library(ggplot2)
 library(ape)
@@ -86,239 +86,22 @@ GreenBlue <- c("#59A14F", "#4E79A7")
 # Read in Data
 
 ```{r Import Data,warning=F,comment=F,message=F}
-### loading mothur output with FWDB+silva taxonomy and sample metadata. 
-### Experiments run in 
+physeq1 <- readRDS("../DataSets/physeq_clean")
+physeq.scale <- readRDS("../DataSets/physeq_scaled")
+alpha <- readRDS("../DataSets/alpha")
 
-
-sharedfile <- "../DataSets/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.shared"
-taxfile <- "../DataSets/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.0.03.cons.taxonomy"
-
-mothurdata <- import_mothur(mothur_shared_file = sharedfile, mothur_constaxonomy_file = taxfile)
-
-sampledata <- read.csv('../DataSets/MetaDataTest.csv')
-
-SAMPLE <- sampledata
-row.names(SAMPLE)=SAMPLE$Sample_ID
-
-SAMPLE <- subset(SAMPLE, SAMPLE$TRT == "Alone"|SAMPLE$TRT == "Inter")
-SAMPLE <- sample_data(SAMPLE)
-
-### create phyloseq object
-physeq.all <- merge_phyloseq(mothurdata, SAMPLE) # Modified version worked
-
-
-### We need to change the taxonomy names: when using the fwdb taxonomy we need to add different headers after removing the last column, which contains no information except for 1 Verrucomicrobia taxon
-
-#   tax_table(physeq.all) <- tax_table(physeq.all)[,-7] # this removes the final column
-colnames(tax_table(physeq.all))<-c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus")
-
-
-#   tax_table(physeq.all) <-cbind(tax_table(physeq.all),row.names(tax_table(physeq.all)))
-
-### removing non-bacterial reads (was already done in mothur, but just to be safe after merging taxonomies)
-#   physeq.all <- subset_taxa(physeq.all, Kingdom == "Bacteria")
-
-```
-
-
-
-```{r, aggregate data by genus}
-
-## Aggregate at the genus level, then saving ea componant externally to reload and save time.
-
-        # physeq_genus <- physeq.all %>%
-         #tax_glom(taxrank = "Genus") 
-
-        # otu=data.frame(otu_table(physeq_genus))
-        
-        # meta=data.frame(sample_data(physeq_genus))
-        # tax=data.frame(tax_table(physeq_genus))
-        
-        # write.csv(x = otu,file = "otu_table.csv",row.names = TRUE)
-        # write.csv(x = tax,file = "tax_table.csv")# 
-        # write.csv(x = meta,file = "sample_table.csv",row.names = F)
-
-
-otu <- read.csv("../DataSets/otu_table.csv", row.names = 1)
-
-colnames(otu) <- gsub('X', "", colnames(otu))
-
-otu <- otu_table(otu, taxa_are_rows = TRUE)
-
-
-tax <- read.csv('../DataSets/tax_table.csv', row.names = 1)
-taxRows <- row.names(tax)
-taxCols <- colnames(tax)
-tax <- tax_table(as.matrix(tax))
-
-#row.names(tax)=taxRows
-#colnames(tax)=taxCols
-
-
-meta <- read.csv('../DataSets/MetaDataTest.csv')
-namesKeep <- colnames(otu)
-
-row.names(meta) <- meta$Sample_ID
-
-meta <- meta[which(meta$Sample_ID %in% namesKeep), ]
-
-meta <- sample_data(meta)
-   
-physeq_genus <- merge_phyloseq(otu, tax, meta)
-
-```
-
-
-
-```{r Proteobacteria phylum change to class, warning=F,comment=F,message=F}
-
-
-### ADD THE PROTEOBACTERIA CLASSES TO THE PHYLA NAME FIELD IN PHYLOSEQ OBJECT TAXONOMY 
-
-phy <- data.frame(tax_table(physeq_genus))
-Phylum <- as.character(phy$Phylum)
-Class <- as.character(phy$Class)
-for  (i in 1:length(Phylum)){ 
-  if (Phylum[i] == "Proteobacteria"){
-    if (Class[i] == "unclassified"){
-      Phylum[i] <- Phylum[i]       
-    } else {
-      Phylum[i] <- Class[i]
-    }
-  } 
-}
-
-
-Phylum <- as.character(phy$Phylum)
-Class <- as.character(phy$Class)
-phy$Phylum <- Phylum
-t <- tax_table(as.matrix(phy))
-
-```
-
-
-```{r read in phylum data, include=FALSE,warning=F,comment=F,message=F}
-SAMPLE <- sample_data(physeq_genus)
-
-SAMPLE$Species <- ifelse(grepl("Ip", SAMPLE$ML), "Ip", "Ihed")
-
-physeq.all2 <- merge_phyloseq(physeq_genus, SAMPLE) 
-```
-
-## Sequence depth and pruning
-
-```{r data scaling}
-physeq <- (physeq.all2)
-physeq <- prune_taxa(taxa_sums(physeq) > 0, physeq) # Remove taxa with no counts
-
-#check number of reads in each sample, differences in count are in part due differet numbers of chlorophyl reads depending on time of experiment
-
-# Make a data frame with a column for the read counts of each sample
-sample_sum_df <- data.frame(sum = sample_sums(physeq))
-
-# Histogram of sample read counts
-ggplot(sample_sum_df, aes(x = sum)) + 
-  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
-  ggtitle("Distribution of sample sequencing depth") + 
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank()) +
-  theme_classic()
-
-
-# Scales reads to smallest library size 
-source("https://raw.githubusercontent.com/michberr/MicrobeMiseq/master/R/miseqR.R")
-#physeq.scale <- scale_reads(physeq, min(sample_sums(physeq)))
-
-##### Normalization #######
-
-# Scales reads by 
-# 1) taking proportions,
-# 2) multiplying by a given library size of n
-# 3) rounding down
-
-physeq1 <- prune_samples(sample_sums(physeq) > 20000, physeq)
-
-sample_sum_df1 <- data.frame(sum = sample_sums(physeq1))
-
-# Histogram of sample read counts
-ggplot(sample_sum_df1, aes(x = sum)) + 
-  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
-  ggtitle("Distribution of sample sequencing depth after pruning") + 
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank()) +
-  theme_classic()
-
-
-n <- min(sample_sums(physeq1))
-  physeq.scale <-
-    transform_sample_counts(physeq1, function(x) {
-      (n * x/sum(x))  # Transform to rel. abundance
-    })
-  
-physeq.scale <- prune_taxa(taxa_sums(physeq.scale) > 0, physeq.scale)
-
-
-physeq1
-
+RootData <- read.csv("../DataSets/RootTraits_PCs.csv")
+LeafData <- read.csv("../DataSets/SizeFitData.csv")
+Fitness = read.csv("../DataSets/FitPA4.csv")
 ```
 
 
 
 ## Alpha Diversity
 
-#### Note: Measures of alpha-diversity 
-
-_*Inverse Simpson*_ it is an indication of the richness in a community with uniform evenness that would have the same level of diversity. So while measures such as the Shannon index are somewhat abstract, the inverse of the Simpson index has some biological interpretation. Other advantages of the Simpson-based metrics are that they do not tend to be as affected by sampling effort as the Shannon index.
-   
-- _*Species richness*_ is simply a count of species, and it does not take into account the abundances of the species or their relative abundance distributions.
-   
-- _*Simpson's Diversity Index*_ is a measure of diversity which takes into account the number of species present, as well as the relative abundance of each species. As species richness and evenness increase, so diversity increases.
-
-
-
-```{r Richness and Inverse Simpson, warning = F, comment = F, message = F}
-
-### I commented out the subsampling to save time. The matrices produced were saved and then reoponed from their tab delmited formats into corresponding matrices.
-
-set.seed(711)
-
-r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
-         
- ## Calculate richness
-rich <- as.numeric(as.matrix(estimate_richness(r, measures = "Observed")))
-
-## Calculate Inverse Simpson
-
-simp <- as.numeric(as.matrix(estimate_richness(r, measures = "InvSimpson")))
-
-sim<- as.numeric(as.matrix(estimate_richness(r, measures = "Simpson")))
-
-s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
-
-shan <- as.numeric(as.matrix(estimate_richness(r, measures = "Shannon")))
-
-InvSimp <- simp
-
-```
-
 
 
 ```{r, message = F, warning = F, comment = F}
-# Create a new dataframe to hold the means and standard deviations of richness estimates
-
-length(rich)
-
-Sample_ID <- sample_names(physeq1)
-Block <- sample_data(physeq1)$Block
-Species <-sample_data(physeq1)$Species
-TRT <- sample_data(physeq1)$TRT
-Combos <-sample_data(physeq1)$Combos
-ML <- sample_data(physeq1)$ML
-
-alpha <- data.frame(Sample_ID,ML, Block, TRT, Species, Combos, rich, InvSimp, sim, shan)
-
-alpha$even <- alpha$shan/alpha$rich
-
 # Visualize data distribution w Violin plots
 
 
@@ -420,9 +203,6 @@ anova(aov.evenness)
 # No significant differences
 ```
 
-
-
-
 # Community Composition
 
 ## Beta Diversity
@@ -457,7 +237,7 @@ physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
 
 physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
 
-SampData <- data.frame(sample_data(physeq))
+SampData <- data.frame(sample_data(physeq1))
 
 colnames(SampData)[1] <- "Duplicates"
 
@@ -486,7 +266,7 @@ block <- sampledf %>%
   filter(Species == "Ip") %>% 
   pull(Block)
 
-adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
+output <- adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
 
 ```
 
@@ -497,8 +277,6 @@ adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
 ## Prep root data
 
 ```{r Preliminary exam on root linear model}
-RootData <- read.csv("../DataSets/RootTraits_PCs.csv")
-
 RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")])
 ```
 
@@ -506,9 +284,6 @@ RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")
 
 
 ```{r Preliminary exam on roots within species}
-
-library(multcomp)
-
 #summary(glht(SimpInvPC1, mcp(rank="Tukey")))
 
 #################################################################
@@ -654,16 +429,11 @@ ranova(RichLMM)
 
 
 ```{r Analyzing leaf data, warning=F,comment=F,message=F}
-LeafData <- read.csv("../DataSets/SizeFitData.csv")
-
 LeafData$Sample_ID <- paste(LeafData$Position, ifelse(grepl("Ihed", LeafData$ML), "H", "P"), sep="")
 ```
 
 
 ```{r Read in fitness data}
-Fitness = read.csv("../DataSets/FitPA4.csv")
-
-library(dplyr)
 # Calculate relative fitness
 # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
 
@@ -748,7 +518,6 @@ ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
 
 
 # Combine with root data
-library(dplyr)
 
 RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML), FUN = mean) 
 
@@ -971,9 +740,7 @@ summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # A
 Within treatment linear regression, regress sp. evenness onto relative fitness
 
 ```{r}
-
 # Run full model
-
 lr_scaled_even <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
   Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
   tidy() %>% 
@@ -1000,52 +767,67 @@ summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT != "Alone"))) # A
 # Figure 3
 
 Plot results
+
+First create data frames of regression residuals after controlling for all other predictors in the model.
 ```{r}
+alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
+  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding evenness
 
-slp1 <- lr_scaled_rich %>% filter(Term == "richScaled") %>% pull(estimate)
-slp2 <- lr_scaled_rich2 %>% filter(Term == "richScaled") %>% pull(estimate)
-inter1 <- lr_scaled_rich %>% filter(Term == "(Intercept)") %>% pull(estimate)
-inter2 <- lr_scaled_rich2 %>% filter(Term == "(Intercept)") %>% pull(estimate)  
+comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
+  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding evenness
 
-ggplot() +
-  geom_point(data = RootFitAlpha, aes(richScaled, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
-  geom_abline(slope = slp1, intercept = inter1, color="darkgreen", size = 1.2, linetype="dashed") +
-  geom_abline(slope = slp2, intercept = inter2, color="brown", size = 1.2) +
-  theme_classic() +
-  xlab("Richness") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + 
-  scale_color_manual(values = c("darkgreen", "brown"), "Treatment", labels = c("Alone", "Competition")) +
-  theme(axis.text = element_text(color="black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
 
+EvenScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(EvenScaled) 
+EvenScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(EvenScaled)
+
+even_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
+                            EvenScaled = c(EvenScaled_alone,
+                                           EvenScaled_comp),
+                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
 ```
 
 ```{r}
-ggplot() +
-  geom_point(data = RootFitAlpha, aes(even, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
-#    geom_smooth(data=RootFitAlpha %>% filter(TRT=="Inter"), aes(EvenScaled,RelativeFitness),method = "lm", fullrange = TRUE, se=FALSE) +
-    geom_abline(slope = 0.004895, intercept = -1.313978, color="darkgreen", size = 1.2, linetype="dashed") +
+alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
+    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding richness
 
-    geom_abline(slope = 0.002953, intercept = -0.322197,color="brown", size = 1.2) +
+comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
+    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding richness
 
-  theme_classic() +
-  xlab("Richness") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + 
-  scale_color_manual(values = c("darkgreen", "brown"), "Treatment", labels = c("Alone", "Competition")) +
-  theme(axis.text = element_text(color="black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
+richScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(richScaled) 
+richScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(richScaled)
 
+rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
+                            richScaled = c(richScaled_alone,
+                                           richScaled_comp),
+                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
 ```
 
 
+```{r}
+ggscatter(
+  rich_df_resid, x = "richScaled", y = "fitness",
+  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
+  ) +
+  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
+  xlab("Sp. Richness") +
+  ylab("Fitness") +
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) 
+```
 
-
+```{r}
+ggscatter(
+  even_df_resid, x = "EvenScaled", y = "fitness",
+  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
+  ) +
+  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
+  xlab("Sp. Evenness") +
+  ylab("Relative Fitness") +
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) 
+```
 
 # MANTEL  (Table 4)
 ```{r}  

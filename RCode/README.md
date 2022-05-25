@@ -1,55 +1,52 @@
-RhizMicrobiome\_GenusLevel
+RhizMicrobiome_GenusLevel
 ================
 Sara Colom
 2/8/2020
 
-  - [Sample sizes](#sample-sizes)
-      - [Table sample number by species and
+-   [Sample sizes](#sample-sizes)
+    -   [Table sample number by species and
         treatment](#table-sample-number-by-species-and-treatment)
-      - [Table number of maternal line per
+    -   [Table number of maternal line per
         species](#table-number-of-maternal-line-per-species)
-  - [Load Libraries](#load-libraries)
-  - [Read in Data](#read-in-data)
-      - [Sequence depth and pruning](#sequence-depth-and-pruning)
-      - [Alpha Diversity](#alpha-diversity)
-          - [Note: Measures of
-            alpha-diversity](#note-measures-of-alpha-diversity)
-      - [Test for differences](#test-for-differences)
-  - [Linear mixed models](#linear-mixed-models)
-  - [ANOVA Test for treatment within I. purpurea (Table
-    1)](#anova-test-for-treatment-within-i-purpurea-table-1)
-  - [Community Composition](#community-composition)
-      - [Beta Diversity](#beta-diversity)
-  - [PERMANOVA (Table 2)](#permanova-table-2)
-  - [Correlations with root traits](#correlations-with-root-traits)
-      - [Prep root data](#prep-root-data)
-      - [Table 3. Within species (root traits and
+-   [Load Libraries](#load-libraries)
+-   [Read in Data](#read-in-data)
+    -   [Alpha Diversity](#alpha-diversity)
+    -   [Test for differences](#test-for-differences)
+-   [Linear mixed models](#linear-mixed-models)
+-   [ANOVA Test for treatment within I. purpurea
+    (Table 1)](#anova-test-for-treatment-within-i-purpurea-table-1)
+-   [Community Composition](#community-composition)
+    -   [Beta Diversity](#beta-diversity)
+-   [PERMANOVA (Table 2)](#permanova-table-2)
+-   [Correlations with root traits](#correlations-with-root-traits)
+    -   [Prep root data](#prep-root-data)
+    -   [Table 3. Within species (root traits and
         alphadiv)](#table-3-within-species-root-traits-and-alphadiv)
-      - [Plotting significant linear
+    -   [Plotting significant linear
         associations](#plotting-significant-linear-associations)
-      - [Linear mixed models (not
+    -   [Linear mixed models (not
         reported)](#linear-mixed-models-not-reported)
-  - [Figure 1](#figure-1)
-  - [Figure 2](#figure-2)
-  - [ANCOVA](#ancova)
-  - [Figure 3](#figure-3)
-  - [MANTEL (Table 4)](#mantel-table-4)
-  - [Export ANCOVA tables](#export-ancova-tables)
+-   [Figure 1](#figure-1)
+-   [Figure 2](#figure-2)
+-   [ANCOVA](#ancova)
+-   [Figure 3](#figure-3)
+-   [MANTEL (Table 4)](#mantel-table-4)
+-   [Export ANCOVA tables](#export-ancova-tables)
 
 ## Sample sizes
 
 ### Table sample number by species and treatment
 
-| Species      | Treatment   | N  |
-| ------------ | ----------- | -- |
-| I. purpurea  | Alone       | 27 |
-| I. purpurea  | Competition | 73 |
-| I. hederacea | Competition | 73 |
+| Species      | Treatment   | N   |
+|--------------|-------------|-----|
+| I. purpurea  | Alone       | 27  |
+| I. purpurea  | Competition | 73  |
+| I. hederacea | Competition | 73  |
 
 ### Table number of maternal line per species
 
 | Species      | Number of ML |
-| ------------ | ------------ |
+|--------------|--------------|
 | I. purpurea  | 10           |
 | I. hederacea | 5            |
 
@@ -107,238 +104,18 @@ GreenBlue <- c("#59A14F", "#4E79A7")
 # Read in Data
 
 ``` r
-### loading mothur output with FWDB+silva taxonomy and sample metadata. 
-### Experiments run in 
+physeq1 <- readRDS("../DataSets/physeq_clean")
+physeq.scale <- readRDS("../DataSets/physeq_scaled")
+alpha <- readRDS("../DataSets/alpha")
 
-
-sharedfile <- "../DataSets/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.shared"
-taxfile <- "../DataSets/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.opti_mcc.0.03.cons.taxonomy"
-
-mothurdata <- import_mothur(mothur_shared_file = sharedfile, mothur_constaxonomy_file = taxfile)
-
-sampledata <- read.csv('../DataSets/MetaDataTest.csv')
-
-SAMPLE <- sampledata
-row.names(SAMPLE)=SAMPLE$Sample_ID
-
-SAMPLE <- subset(SAMPLE, SAMPLE$TRT == "Alone"|SAMPLE$TRT == "Inter")
-SAMPLE <- sample_data(SAMPLE)
-
-### create phyloseq object
-physeq.all <- merge_phyloseq(mothurdata, SAMPLE) # Modified version worked
-
-
-### We need to change the taxonomy names: when using the fwdb taxonomy we need to add different headers after removing the last column, which contains no information except for 1 Verrucomicrobia taxon
-
-#   tax_table(physeq.all) <- tax_table(physeq.all)[,-7] # this removes the final column
-colnames(tax_table(physeq.all))<-c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus")
-
-
-#   tax_table(physeq.all) <-cbind(tax_table(physeq.all),row.names(tax_table(physeq.all)))
-
-### removing non-bacterial reads (was already done in mothur, but just to be safe after merging taxonomies)
-#   physeq.all <- subset_taxa(physeq.all, Kingdom == "Bacteria")
+RootData <- read.csv("../DataSets/RootTraits_PCs.csv")
+LeafData <- read.csv("../DataSets/SizeFitData.csv")
+Fitness = read.csv("../DataSets/FitPA4.csv")
 ```
-
-``` r
-## Aggregate at the genus level, then saving ea componant externally to reload and save time.
-
-        # physeq_genus <- physeq.all %>%
-         #tax_glom(taxrank = "Genus") 
-
-        # otu=data.frame(otu_table(physeq_genus))
-        
-        # meta=data.frame(sample_data(physeq_genus))
-        # tax=data.frame(tax_table(physeq_genus))
-        
-        # write.csv(x = otu,file = "otu_table.csv",row.names = TRUE)
-        # write.csv(x = tax,file = "tax_table.csv")# 
-        # write.csv(x = meta,file = "sample_table.csv",row.names = F)
-
-
-otu <- read.csv("../DataSets/otu_table.csv", row.names = 1)
-
-colnames(otu) <- gsub('X', "", colnames(otu))
-
-otu <- otu_table(otu, taxa_are_rows = TRUE)
-
-
-tax <- read.csv('../DataSets/tax_table.csv', row.names = 1)
-taxRows <- row.names(tax)
-taxCols <- colnames(tax)
-tax <- tax_table(as.matrix(tax))
-
-#row.names(tax)=taxRows
-#colnames(tax)=taxCols
-
-
-meta <- read.csv('../DataSets/MetaDataTest.csv')
-namesKeep <- colnames(otu)
-
-row.names(meta) <- meta$Sample_ID
-
-meta <- meta[which(meta$Sample_ID %in% namesKeep), ]
-
-meta <- sample_data(meta)
-   
-physeq_genus <- merge_phyloseq(otu, tax, meta)
-```
-
-``` r
-### ADD THE PROTEOBACTERIA CLASSES TO THE PHYLA NAME FIELD IN PHYLOSEQ OBJECT TAXONOMY 
-
-phy <- data.frame(tax_table(physeq_genus))
-Phylum <- as.character(phy$Phylum)
-Class <- as.character(phy$Class)
-for  (i in 1:length(Phylum)){ 
-  if (Phylum[i] == "Proteobacteria"){
-    if (Class[i] == "unclassified"){
-      Phylum[i] <- Phylum[i]       
-    } else {
-      Phylum[i] <- Class[i]
-    }
-  } 
-}
-
-
-Phylum <- as.character(phy$Phylum)
-Class <- as.character(phy$Class)
-phy$Phylum <- Phylum
-t <- tax_table(as.matrix(phy))
-```
-
-## Sequence depth and pruning
-
-``` r
-physeq <- (physeq.all2)
-physeq <- prune_taxa(taxa_sums(physeq) > 0, physeq) # Remove taxa with no counts
-
-#check number of reads in each sample, differences in count are in part due differet numbers of chlorophyl reads depending on time of experiment
-
-# Make a data frame with a column for the read counts of each sample
-sample_sum_df <- data.frame(sum = sample_sums(physeq))
-
-# Histogram of sample read counts
-ggplot(sample_sum_df, aes(x = sum)) + 
-  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
-  ggtitle("Distribution of sample sequencing depth") + 
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank()) +
-  theme_classic()
-```
-
-![](README_files/figure-gfm/data%20scaling-1.png)<!-- -->
-
-``` r
-# Scales reads to smallest library size 
-source("https://raw.githubusercontent.com/michberr/MicrobeMiseq/master/R/miseqR.R")
-#physeq.scale <- scale_reads(physeq, min(sample_sums(physeq)))
-
-##### Normalization #######
-
-# Scales reads by 
-# 1) taking proportions,
-# 2) multiplying by a given library size of n
-# 3) rounding down
-
-physeq1 <- prune_samples(sample_sums(physeq) > 20000, physeq)
-
-sample_sum_df1 <- data.frame(sum = sample_sums(physeq1))
-
-# Histogram of sample read counts
-ggplot(sample_sum_df1, aes(x = sum)) + 
-  geom_histogram(color = "black", fill = "#59A14F", binwidth = 2500) +
-  ggtitle("Distribution of sample sequencing depth after pruning") + 
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank()) +
-  theme_classic()
-```
-
-![](README_files/figure-gfm/data%20scaling-2.png)<!-- -->
-
-``` r
-n <- min(sample_sums(physeq1))
-  physeq.scale <-
-    transform_sample_counts(physeq1, function(x) {
-      (n * x/sum(x))  # Transform to rel. abundance
-    })
-  
-physeq.scale <- prune_taxa(taxa_sums(physeq.scale) > 0, physeq.scale)
-
-
-physeq1
-```
-
-    ## phyloseq-class experiment-level object
-    ## otu_table()   OTU Table:         [ 1098 taxa and 173 samples ]
-    ## sample_data() Sample Data:       [ 173 samples by 9 sample variables ]
-    ## tax_table()   Taxonomy Table:    [ 1098 taxa by 6 taxonomic ranks ]
 
 ## Alpha Diversity
 
-#### Note: Measures of alpha-diversity
-
-*_Inverse Simpson_* it is an indication of the richness in a community
-with uniform evenness that would have the same level of diversity. So
-while measures such as the Shannon index are somewhat abstract, the
-inverse of the Simpson index has some biological interpretation. Other
-advantages of the Simpson-based metrics are that they do not tend to be
-as affected by sampling effort as the Shannon index.
-
-  - *_Species richness_* is simply a count of species, and it does not
-    take into account the abundances of the species or their relative
-    abundance distributions.
-
-  - *_Simpson’s Diversity Index_* is a measure of diversity which takes
-    into account the number of species present, as well as the relative
-    abundance of each species. As species richness and evenness
-    increase, so diversity increases.
-
-<!-- end list -->
-
 ``` r
-### I commented out the subsampling to save time. The matrices produced were saved and then reoponed from their tab delmited formats into corresponding matrices.
-
-set.seed(711)
-
-r <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
-         
- ## Calculate richness
-rich <- as.numeric(as.matrix(estimate_richness(r, measures = "Observed")))
-
-## Calculate Inverse Simpson
-
-simp <- as.numeric(as.matrix(estimate_richness(r, measures = "InvSimpson")))
-
-sim<- as.numeric(as.matrix(estimate_richness(r, measures = "Simpson")))
-
-s <- rarefy_even_depth(physeq1, sample.size = n, verbose = FALSE, replace = TRUE, rngseed = 711)
-
-shan <- as.numeric(as.matrix(estimate_richness(r, measures = "Shannon")))
-
-InvSimp <- simp
-```
-
-``` r
-# Create a new dataframe to hold the means and standard deviations of richness estimates
-
-length(rich)
-```
-
-    FALSE [1] 173
-
-``` r
-Sample_ID <- sample_names(physeq1)
-Block <- sample_data(physeq1)$Block
-Species <-sample_data(physeq1)$Species
-TRT <- sample_data(physeq1)$TRT
-Combos <-sample_data(physeq1)$Combos
-ML <- sample_data(physeq1)$ML
-
-alpha <- data.frame(Sample_ID,ML, Block, TRT, Species, Combos, rich, InvSimp, sim, shan)
-
-alpha$even <- alpha$shan/alpha$rich
-
 # Visualize data distribution w Violin plots
 
 
@@ -403,7 +180,7 @@ SimLmm <- lmer(sim ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip
 EvenLmm <- lmer(even ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
 ```
 
-    ## boundary (singular) fit: see ?isSingular
+    ## boundary (singular) fit: see help('isSingular')
 
 ``` r
 anova(RichLmm)
@@ -598,7 +375,7 @@ physeq.pcoa.vectors <- data.frame(physeq.pcoa$vectors[, 1:4])
 
 physeq.pcoa.vectors$Duplicates <- row.names(physeq.pcoa.vectors)
 
-SampData <- data.frame(sample_data(physeq))
+SampData <- data.frame(sample_data(physeq1))
 
 colnames(SampData)[1] <- "Duplicates"
 
@@ -623,41 +400,20 @@ block <- sampledf %>%
   filter(Species == "Ip") %>% 
   pull(Block)
 
-adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
+output <- adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
 ```
-
-    FALSE 
-    FALSE Call:
-    FALSE adonis(formula = otu_table(physeq.purp) %>% t ~ treatment + block,      method = "bray") 
-    FALSE 
-    FALSE Permutation: free
-    FALSE Number of permutations: 999
-    FALSE 
-    FALSE Terms added sequentially (first to last)
-    FALSE 
-    FALSE           Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)    
-    FALSE treatment  1    0.0258 0.025835  0.8460 0.00796  0.551    
-    FALSE block      3    0.3189 0.106312  3.4813 0.09826  0.001 ***
-    FALSE Residuals 95    2.9011 0.030538         0.89378           
-    FALSE Total     99    3.2459                  1.00000           
-    FALSE ---
-    FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # Correlations with root traits
 
 ## Prep root data
 
 ``` r
-RootData <- read.csv("../DataSets/RootTraits_PCs.csv")
-
 RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")])
 ```
 
 ## Table 3. Within species (root traits and alphadiv)
 
 ``` r
-library(multcomp)
-
 #summary(glht(SimpInvPC1, mcp(rank="Tukey")))
 
 #################################################################
@@ -1249,7 +1005,7 @@ P4.Sim <- ggplot() +
 SimpLMM <- lmer(sim ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
 ```
 
-    ## boundary (singular) fit: see ?isSingular
+    ## boundary (singular) fit: see help('isSingular')
 
 ``` r
 anova(SimpLMM)
@@ -1279,7 +1035,7 @@ ranova(SimpLMM)
 SimpInvLMM <- lmer(InvSimp ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
 ```
 
-    ## boundary (singular) fit: see ?isSingular
+    ## boundary (singular) fit: see help('isSingular')
 
 ``` r
 anova(SimpInvLMM)
@@ -1330,15 +1086,10 @@ ranova(RichLMM)
     ## (1 | ML)    6 -467.22 946.44 0.12747  1     0.7211
 
 ``` r
-LeafData <- read.csv("../DataSets/SizeFitData.csv")
-
 LeafData$Sample_ID <- paste(LeafData$Position, ifelse(grepl("Ihed", LeafData$ML), "H", "P"), sep="")
 ```
 
 ``` r
-Fitness = read.csv("../DataSets/FitPA4.csv")
-
-library(dplyr)
 # Calculate relative fitness
 # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
 
@@ -1506,7 +1257,6 @@ ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
 
 ``` r
 # Combine with root data
-library(dplyr)
 
 RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML), FUN = mean) 
 
@@ -1974,7 +1724,6 @@ fitness
 
 ``` r
 # Run full model
-
 lr_scaled_even <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
   Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
   tidy() %>% 
@@ -2084,49 +1833,75 @@ summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT != "Alone"))) # A
 
 Plot results
 
-``` r
-slp1 <- lr_scaled_rich %>% filter(Term == "richScaled") %>% pull(estimate)
-slp2 <- lr_scaled_rich2 %>% filter(Term == "richScaled") %>% pull(estimate)
-inter1 <- lr_scaled_rich %>% filter(Term == "(Intercept)") %>% pull(estimate)
-inter2 <- lr_scaled_rich2 %>% filter(Term == "(Intercept)") %>% pull(estimate)  
-
-ggplot() +
-  geom_point(data = RootFitAlpha, aes(richScaled, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
-  geom_abline(slope = slp1, intercept = inter1, color="darkgreen", size = 1.2, linetype="dashed") +
-  geom_abline(slope = slp2, intercept = inter2, color="brown", size = 1.2) +
-  theme_classic() +
-  xlab("Richness") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + 
-  scale_color_manual(values = c("darkgreen", "brown"), "Treatment", labels = c("Alone", "Competition")) +
-  theme(axis.text = element_text(color="black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+First create data frames of regression residuals after controlling for
+all other predictors in the model.
 
 ``` r
-ggplot() +
-  geom_point(data = RootFitAlpha, aes(even, RelativeFitness, color = TRT), size = 3, alpha = 0.5) +
-#    geom_smooth(data=RootFitAlpha %>% filter(TRT=="Inter"), aes(EvenScaled,RelativeFitness),method = "lm", fullrange = TRUE, se=FALSE) +
-    geom_abline(slope = 0.004895, intercept = -1.313978, color="darkgreen", size = 1.2, linetype="dashed") +
+alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
+  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding evenness
 
-    geom_abline(slope = 0.002953, intercept = -0.322197,color="brown", size = 1.2) +
+comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
+  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding evenness
 
-  theme_classic() +
-  xlab("Richness") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) + 
-  scale_color_manual(values = c("darkgreen", "brown"), "Treatment", labels = c("Alone", "Competition")) +
-  theme(axis.text = element_text(color="black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
+
+EvenScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(EvenScaled) 
+EvenScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(EvenScaled)
+
+even_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
+                            EvenScaled = c(EvenScaled_alone,
+                                           EvenScaled_comp),
+                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+``` r
+alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
+    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding richness
+
+comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
+    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding richness
+
+richScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(richScaled) 
+richScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(richScaled)
+
+rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
+                            richScaled = c(richScaled_alone,
+                                           richScaled_comp),
+                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
+```
+
+``` r
+ggscatter(
+  rich_df_resid, x = "richScaled", y = "fitness",
+  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
+  ) +
+  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
+  xlab("Sp. Richness") +
+  ylab("Fitness") +
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) 
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+``` r
+ggscatter(
+  even_df_resid, x = "EvenScaled", y = "fitness",
+  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
+  ) +
+  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
+  xlab("Sp. Evenness") +
+  ylab("Relative Fitness") +
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) 
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 # MANTEL (Table 4)
 
@@ -2205,11 +1980,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7636 
+    ##       Significance: 0.7619 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0729 0.0975 0.1179 0.1435 
+    ## 0.0744 0.0986 0.1177 0.1406 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2226,11 +2001,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.071 
+    ##       Significance: 0.0714 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0595 0.0777 0.0937 0.1109 
+    ## 0.0600 0.0763 0.0913 0.1086 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2247,11 +2022,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1325 
+    ##       Significance: 0.1253 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0829 0.1064 0.1274 0.1491 
+    ## 0.0803 0.1045 0.1242 0.1509 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2268,11 +2043,11 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7618 
+    ##       Significance: 0.7665 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0735 0.0954 0.1155 0.1411 
+    ## 0.0731 0.0965 0.1147 0.1410 
     ## Permutation: free
     ## Number of permutations: 9999
 
