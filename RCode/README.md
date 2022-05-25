@@ -1870,38 +1870,50 @@ rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit),
 ```
 
 ``` r
-ggscatter(
+rich_p <- ggscatter(
   rich_df_resid, x = "richScaled", y = "fitness",
   color = "TRT", add = "reg.line", size = 2, alpha = 0.5
   ) +
   scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
   xlab("Sp. Richness") +
-  ylab("Fitness") +
+  ylab("") +
   theme(axis.text = element_text(color = "black", size = 12)) +
   theme(axis.title = element_text(color = "black", size = 18)) +
   theme(legend.text = element_text(size = 12)) 
 ```
 
-    ## `geom_smooth()` using formula 'y ~ x'
-
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
-
 ``` r
-ggscatter(
+even_p <- ggscatter(
   even_df_resid, x = "EvenScaled", y = "fitness",
   color = "TRT", add = "reg.line", size = 2, alpha = 0.5
   ) +
   scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
   xlab("Sp. Evenness") +
-  ylab("Relative Fitness") +
+  ylab("") +
   theme(axis.text = element_text(color = "black", size = 12)) +
   theme(axis.title = element_text(color = "black", size = 18)) +
   theme(legend.text = element_text(size = 12)) 
 ```
 
+``` r
+#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
+AB <- ggarrange(rich_p, even_p, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14),
+                common.legend = T)
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+``` r
+# Common x title
+y.grob1 <- textGrob("Relative Fitness", 
+                   gp = gpar(col="black", fontsize = 25), rot = 90)
+
+gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 # MANTEL (Table 4)
 
@@ -1980,11 +1992,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7619 
+    ##       Significance: 0.7705 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0744 0.0986 0.1177 0.1406 
+    ## 0.0752 0.0989 0.1181 0.1398 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2001,11 +2013,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0714 
+    ##       Significance: 0.0685 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0600 0.0763 0.0913 0.1086 
+    ## 0.0587 0.0754 0.0917 0.1125 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2022,11 +2034,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1253 
+    ##       Significance: 0.1319 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0803 0.1045 0.1242 0.1509 
+    ## 0.0815 0.1047 0.1283 0.1518 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2043,11 +2055,11 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7665 
+    ##       Significance: 0.7636 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0731 0.0965 0.1147 0.1410 
+    ## 0.0727 0.0968 0.1164 0.1386 
     ## Permutation: free
     ## Number of permutations: 9999
 

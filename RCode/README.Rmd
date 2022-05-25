@@ -804,30 +804,44 @@ rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit),
 
 
 ```{r}
-ggscatter(
+rich_p <- ggscatter(
   rich_df_resid, x = "richScaled", y = "fitness",
   color = "TRT", add = "reg.line", size = 2, alpha = 0.5
   ) +
   scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
   xlab("Sp. Richness") +
-  ylab("Fitness") +
+  ylab("") +
   theme(axis.text = element_text(color = "black", size = 12)) +
   theme(axis.title = element_text(color = "black", size = 18)) +
   theme(legend.text = element_text(size = 12)) 
 ```
 
 ```{r}
-ggscatter(
+even_p <- ggscatter(
   even_df_resid, x = "EvenScaled", y = "fitness",
   color = "TRT", add = "reg.line", size = 2, alpha = 0.5
   ) +
   scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
   xlab("Sp. Evenness") +
-  ylab("Relative Fitness") +
+  ylab("") +
   theme(axis.text = element_text(color = "black", size = 12)) +
   theme(axis.title = element_text(color = "black", size = 18)) +
   theme(legend.text = element_text(size = 12)) 
 ```
+
+```{r}
+#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
+AB <- ggarrange(rich_p, even_p, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14),
+                common.legend = T)
+
+
+# Common x title
+y.grob1 <- textGrob("Relative Fitness", 
+                   gp = gpar(col="black", fontsize = 25), rot = 90)
+
+gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
+```
+
 
 # MANTEL  (Table 4)
 ```{r}  
