@@ -635,7 +635,7 @@ ancova_even
 - Add root traits as covariates in the model and perform accross treatments.
 
 ```{r}
-cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
 
 cntrl_invSim_res2 <- cntrl_invSim2 %>% 
                         tidy() %>% 
@@ -646,7 +646,7 @@ cntrl_invSim_res2 <- cntrl_invSim2 %>%
 
 cntrl_invSim_res2
 
-cntrl_rich2 <- lm(RelativeFitness ~ richScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+cntrl_rich2 <- lm(RelativeFitness ~ richScaled+ PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
 
 cntrl_rich_res2 <- cntrl_rich2 %>% 
                         tidy() %>% 
@@ -666,86 +666,30 @@ cntrl_even_res2 <- cntrl_even2 %>%
                         tidy_p()
 cntrl_even_res2
 ```
-
-
-# Figure 3
-
-Plot results
-
-First create data frames of regression residuals after controlling for all other predictors in the model.
+Re-run ANCOVA with root traits in the model.
 ```{r}
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding evenness
+ancova_invSim <- lm(RelativeFitness ~ InvSimScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
 
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding evenness
+ancova_invSim <- anova(ancova_invSim) %>% 
+  tidy() %>% 
+  tidy_more()
 
+ancova_rich <- lm(RelativeFitness ~ richScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
 
-EvenScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(EvenScaled) 
-EvenScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(EvenScaled)
+ancova_rich <- anova(ancova_rich) %>% 
+  tidy( ) %>% 
+  tidy_more()
 
-even_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            EvenScaled = c(EvenScaled_alone,
-                                           EvenScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
+ancova_even <- lm(RelativeFitness ~ EvenScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
+
+ancova_even <- anova(ancova_even) %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invSim
+ancova_rich
+ancova_even
 ```
-
-```{r}
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding richness
-
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding richness
-
-richScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(richScaled) 
-richScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(richScaled)
-
-rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            richScaled = c(richScaled_alone,
-                                           richScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
-```
-
-
-```{r}
-rich_p <- ggscatter(
-  rich_df_resid, x = "richScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Richness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
-```
-
-```{r}
-even_p <- ggscatter(
-  even_df_resid, x = "EvenScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Evenness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
-```
-
-```{r}
-#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-AB <- ggarrange(rich_p, even_p, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14),
-                common.legend = T)
-
-
-# Common x title
-y.grob1 <- textGrob("Relative Fitness", 
-                   gp = gpar(col="black", fontsize = 25), rot = 90)
-
-gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
-```
-
 
 #### MANTEL test (supplimentary)
 ```{r}  

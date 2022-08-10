@@ -33,7 +33,6 @@ Sara Colom
     -   [ANCOVA](#ancova)
         -   [Revaluation controlling for root
             traits](#revaluation-controlling-for-root-traits)
--   [Figure 3](#figure-3)
 -   [Export ANCOVA tables](#export-ancova-tables)
 
 # Objectives
@@ -1047,7 +1046,7 @@ ancova_even
     treatments.
 
 ``` r
-cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
 
 cntrl_invSim_res2 <- cntrl_invSim2 %>% 
                         tidy() %>% 
@@ -1073,7 +1072,7 @@ cntrl_invSim_res2
     ## 9 Block4        0.409 0.081         5.04    0     <0.001***
 
 ``` r
-cntrl_rich2 <- lm(RelativeFitness ~ richScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+cntrl_rich2 <- lm(RelativeFitness ~ richScaled+ PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
 
 cntrl_rich_res2 <- cntrl_rich2 %>% 
                         tidy() %>% 
@@ -1122,91 +1121,76 @@ cntrl_even_res2
     ## 8 Block3       0.738 0.083         8.88    0     <0.001***
     ## 9 Block4       0.406 0.08          5.06    0     <0.001***
 
-# Figure 3
-
-Plot results
-
-First create data frames of regression residuals after controlling for
-all other predictors in the model.
+Re-run ANCOVA with root traits in the model.
 
 ``` r
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding evenness
+ancova_invSim <- lm(RelativeFitness ~ InvSimScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
 
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding evenness
+ancova_invSim <- anova(ancova_invSim) %>% 
+  tidy() %>% 
+  tidy_more()
 
+ancova_rich <- lm(RelativeFitness ~ richScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
 
-EvenScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(EvenScaled) 
-EvenScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(EvenScaled)
+ancova_rich <- anova(ancova_rich) %>% 
+  tidy( ) %>% 
+  tidy_more()
 
-even_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            EvenScaled = c(EvenScaled_alone,
-                                           EvenScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
+ancova_even <- lm(RelativeFitness ~ EvenScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
+
+ancova_even <- anova(ancova_even) %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invSim
 ```
+
+    ## # A tibble: 9 x 7
+    ##   Term                DF    SS meansq `F-value` p.value P        
+    ##   <chr>            <dbl> <dbl>  <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 InvSimScaled         1 0.323  0.323     4.23    0.043 0.043*   
+    ## 2 TRT                  1 0.105  0.105     1.38    0.244 0.244    
+    ## 3 Block                3 7.80   2.60     34.1     0     <0.001***
+    ## 4 PC1                  1 0.043  0.043     0.569   0.453 0.453    
+    ## 5 PC2                  1 0.002  0.002     0.033   0.857 0.857    
+    ## 6 PC3                  1 0.237  0.237     3.11    0.081 0.081    
+    ## 7 PC4                  1 0.002  0.002     0.029   0.865 0.865    
+    ## 8 InvSimScaled:TRT     1 0      0         0.001   0.981 0.981    
+    ## 9 Residuals           86 6.56   0.076    NA      NA     <NA>
 
 ``` r
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding richness
-
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding richness
-
-richScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(richScaled) 
-richScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(richScaled)
-
-rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            richScaled = c(richScaled_alone,
-                                           richScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
+ancova_rich
 ```
+
+    ## # A tibble: 9 x 7
+    ##   Term              DF    SS meansq `F-value` p.value P        
+    ##   <chr>          <dbl> <dbl>  <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 richScaled         1 1.06   1.06     14.0     0     <0.001***
+    ## 2 TRT                1 0.224  0.224     2.96    0.089 0.089    
+    ## 3 Block              3 6.95   2.32     30.7     0     <0.001***
+    ## 4 PC1                1 0.03   0.03      0.394   0.532 0.532    
+    ## 5 PC2                1 0.003  0.003     0.034   0.855 0.855    
+    ## 6 PC3                1 0.252  0.252     3.34    0.071 0.071    
+    ## 7 PC4                1 0.004  0.004     0.054   0.817 0.817    
+    ## 8 richScaled:TRT     1 0.05   0.05      0.666   0.417 0.417    
+    ## 9 Residuals         86 6.50   0.076    NA      NA     <NA>
 
 ``` r
-rich_p <- ggscatter(
-  rich_df_resid, x = "richScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Richness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
+ancova_even
 ```
 
-``` r
-even_p <- ggscatter(
-  even_df_resid, x = "EvenScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Evenness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
-```
-
-``` r
-#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-AB <- ggarrange(rich_p, even_p, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14),
-                common.legend = T)
-```
-
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-
-``` r
-# Common x title
-y.grob1 <- textGrob("Relative Fitness", 
-                   gp = gpar(col="black", fontsize = 25), rot = 90)
-
-gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
-```
-
-![](prelim_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+    ## # A tibble: 9 x 7
+    ##   Term              DF    SS meansq `F-value` p.value P        
+    ##   <chr>          <dbl> <dbl>  <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 EvenScaled         1 1.40   1.40     18.7     0     <0.001***
+    ## 2 TRT                1 0.261  0.261     3.49    0.065 0.065    
+    ## 3 Block              3 6.60   2.20     29.4     0     <0.001***
+    ## 4 PC1                1 0.027  0.027     0.362   0.549 0.549    
+    ## 5 PC2                1 0.003  0.003     0.038   0.847 0.847    
+    ## 6 PC3                1 0.235  0.235     3.13    0.08  0.08     
+    ## 7 PC4                1 0.005  0.005     0.069   0.793 0.793    
+    ## 8 EvenScaled:TRT     1 0.086  0.086     1.15    0.287 0.287    
+    ## 9 Residuals         86 6.44   0.075    NA      NA     <NA>
 
 #### MANTEL test (supplimentary)
 
@@ -1285,11 +1269,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7693 
+    ##       Significance: 0.7684 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0743 0.0967 0.1175 0.1408 
+    ## 0.0756 0.0982 0.1180 0.1426 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1306,11 +1290,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0722 
+    ##       Significance: 0.0719 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0599 0.0773 0.0941 0.1124 
+    ## 0.0599 0.0785 0.0959 0.1142 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1327,11 +1311,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1275 
+    ##       Significance: 0.1196 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0799 0.1037 0.1235 0.1480 
+    ## 0.0789 0.1039 0.1262 0.1519 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1348,11 +1332,11 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7649 
+    ##       Significance: 0.7709 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0740 0.0986 0.1200 0.1429 
+    ## 0.0739 0.0973 0.1160 0.1421 
     ## Permutation: free
     ## Number of permutations: 9999
 
