@@ -632,10 +632,11 @@ ancova_even
 
 ### Revaluation controlling for root traits
 
-- Add root traits as covariates in the model and perform accross treatments.
+- Add root traits as covariates in the model and perform within alone.
 
 ```{r}
-cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
 cntrl_invSim_res2 <- cntrl_invSim2 %>% 
                         tidy() %>% 
@@ -689,6 +690,44 @@ ancova_even <- anova(ancova_even) %>%
 ancova_invSim
 ancova_rich
 ancova_even
+```
+
+
+OUT of curiousity I ran the fuller model within competition.
+```{r}
+comp_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_invSim_res2 <- comp_invSim2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+comp_invSim_res2
+
+comp_rich2 <- lm(RelativeFitness ~ richScaled+ PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_rich_res2 <- comp_rich2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+comp_rich_res2
+
+comp_even2 <- lm(RelativeFitness ~ EvenScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_even_res2 <- comp_even2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+comp_even_res2
 ```
 
 #### MANTEL test (supplimentary)

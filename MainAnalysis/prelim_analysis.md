@@ -1042,11 +1042,11 @@ ancova_even
 
 ### Revaluation controlling for root traits
 
--   Add root traits as covariates in the model and perform accross
-    treatments.
+-   Add root traits as covariates in the model and perform within alone.
 
 ``` r
-cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
 cntrl_invSim_res2 <- cntrl_invSim2 %>% 
                         tidy() %>% 
@@ -1061,15 +1061,15 @@ cntrl_invSim_res2
     ## # A tibble: 9 x 6
     ##   term              b    SE `t-statistic` p_value `p-value`
     ##   <chr>         <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept)   0.68  0.061        11.2     0     <0.001***
-    ## 2 InvSimScaled -0.001 0.031        -0.023   0.982 0.982    
-    ## 3 PC1           0.002 0.03          0.066   0.947 0.947    
-    ## 4 PC2          -0.034 0.038        -0.9     0.371 0.371    
-    ## 5 PC3          -0.137 0.076        -1.80    0.075 0.075    
-    ## 6 PC4          -0.011 0.063        -0.17    0.866 0.866    
-    ## 7 Block2        0.107 0.079         1.35    0.18  0.18     
-    ## 8 Block3        0.751 0.083         9.05    0     <0.001***
-    ## 9 Block4        0.409 0.081         5.04    0     <0.001***
+    ## 1 (Intercept)   0.626 0.353         1.77    0.097 0.097    
+    ## 2 InvSimScaled  0.048 0.151         0.316   0.756 0.756    
+    ## 3 PC1          -0.041 0.118        -0.349   0.732 0.732    
+    ## 4 PC2          -0.045 0.092        -0.487   0.634 0.634    
+    ## 5 PC3          -0.251 0.217        -1.16    0.265 0.265    
+    ## 6 PC4          -0.028 0.222        -0.124   0.903 0.903    
+    ## 7 Block2        0.136 0.291         0.469   0.646 0.646    
+    ## 8 Block3        0.685 0.366         1.87    0.081 0.081    
+    ## 9 Block4        0.649 0.349         1.86    0.083 0.083
 
 ``` r
 cntrl_rich2 <- lm(RelativeFitness ~ richScaled+ PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
@@ -1192,6 +1192,87 @@ ancova_even
     ## 8 EvenScaled:TRT     1 0.086  0.086     1.15    0.287 0.287    
     ## 9 Residuals         86 6.44   0.075    NA      NA     <NA>
 
+OUT of curiousity I ran the fuller model within competition.
+
+``` r
+comp_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_invSim_res2 <- comp_invSim2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+comp_invSim_res2
+```
+
+    ## # A tibble: 9 x 6
+    ##   term              b    SE `t-statistic` p_value `p-value`
+    ##   <chr>         <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)   0.674 0.058        11.7     0     <0.001***
+    ## 2 InvSimScaled -0.017 0.026        -0.671   0.504 0.504    
+    ## 3 PC1           0.018 0.044         0.414   0.68  0.68     
+    ## 4 PC2          -0.004 0.061        -0.073   0.942 0.942    
+    ## 5 PC3          -0.053 0.089        -0.594   0.554 0.554    
+    ## 6 PC4          -0.029 0.087        -0.337   0.737 0.737    
+    ## 7 Block2        0.102 0.071         1.43    0.158 0.158    
+    ## 8 Block3        0.789 0.075        10.6     0     <0.001***
+    ## 9 Block4        0.336 0.074         4.53    0     <0.001***
+
+``` r
+comp_rich2 <- lm(RelativeFitness ~ richScaled+ PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_rich_res2 <- comp_rich2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+comp_rich_res2
+```
+
+    ## # A tibble: 9 x 6
+    ##   term             b    SE `t-statistic` p_value `p-value`
+    ##   <chr>        <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)  0.675 0.058        11.7     0     <0.001***
+    ## 2 richScaled  -0.014 0.028        -0.502   0.617 0.617    
+    ## 3 PC1          0.016 0.044         0.373   0.71  0.71     
+    ## 4 PC2         -0.004 0.062        -0.064   0.949 0.949    
+    ## 5 PC3         -0.059 0.088        -0.671   0.505 0.505    
+    ## 6 PC4         -0.022 0.088        -0.255   0.799 0.799    
+    ## 7 Block2       0.098 0.071         1.38    0.174 0.174    
+    ## 8 Block3       0.787 0.075        10.4     0     <0.001***
+    ## 9 Block4       0.341 0.074         4.61    0     <0.001***
+
+``` r
+comp_even2 <- lm(RelativeFitness ~ EvenScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_even_res2 <- comp_even2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+comp_even_res2
+```
+
+    ## # A tibble: 9 x 6
+    ##   term             b    SE `t-statistic` p_value `p-value`
+    ##   <chr>        <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)  0.679 0.057        11.8     0     <0.001***
+    ## 2 EvenScaled   0.001 0.027         0.053   0.958 0.958    
+    ## 3 PC1          0.014 0.044         0.318   0.751 0.751    
+    ## 4 PC2         -0.003 0.062        -0.048   0.962 0.962    
+    ## 5 PC3         -0.063 0.088        -0.71    0.481 0.481    
+    ## 6 PC4         -0.028 0.088        -0.32    0.75  0.75     
+    ## 7 Block2       0.096 0.071         1.35    0.182 0.182    
+    ## 8 Block3       0.775 0.074        10.5     0     <0.001***
+    ## 9 Block4       0.34  0.074         4.58    0     <0.001***
+
 #### MANTEL test (supplimentary)
 
 ``` r
@@ -1269,11 +1350,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7684 
+    ##       Significance: 0.7622 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0756 0.0982 0.1180 0.1426 
+    ## 0.0728 0.0975 0.1170 0.1428 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1290,11 +1371,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0719 
+    ##       Significance: 0.07 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0599 0.0785 0.0959 0.1142 
+    ## 0.0590 0.0764 0.0922 0.1108 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1311,11 +1392,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1196 
+    ##       Significance: 0.1336 
     ## 
     ## Upper quantiles of permutations (null model):
-    ##    90%    95%  97.5%    99% 
-    ## 0.0789 0.1039 0.1262 0.1519 
+    ##   90%   95% 97.5%   99% 
+    ## 0.083 0.106 0.128 0.150 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1332,11 +1413,11 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7709 
+    ##       Significance: 0.7625 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0739 0.0973 0.1160 0.1421 
+    ## 0.0747 0.0958 0.1158 0.1402 
     ## Permutation: free
     ## Number of permutations: 9999
 
