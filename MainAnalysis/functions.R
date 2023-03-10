@@ -1,5 +1,23 @@
 # Additional functions
 
+
+# Aesthetics
+Tx<-theme(axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, angle=0, size = 20),
+        axis.title.x = element_text(angle=0, size = 12),
+        plot.title=element_text(size = 25,hjust=0))
+
+# Aesthetics
+Tx2<-theme(axis.text.y = element_text(size = 12),
+           axis.title.y = element_text(size = 12)) +
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 25),
+        axis.title.x = element_text(size = 25),
+        plot.title=element_text(size = 25,hjust=0))
+
+GoldGrey <- c("#F1CE63", "#79706E")
+GreenBlue <- c("#59A14F", "#4E79A7")
+
 # Code to further tidy results table
 
 tidy_more <- function(x){

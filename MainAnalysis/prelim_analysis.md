@@ -31,9 +31,10 @@ Sara Colom
 -   [7/29/2022](#7292022)
     -   [Regression on plant fitness](#regression-on-plant-fitness)
     -   [ANCOVA](#ancova)
-        -   [Revaluation controlling for root
-            traits](#revaluation-controlling-for-root-traits)
--   [Export ANCOVA tables](#export-ancova-tables)
+        -   [Revaluation controling for *ALL* root
+            traits](#revaluation-controling-for-all-root-traits)
+    -   [9/22/2022](#9222022)
+-   [Export models](#export-models)
 
 # Objectives
 
@@ -899,14 +900,15 @@ RootFitAlpha$Comp <- sub(".*\\-", "", RootFitAlpha$Combos)
 
 -   Evaluate linear relationship of I.purpurea fitness and microbial
     richness, inverse Simpson, and evenness within the control (*alone*)
-    treatment for each metric separatley.
+    treatment for each metric separately.
 
 -   Evaluate if relationship above is impacted by treatment via ANCOVA
 
 -   Assess how I.purpurea fitness in control varies with the three main
     microbial metrics while controlling for root architecture.
 
-#### Control treatment
+Prior to runing models below, I will visualize the relationships between
+microbial community metrics and plant fitness and color by treatment.
 
 ``` r
 # Scale the microbial variables
@@ -915,7 +917,24 @@ RootFitAlpha$SimScaled <-scale(RootFitAlpha$sim)
 RootFitAlpha$InvSimScaled <-scale(RootFitAlpha$InvSimp)
 RootFitAlpha$EvenScaled <-scale(RootFitAlpha$even)
 
-cntrl_invSim <- lm(RelativeFitness ~ InvSimScaled + Block, RootFitAlpha %>% 
+RootFitAlpha %>% 
+  dplyr::select(TRT, matches("Scaled"), RelativeFitness, Block) %>% 
+  pivot_longer(cols = richScaled:EvenScaled, names_to = "vars", values_to = "value") %>% 
+  ggplot() +
+  geom_point(aes(value, RelativeFitness, color = TRT)) +
+  geom_smooth(aes(value, RelativeFitness, color = TRT), method='lm', se = F) +
+  facet_wrap(~vars) +
+  theme_classic()
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](prelim_analysis_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+#### Control treatment
+
+``` r
+cntrl_invSim <- lm(RelativeFitness ~ InvSimScaled, RootFitAlpha %>% 
                    filter(TRT == "Alone"))
 
 cntrl_invSim_res <- cntrl_invSim %>% 
@@ -928,17 +947,14 @@ cntrl_invSim_res <- cntrl_invSim %>%
 cntrl_invSim_res
 ```
 
-    ## # A tibble: 5 x 6
+    ## # A tibble: 2 x 6
     ##   term             b    SE `t-statistic` p_value `p-value`
     ##   <chr>        <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept)  0.573 0.18          3.18    0.005 0.005**  
-    ## 2 InvSimScaled 0.018 0.132         0.135   0.894 0.894    
-    ## 3 Block2       0.154 0.26          0.593   0.56  0.56     
-    ## 4 Block3       0.633 0.269         2.35    0.029 0.029*   
-    ## 5 Block4       0.588 0.248         2.38    0.028 0.028*
+    ## 1 (Intercept)  0.916 0.102         9.00    0     <0.001***
+    ## 2 InvSimScaled 0.044 0.141         0.316   0.755 0.755
 
 ``` r
-cntrl_rich <- lm(RelativeFitness ~ richScaled + Block, RootFitAlpha %>% 
+cntrl_rich <- lm(RelativeFitness ~ richScaled, RootFitAlpha %>% 
                    filter(TRT == "Alone"))
 
 cntrl_rich_res <- cntrl_rich %>% 
@@ -950,17 +966,14 @@ cntrl_rich_res <- cntrl_rich %>%
 cntrl_rich_res
 ```
 
-    ## # A tibble: 5 x 6
+    ## # A tibble: 2 x 6
     ##   term            b    SE `t-statistic` p_value `p-value`
     ##   <chr>       <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept) 0.53  0.176         3.02    0.007 0.007**  
-    ## 2 richScaled  0.137 0.106         1.30    0.209 0.209    
-    ## 3 Block2      0.238 0.254         0.937   0.361 0.361    
-    ## 4 Block3      0.529 0.269         1.96    0.064 0.064    
-    ## 5 Block4      0.63  0.238         2.65    0.016 0.016*
+    ## 1 (Intercept) 0.879 0.099          8.90   0     <0.001***
+    ## 2 richScaled  0.159 0.1            1.60   0.125 0.125
 
 ``` r
-cntrl_even <- lm(RelativeFitness ~ EvenScaled + Block, RootFitAlpha %>% 
+cntrl_even <- lm(RelativeFitness ~ EvenScaled, RootFitAlpha %>% 
                    filter(TRT == "Alone"))
 
 cntrl_even_res <- cntrl_even %>% 
@@ -972,14 +985,11 @@ cntrl_even_res <- cntrl_even %>%
 cntrl_even_res
 ```
 
-    ## # A tibble: 5 x 6
+    ## # A tibble: 2 x 6
     ##   term             b    SE `t-statistic` p_value `p-value`
     ##   <chr>        <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept)  0.534 0.171         3.13    0.006 0.006**  
-    ## 2 EvenScaled  -0.168 0.104        -1.62    0.122 0.122    
-    ## 3 Block2       0.241 0.246         0.982   0.339 0.339    
-    ## 4 Block3       0.487 0.267         1.82    0.084 0.084    
-    ## 5 Block4       0.609 0.231         2.64    0.016 0.016*
+    ## 1 (Intercept)  0.865 0.096          8.99   0     <0.001***
+    ## 2 EvenScaled  -0.2   0.098         -2.05   0.052 0.052
 
 ## ANCOVA
 
@@ -1040,47 +1050,460 @@ ancova_even
     ## 4 EvenScaled:TRT     1 0.12   0.12       1.62   0.206 0.206    
     ## 5 Residuals         90 6.68   0.074     NA     NA     <NA>
 
-### Revaluation controlling for root traits
-
--   Add root traits as covariates in the model and perform within alone.
+Test model with sp. richness, sp. evenness, sp. Inv Simpson, and Root
+architecture in the model.
 
 ``` r
-cntrl_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
+cntrl_full <- lm(RelativeFitness ~ InvSimScaled + richScaled + PC2 + Block, RootFitAlpha %>% 
                    filter(TRT == "Alone"))
 
-cntrl_invSim_res2 <- cntrl_invSim2 %>% 
+cntrl_full_res <- cntrl_full %>% 
                         tidy() %>% 
                         rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
                         mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
                         rename(`p_value` = `p.value`) %>% 
                         tidy_p()
 
-cntrl_invSim_res2
+
+cntrl_full_res
 ```
 
-    ## # A tibble: 9 x 6
+    ## # A tibble: 7 x 6
     ##   term              b    SE `t-statistic` p_value `p-value`
     ##   <chr>         <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept)   0.626 0.353         1.77    0.097 0.097    
-    ## 2 InvSimScaled  0.048 0.151         0.316   0.756 0.756    
-    ## 3 PC1          -0.041 0.118        -0.349   0.732 0.732    
-    ## 4 PC2          -0.045 0.092        -0.487   0.634 0.634    
-    ## 5 PC3          -0.251 0.217        -1.16    0.265 0.265    
-    ## 6 PC4          -0.028 0.222        -0.124   0.903 0.903    
-    ## 7 Block2        0.136 0.291         0.469   0.646 0.646    
-    ## 8 Block3        0.685 0.366         1.87    0.081 0.081    
-    ## 9 Block4        0.649 0.349         1.86    0.083 0.083
+    ## 1 (Intercept)   0.481 0.187         2.57    0.02  0.02*    
+    ## 2 InvSimScaled -0.173 0.18         -0.963   0.349 0.349    
+    ## 3 richScaled    0.255 0.15          1.70    0.108 0.108    
+    ## 4 PC2          -0.04  0.072        -0.562   0.582 0.582    
+    ## 5 Block2        0.258 0.261         0.989   0.336 0.336    
+    ## 6 Block3        0.491 0.276         1.78    0.094 0.094    
+    ## 7 Block4        0.62  0.242         2.56    0.02  0.02*
+
+### Revaluation controling for *ALL* root traits
+
+-   Add root traits as co-variates in the model and perform across
+    treatments
 
 ``` r
-cntrl_rich2 <- lm(RelativeFitness ~ richScaled+ PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+all_invSim2 <- lm(RelativeFitness ~ InvSimScaled + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4 + Block, RootFitAlpha)
 
-cntrl_rich_res2 <- cntrl_rich2 %>% 
+all_invSim_res2 <- all_invSim2 %>% 
                         tidy() %>% 
                         rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
                         mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
                         rename(`p_value` = `p.value`) %>% 
                         tidy_p()
-cntrl_rich_res2
+
+all_invSim_res2
+```
+
+    ## # A tibble: 13 x 6
+    ##    term                  b    SE `t-statistic` p_value `p-value`
+    ##    <chr>             <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)       0.675 0.063        10.7     0     <0.001***
+    ##  2 InvSimScaled     -0.019 0.038        -0.497   0.621 0.621    
+    ##  3 PC1              -0.002 0.031        -0.067   0.947 0.947    
+    ##  4 PC2              -0.042 0.042        -0.982   0.329 0.329    
+    ##  5 PC3              -0.141 0.08         -1.77    0.08  0.08     
+    ##  6 PC4              -0.01  0.066        -0.159   0.874 0.874    
+    ##  7 Block2            0.118 0.082         1.43    0.157 0.157    
+    ##  8 Block3            0.756 0.085         8.93    0     <0.001***
+    ##  9 Block4            0.412 0.083         4.96    0     <0.001***
+    ## 10 InvSimScaled:PC1 -0.006 0.034        -0.187   0.852 0.852    
+    ## 11 InvSimScaled:PC2 -0.002 0.055        -0.037   0.97  0.97     
+    ## 12 InvSimScaled:PC3  0.041 0.089         0.466   0.642 0.642    
+    ## 13 InvSimScaled:PC4 -0.04  0.07         -0.577   0.566 0.566
+
+``` r
+all_rich2 <- lm(RelativeFitness ~ richScaled + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4 + Block, RootFitAlpha)
+
+all_rich_res2 <- all_rich2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+all_rich_res2
+```
+
+    ## # A tibble: 13 x 6
+    ##    term                b    SE `t-statistic` p_value `p-value`
+    ##    <chr>           <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)     0.679 0.063        10.8     0     <0.001***
+    ##  2 richScaled     -0.001 0.035        -0.027   0.978 0.978    
+    ##  3 PC1            -0.011 0.032        -0.347   0.729 0.729    
+    ##  4 PC2            -0.05  0.041        -1.21    0.23  0.23     
+    ##  5 PC3            -0.163 0.078        -2.08    0.041 0.041*   
+    ##  6 PC4            -0.011 0.067        -0.171   0.865 0.865    
+    ##  7 Block2          0.121 0.082         1.48    0.143 0.143    
+    ##  8 Block3          0.753 0.087         8.70    0     <0.001***
+    ##  9 Block4          0.42  0.084         5.03    0     <0.001***
+    ## 10 richScaled:PC1  0.001 0.029         0.018   0.985 0.985    
+    ## 11 richScaled:PC2 -0.025 0.053        -0.476   0.635 0.635    
+    ## 12 richScaled:PC3  0.026 0.075         0.342   0.733 0.733    
+    ## 13 richScaled:PC4 -0.068 0.065        -1.04    0.301 0.301
+
+``` r
+all_even2 <- lm(RelativeFitness ~ EvenScaled  + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 + Block, RootFitAlpha)
+
+all_even_res2 <- all_even2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+all_even_res2
+```
+
+    ## # A tibble: 13 x 6
+    ##    term                b    SE `t-statistic` p_value `p-value`
+    ##    <chr>           <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)     0.684 0.063        10.9     0     <0.001***
+    ##  2 EvenScaled     -0.013 0.033        -0.406   0.686 0.686    
+    ##  3 PC1            -0.004 0.031        -0.113   0.91  0.91     
+    ##  4 PC2            -0.039 0.04         -0.975   0.333 0.333    
+    ##  5 PC3            -0.145 0.077        -1.88    0.064 0.064    
+    ##  6 PC4            -0.01  0.066        -0.151   0.88  0.88     
+    ##  7 Block2          0.113 0.082         1.37    0.175 0.175    
+    ##  8 Block3          0.739 0.086         8.59    0     <0.001***
+    ##  9 Block4          0.408 0.083         4.9     0     <0.001***
+    ## 10 EvenScaled:PC1 -0.008 0.031        -0.259   0.796 0.796    
+    ## 11 EvenScaled:PC2  0.022 0.059         0.382   0.704 0.704    
+    ## 12 EvenScaled:PC3 -0.024 0.08         -0.295   0.769 0.769    
+    ## 13 EvenScaled:PC4  0.039 0.071         0.551   0.583 0.583
+
+Re-run ANCOVA with root traits in the model.
+
+``` r
+library(car)
+```
+
+    ## Warning: package 'car' was built under R version 4.1.3
+
+    ## Loading required package: carData
+
+    ## 
+    ## Attaching package: 'car'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     recode
+
+    ## The following object is masked from 'package:purrr':
+    ## 
+    ##     some
+
+``` r
+ancova_invSim_m <- lm(RelativeFitness ~ InvSimScaled*TRT + Block + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4 , RootFitAlpha)
+
+ancova_invSim <- Anova(ancova_invSim_m, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_rich_m <- lm(RelativeFitness ~ richScaled*TRT + Block + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4 , RootFitAlpha)
+
+ancova_rich <- Anova(ancova_rich_m, type = "III") %>% 
+  tidy( ) %>% 
+  tidy_more()
+
+ancova_even_m <- lm(RelativeFitness ~ EvenScaled*TRT + Block + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 , RootFitAlpha)
+
+ancova_even <- Anova(ancova_even_m, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invSim
+```
+
+    ## # A tibble: 14 x 6
+    ##    Term                SS    DF `F-value` p.value P        
+    ##    <chr>            <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)      3.64      1    46.1     0     <0.001***
+    ##  2 InvSimScaled     0.024     1     0.304   0.583 0.583    
+    ##  3 TRT              0         1     0       0.988 0.988    
+    ##  4 Block            7.52      3    31.8     0     <0.001***
+    ##  5 PC1              0         1     0.001   0.98  0.98     
+    ##  6 PC2              0.051     1     0.646   0.424 0.424    
+    ##  7 PC3              0.208     1     2.64    0.108 0.108    
+    ##  8 PC4              0.002     1     0.03    0.863 0.863    
+    ##  9 InvSimScaled:TRT 0.013     1     0.171   0.68  0.68     
+    ## 10 InvSimScaled:PC1 0.012     1     0.146   0.703 0.703    
+    ## 11 InvSimScaled:PC2 0.001     1     0.016   0.898 0.898    
+    ## 12 InvSimScaled:PC3 0.021     1     0.268   0.606 0.606    
+    ## 13 InvSimScaled:PC4 0.015     1     0.19    0.664 0.664    
+    ## 14 Residuals        6.47     82    NA      NA     <NA>
+
+``` r
+ancova_rich
+```
+
+    ## # A tibble: 14 x 6
+    ##    Term              SS    DF `F-value` p.value P        
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)    2.89      1    37.6     0     <0.001***
+    ##  2 richScaled     0.084     1     1.09    0.3   0.3      
+    ##  3 TRT            0.013     1     0.172   0.679 0.679    
+    ##  4 Block          6.76      3    29.3     0     <0.001***
+    ##  5 PC1            0.015     1     0.192   0.662 0.662    
+    ##  6 PC2            0.158     1     2.05    0.156 0.156    
+    ##  7 PC3            0.311     1     4.03    0.048 0.048*   
+    ##  8 PC4            0         1     0       0.985 0.985    
+    ##  9 richScaled:TRT 0.101     1     1.31    0.255 0.255    
+    ## 10 richScaled:PC1 0.031     1     0.402   0.528 0.528    
+    ## 11 richScaled:PC2 0.001     1     0.011   0.915 0.915    
+    ## 12 richScaled:PC3 0.008     1     0.104   0.747 0.747    
+    ## 13 richScaled:PC4 0.148     1     1.92    0.169 0.169    
+    ## 14 Residuals      6.32     82    NA      NA     <NA>
+
+``` r
+ancova_even
+```
+
+    ## # A tibble: 14 x 6
+    ##    Term              SS    DF `F-value` p.value P        
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)    2.88      1    37.6     0     <0.001***
+    ##  2 EvenScaled     0.186     1     2.43    0.123 0.123    
+    ##  3 TRT            0.021     1     0.275   0.601 0.601    
+    ##  4 Block          6.53      3    28.4     0     <0.001***
+    ##  5 PC1            0.008     1     0.103   0.75  0.75     
+    ##  6 PC2            0.113     1     1.48    0.227 0.227    
+    ##  7 PC3            0.241     1     3.14    0.08  0.08     
+    ##  8 PC4            0         1     0.006   0.941 0.941    
+    ##  9 EvenScaled:TRT 0.178     1     2.32    0.131 0.131    
+    ## 10 EvenScaled:PC1 0.073     1     0.954   0.331 0.331    
+    ## 11 EvenScaled:PC2 0         1     0.004   0.95  0.95     
+    ## 12 EvenScaled:PC3 0.002     1     0.028   0.867 0.867    
+    ## 13 EvenScaled:PC4 0.092     1     1.20    0.276 0.276    
+    ## 14 Residuals      6.28     82    NA      NA     <NA>
+
+t-tests for model with interaction
+
+``` r
+ancova_invSim_tres <- ancova_invSim_m %>% 
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+  rename(`p_value` = `p.value`) %>% 
+  tidy_p() 
+
+ancova_rich_tres <- ancova_rich_m  %>% 
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+  rename(`p_value` = `p.value`) %>% 
+  tidy_p() 
+
+ancova_even_tres <- ancova_even_m %>% 
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+  rename(`p_value` = `p.value`) %>% 
+  tidy_p() 
+
+ancova_invSim_tres
+```
+
+    ## # A tibble: 15 x 6
+    ##    term                       b    SE `t-statistic` p_value `p-value`
+    ##    <chr>                  <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)            0.675 0.099         6.79    0     <0.001***
+    ##  2 InvSimScaled          -0.065 0.118        -0.551   0.583 0.583    
+    ##  3 TRTInter              -0.001 0.094        -0.016   0.988 0.988    
+    ##  4 Block2                 0.117 0.084         1.40    0.166 0.166    
+    ##  5 Block3                 0.755 0.086         8.79    0     <0.001***
+    ##  6 Block4                 0.414 0.084         4.92    0     <0.001***
+    ##  7 PC1                   -0.001 0.037        -0.025   0.98  0.98     
+    ##  8 PC2                   -0.037 0.046        -0.804   0.424 0.424    
+    ##  9 PC3                   -0.136 0.084        -1.62    0.108 0.108    
+    ## 10 PC4                   -0.012 0.067        -0.173   0.863 0.863    
+    ## 11 InvSimScaled:TRTInter  0.05  0.121         0.413   0.68  0.68     
+    ## 12 InvSimScaled:PC1      -0.016 0.041        -0.383   0.703 0.703    
+    ## 13 InvSimScaled:PC2      -0.007 0.058        -0.128   0.898 0.898    
+    ## 14 InvSimScaled:PC3       0.047 0.091         0.518   0.606 0.606    
+    ## 15 InvSimScaled:PC4      -0.032 0.074        -0.436   0.664 0.664
+
+``` r
+ancova_rich_tres
+```
+
+    ## # A tibble: 15 x 6
+    ##    term                     b    SE `t-statistic` p_value `p-value`
+    ##    <chr>                <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)          0.642 0.105         6.13    0     <0.001***
+    ##  2 richScaled           0.09  0.086         1.04    0.3   0.3      
+    ##  3 TRTInter             0.042 0.1           0.415   0.679 0.679    
+    ##  4 Block2               0.122 0.082         1.49    0.14  0.14     
+    ##  5 Block3               0.751 0.087         8.59    0     <0.001***
+    ##  6 Block4               0.417 0.084         4.96    0     <0.001***
+    ##  7 PC1                 -0.017 0.039        -0.439   0.662 0.662    
+    ##  8 PC2                 -0.063 0.044        -1.43    0.156 0.156    
+    ##  9 PC3                 -0.16  0.08         -2.01    0.048 0.048*   
+    ## 10 PC4                  0.001 0.068         0.018   0.985 0.985    
+    ## 11 richScaled:TRTInter -0.113 0.099        -1.15    0.255 0.255    
+    ## 12 richScaled:PC1       0.023 0.036         0.634   0.528 0.528    
+    ## 13 richScaled:PC2      -0.006 0.056        -0.107   0.915 0.915    
+    ## 14 richScaled:PC3       0.024 0.075         0.323   0.747 0.747    
+    ## 15 richScaled:PC4      -0.098 0.071        -1.39    0.169 0.169
+
+``` r
+ancova_even_tres
+```
+
+    ## # A tibble: 15 x 6
+    ##    term                     b    SE `t-statistic` p_value `p-value`
+    ##    <chr>                <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)          0.638 0.104         6.13    0     <0.001***
+    ##  2 EvenScaled          -0.127 0.081        -1.56    0.123 0.123    
+    ##  3 TRTInter             0.052 0.099         0.525   0.601 0.601    
+    ##  4 Block2               0.111 0.082         1.35    0.18  0.18     
+    ##  5 Block3               0.737 0.086         8.53    0     <0.001***
+    ##  6 Block4               0.411 0.083         4.94    0     <0.001***
+    ##  7 PC1                 -0.012 0.038        -0.32    0.75  0.75     
+    ##  8 PC2                 -0.051 0.042        -1.22    0.227 0.227    
+    ##  9 PC3                 -0.14  0.079        -1.77    0.08  0.08     
+    ## 10 PC4                  0.005 0.066         0.074   0.941 0.941    
+    ## 11 EvenScaled:TRTInter  0.144 0.095         1.52    0.131 0.131    
+    ## 12 EvenScaled:PC1      -0.035 0.036        -0.977   0.331 0.331    
+    ## 13 EvenScaled:PC2       0.004 0.06          0.063   0.95  0.95     
+    ## 14 EvenScaled:PC3      -0.013 0.08         -0.168   0.867 0.867    
+    ## 15 EvenScaled:PC4       0.084 0.077         1.10    0.276 0.276
+
+OUT of curiosity I ran the fuller model within competition.
+
+``` r
+comp_invSim2 <- lm(RelativeFitness ~ InvSimScaled*PC2 + InvSimScaled*PC1 + InvSimScaled*PC3 + InvSimScaled*PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_invSim_res2 <- comp_invSim2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+comp_invSim_res2
+```
+
+    ## # A tibble: 13 x 6
+    ##    term                  b    SE `t-statistic` p_value `p-value`
+    ##    <chr>             <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)       0.675 0.06         11.2     0     <0.001***
+    ##  2 InvSimScaled     -0.003 0.032        -0.101   0.92  0.92     
+    ##  3 PC2              -0.013 0.064        -0.196   0.845 0.845    
+    ##  4 PC1               0.012 0.046         0.256   0.799 0.799    
+    ##  5 PC3              -0.056 0.098        -0.572   0.569 0.569    
+    ##  6 PC4              -0.028 0.094        -0.295   0.769 0.769    
+    ##  7 Block2            0.099 0.074         1.34    0.187 0.187    
+    ##  8 Block3            0.787 0.077        10.2     0     <0.001***
+    ##  9 Block4            0.341 0.076         4.49    0     <0.001***
+    ## 10 InvSimScaled:PC2 -0.055 0.068        -0.815   0.418 0.418    
+    ## 11 InvSimScaled:PC1 -0.048 0.04         -1.19    0.239 0.239    
+    ## 12 InvSimScaled:PC3 -0.055 0.091        -0.606   0.547 0.547    
+    ## 13 InvSimScaled:PC4  0.05  0.093         0.539   0.592 0.592
+
+``` r
+comp_rich2 <- lm(RelativeFitness ~ richScaled*PC2 + richScaled*PC1 + richScaled*PC3 + richScaled*PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_rich_res2 <- comp_rich2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+comp_rich_res2
+```
+
+    ## # A tibble: 13 x 6
+    ##    term                b    SE `t-statistic` p_value `p-value`
+    ##    <chr>           <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)     0.684 0.061        11.2     0     <0.001***
+    ##  2 richScaled     -0.004 0.035        -0.12    0.905 0.905    
+    ##  3 PC2            -0.012 0.064        -0.193   0.848 0.848    
+    ##  4 PC1            -0.003 0.048        -0.056   0.956 0.956    
+    ##  5 PC3            -0.077 0.097        -0.795   0.43  0.43     
+    ##  6 PC4            -0.031 0.092        -0.342   0.734 0.734    
+    ##  7 Block2          0.09  0.075         1.20    0.234 0.234    
+    ##  8 Block3          0.785 0.078        10.1     0     <0.001***
+    ##  9 Block4          0.345 0.077         4.51    0     <0.001***
+    ## 10 richScaled:PC2 -0.034 0.067        -0.505   0.616 0.616    
+    ## 11 richScaled:PC1 -0.046 0.046        -0.992   0.325 0.325    
+    ## 12 richScaled:PC3 -0.05  0.089        -0.56    0.578 0.578    
+    ## 13 richScaled:PC4  0     0.099         0.002   0.998 >0.99
+
+``` r
+comp_even2 <- lm(RelativeFitness ~ EvenScaled*PC2 + EvenScaled*PC1 + EvenScaled*PC3 + EvenScaled*PC4 + Block, RootFitAlpha %>% 
+                   filter(TRT != "Alone"))
+
+comp_even_res2 <- comp_even2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+comp_even_res2
+```
+
+    ## # A tibble: 13 x 6
+    ##    term                b    SE `t-statistic` p_value `p-value`
+    ##    <chr>           <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)     0.681 0.06         11.3     0     <0.001***
+    ##  2 EvenScaled      0.008 0.036         0.223   0.824 0.824    
+    ##  3 PC2            -0.005 0.064        -0.073   0.942 0.942    
+    ##  4 PC1             0.008 0.047         0.163   0.871 0.871    
+    ##  5 PC3            -0.063 0.096        -0.658   0.513 0.513    
+    ##  6 PC4            -0.027 0.092        -0.29    0.773 0.773    
+    ##  7 Block2          0.101 0.076         1.33    0.189 0.189    
+    ##  8 Block3          0.778 0.077        10.2     0     <0.001***
+    ##  9 Block4          0.343 0.077         4.44    0     <0.001***
+    ## 10 EvenScaled:PC2 -0.005 0.062        -0.087   0.931 0.931    
+    ## 11 EvenScaled:PC1  0.006 0.049         0.112   0.911 0.911    
+    ## 12 EvenScaled:PC3 -0.013 0.092        -0.143   0.887 0.887    
+    ## 13 EvenScaled:PC4  0.034 0.098         0.343   0.733 0.733
+
+Regression overall across both treatments for ea trait–no interaction
+terms. Just controlling for root traits.
+
+``` r
+all_invSim <- lm(RelativeFitness ~ InvSimScaled*Block + PC1 + PC2 + PC3 + PC4, RootFitAlpha)
+
+all_invSim_res <- all_invSim  %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+all_invSim_res
+```
+
+    ## # A tibble: 12 x 6
+    ##    term                     b    SE `t-statistic` p_value `p-value`
+    ##    <chr>                <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)          0.675 0.062        10.8     0     <0.001***
+    ##  2 InvSimScaled        -0.031 0.064        -0.476   0.635 0.635    
+    ##  3 Block2               0.112 0.081         1.38    0.171 0.171    
+    ##  4 Block3               0.741 0.086         8.59    0     <0.001***
+    ##  5 Block4               0.404 0.087         4.63    0     <0.001***
+    ##  6 PC1                  0.003 0.031         0.095   0.924 0.924    
+    ##  7 PC2                 -0.034 0.039        -0.866   0.389 0.389    
+    ##  8 PC3                 -0.132 0.078        -1.69    0.094 0.094    
+    ##  9 PC4                 -0.01  0.064        -0.163   0.871 0.871    
+    ## 10 InvSimScaled:Block2  0.035 0.097         0.358   0.721 0.721    
+    ## 11 InvSimScaled:Block3  0.055 0.08          0.684   0.496 0.496    
+    ## 12 InvSimScaled:Block4  0.008 0.094         0.089   0.93  0.93
+
+``` r
+all_rich <- lm(RelativeFitness ~ richScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+
+all_rich_res <- all_rich %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+all_rich_res
 ```
 
     ## # A tibble: 9 x 6
@@ -1097,15 +1520,15 @@ cntrl_rich_res2
     ## 9 Block4       0.41  0.08          5.10    0     <0.001***
 
 ``` r
-cntrl_even2 <- lm(RelativeFitness ~ EvenScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
+all_even <- lm(RelativeFitness ~ EvenScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha)
 
-cntrl_even_res2 <- cntrl_even2 %>% 
+all_even_res <- all_even %>% 
                         tidy() %>% 
                         rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
                         mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
                         rename(`p_value` = `p.value`) %>% 
                         tidy_p()
-cntrl_even_res2
+all_even_res
 ```
 
     ## # A tibble: 9 x 6
@@ -1121,157 +1544,327 @@ cntrl_even_res2
     ## 8 Block3       0.738 0.083         8.88    0     <0.001***
     ## 9 Block4       0.406 0.08          5.06    0     <0.001***
 
-Re-run ANCOVA with root traits in the model.
+Investigating quadratic effects (i.e. nonlinear relationships.)
 
 ``` r
-ancova_invSim <- lm(RelativeFitness ~ InvSimScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
+RootFitAlpha <- RootFitAlpha %>% 
+  mutate(InvSimScaled2 = InvSimScaled*InvSimScaled,
+         richScaled2 = richScaled*richScaled,
+         EvenScaled2 = EvenScaled*EvenScaled)
 
-ancova_invSim <- anova(ancova_invSim) %>% 
+all_rich2 <- lm(RelativeFitness ~ InvSimScaled + InvSimScaled2 + InvSimScaled*TRT + Block + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4, RootFitAlpha)
+
+InvSim2_res <- all_rich2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+
+all_rich2 <- lm(RelativeFitness ~ richScaled + richScaled2 +richScaled*TRT + Block + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4, RootFitAlpha)
+
+Rich2_res <- all_rich2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+all_even2 <- lm(RelativeFitness ~ EvenScaled + EvenScaled2 + EvenScaled*TRT + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 + Block, RootFitAlpha)
+
+Even2_res <- all_even2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+InvSim2_res
+```
+
+    ## # A tibble: 16 x 6
+    ##    term                       b    SE `t-statistic` p_value `p-value`
+    ##    <chr>                  <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)            0.672 0.1           6.75    0     <0.001***
+    ##  2 InvSimScaled          -0.055 0.119        -0.459   0.648 0.648    
+    ##  3 InvSimScaled2          0.02  0.026         0.752   0.454 0.454    
+    ##  4 TRTInter              -0.014 0.095        -0.151   0.88  0.88     
+    ##  5 Block2                 0.12  0.084         1.43    0.157 0.157    
+    ##  6 Block3                 0.746 0.087         8.59    0     <0.001***
+    ##  7 Block4                 0.415 0.084         4.91    0     <0.001***
+    ##  8 PC1                    0     0.037        -0.007   0.995 >0.99    
+    ##  9 PC2                   -0.035 0.046        -0.774   0.441 0.441    
+    ## 10 PC3                   -0.144 0.084        -1.70    0.092 0.092    
+    ## 11 PC4                   -0.014 0.067        -0.206   0.837 0.837    
+    ## 12 InvSimScaled:TRTInter  0.036 0.122         0.295   0.769 0.769    
+    ## 13 InvSimScaled:PC1      -0.022 0.042        -0.524   0.602 0.602    
+    ## 14 InvSimScaled:PC2      -0.002 0.059        -0.029   0.977 0.977    
+    ## 15 InvSimScaled:PC3       0.026 0.096         0.268   0.789 0.789    
+    ## 16 InvSimScaled:PC4      -0.053 0.079        -0.674   0.502 0.502
+
+``` r
+Even2_res
+```
+
+    ## # A tibble: 16 x 6
+    ##    term                     b    SE `t-statistic` p_value `p-value`
+    ##    <chr>                <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)          0.691 0.111         6.23    0     <0.001***
+    ##  2 EvenScaled          -0.142 0.082        -1.74    0.085 0.085    
+    ##  3 EvenScaled2         -0.033 0.025        -1.34    0.185 0.185    
+    ##  4 TRTInter             0.027 0.1           0.266   0.791 0.791    
+    ##  5 PC1                 -0.004 0.038        -0.106   0.916 0.916    
+    ##  6 PC2                 -0.046 0.042        -1.09    0.28  0.28     
+    ##  7 PC3                 -0.155 0.079        -1.96    0.054 0.054    
+    ##  8 PC4                  0.014 0.066         0.205   0.838 0.838    
+    ##  9 Block2               0.12  0.082         1.46    0.147 0.147    
+    ## 10 Block3               0.742 0.086         8.61    0     <0.001***
+    ## 11 Block4               0.399 0.083         4.80    0     <0.001***
+    ## 12 EvenScaled:TRTInter  0.17  0.096         1.77    0.081 0.081    
+    ## 13 EvenScaled:PC1      -0.041 0.036        -1.14    0.259 0.259    
+    ## 14 EvenScaled:PC2       0.01  0.06          0.164   0.87  0.87     
+    ## 15 EvenScaled:PC3      -0.004 0.08         -0.054   0.957 0.957    
+    ## 16 EvenScaled:PC4       0.04  0.084         0.478   0.634 0.634
+
+``` r
+Rich2_res
+```
+
+    ## # A tibble: 16 x 6
+    ##    term                     b    SE `t-statistic` p_value `p-value`
+    ##    <chr>                <dbl> <dbl>         <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)          0.676 0.117         5.78    0     <0.001***
+    ##  2 richScaled           0.104 0.089         1.16    0.248 0.248    
+    ##  3 richScaled2         -0.019 0.029        -0.659   0.512 0.512    
+    ##  4 TRTInter             0.029 0.102         0.285   0.776 0.776    
+    ##  5 Block2               0.114 0.084         1.36    0.178 0.178    
+    ##  6 Block3               0.75  0.088         8.55    0     <0.001***
+    ##  7 Block4               0.401 0.088         4.56    0     <0.001***
+    ##  8 PC1                 -0.013 0.039        -0.341   0.734 0.734    
+    ##  9 PC2                 -0.061 0.044        -1.38    0.172 0.172    
+    ## 10 PC3                 -0.166 0.081        -2.06    0.043 0.043*   
+    ## 11 PC4                  0.011 0.069         0.153   0.879 0.879    
+    ## 12 richScaled:TRTInter -0.136 0.105        -1.29    0.2   0.2      
+    ## 13 richScaled:PC1       0.034 0.04          0.849   0.398 0.398    
+    ## 14 richScaled:PC2      -0.005 0.056        -0.09    0.928 0.928    
+    ## 15 richScaled:PC3       0.031 0.076         0.403   0.688 0.688    
+    ## 16 richScaled:PC4      -0.074 0.08         -0.922   0.359 0.359
+
+## 9/22/2022
+
+Evaluate the model w/o treatment and treatment interactions (ANCOVA)
+with all root traits and then with ONLY PC2 across all treatments.
+
+``` r
+ancova_invSim_m <- lm(RelativeFitness ~ InvSimScaled + Block + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4 , RootFitAlpha)
+
+ancova_invSim_all <- Anova(ancova_invSim_m, type = "III") %>% 
   tidy() %>% 
   tidy_more()
 
-ancova_rich <- lm(RelativeFitness ~ richScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
+ancova_rich_m <- lm(RelativeFitness ~ richScaled + Block + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4 , RootFitAlpha)
 
-ancova_rich <- anova(ancova_rich) %>% 
+ancova_rich_all <- Anova(ancova_rich_m, type = "III") %>% 
   tidy( ) %>% 
   tidy_more()
 
-ancova_even <- lm(RelativeFitness ~ EvenScaled*TRT + Block + PC1 + PC2 + PC3 + PC4 , RootFitAlpha)
+ancova_even_m <- lm(RelativeFitness ~ EvenScaled + Block + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 , RootFitAlpha)
 
-ancova_even <- anova(ancova_even) %>% 
+ancova_even_all <- Anova(ancova_even_m, type = "III") %>% 
   tidy() %>% 
   tidy_more()
 
-ancova_invSim
+ancova_invSim_all
 ```
 
-    ## # A tibble: 9 x 7
-    ##   Term                DF    SS meansq `F-value` p.value P        
-    ##   <chr>            <dbl> <dbl>  <dbl>     <dbl>   <dbl> <chr>    
-    ## 1 InvSimScaled         1 0.323  0.323     4.23    0.043 0.043*   
-    ## 2 TRT                  1 0.105  0.105     1.38    0.244 0.244    
-    ## 3 Block                3 7.80   2.60     34.1     0     <0.001***
-    ## 4 PC1                  1 0.043  0.043     0.569   0.453 0.453    
-    ## 5 PC2                  1 0.002  0.002     0.033   0.857 0.857    
-    ## 6 PC3                  1 0.237  0.237     3.11    0.081 0.081    
-    ## 7 PC4                  1 0.002  0.002     0.029   0.865 0.865    
-    ## 8 InvSimScaled:TRT     1 0      0         0.001   0.981 0.981    
-    ## 9 Residuals           86 6.56   0.076    NA      NA     <NA>
+    ## # A tibble: 12 x 6
+    ##    Term                SS    DF `F-value` p.value P        
+    ##    <chr>            <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)      8.87      1   115.      0     <0.001***
+    ##  2 InvSimScaled     0.019     1     0.247   0.621 0.621    
+    ##  3 Block            7.53      3    32.5     0     <0.001***
+    ##  4 PC1              0         1     0.004   0.947 0.947    
+    ##  5 PC2              0.074     1     0.964   0.329 0.329    
+    ##  6 PC3              0.243     1     3.14    0.08  0.08     
+    ##  7 PC4              0.002     1     0.025   0.874 0.874    
+    ##  8 InvSimScaled:PC1 0.003     1     0.035   0.852 0.852    
+    ##  9 InvSimScaled:PC2 0         1     0.001   0.97  0.97     
+    ## 10 InvSimScaled:PC3 0.017     1     0.217   0.642 0.642    
+    ## 11 InvSimScaled:PC4 0.026     1     0.332   0.566 0.566    
+    ## 12 Residuals        6.48     84    NA      NA     <NA>
 
 ``` r
-ancova_rich
+ancova_rich_all
 ```
 
-    ## # A tibble: 9 x 7
-    ##   Term              DF    SS meansq `F-value` p.value P        
-    ##   <chr>          <dbl> <dbl>  <dbl>     <dbl>   <dbl> <chr>    
-    ## 1 richScaled         1 1.06   1.06     14.0     0     <0.001***
-    ## 2 TRT                1 0.224  0.224     2.96    0.089 0.089    
-    ## 3 Block              3 6.95   2.32     30.7     0     <0.001***
-    ## 4 PC1                1 0.03   0.03      0.394   0.532 0.532    
-    ## 5 PC2                1 0.003  0.003     0.034   0.855 0.855    
-    ## 6 PC3                1 0.252  0.252     3.34    0.071 0.071    
-    ## 7 PC4                1 0.004  0.004     0.054   0.817 0.817    
-    ## 8 richScaled:TRT     1 0.05   0.05      0.666   0.417 0.417    
-    ## 9 Residuals         86 6.50   0.076    NA      NA     <NA>
+    ## # A tibble: 12 x 6
+    ##    Term              SS    DF `F-value` p.value P        
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)    8.99      1   118.      0     <0.001***
+    ##  2 richScaled     0         1     0.001   0.978 0.978    
+    ##  3 Block          6.88      3    30.0     0     <0.001***
+    ##  4 PC1            0.009     1     0.121   0.729 0.729    
+    ##  5 PC2            0.112     1     1.46    0.23  0.23     
+    ##  6 PC3            0.33      1     4.31    0.041 0.041*   
+    ##  7 PC4            0.002     1     0.029   0.865 0.865    
+    ##  8 richScaled:PC1 0         1     0       0.985 0.985    
+    ##  9 richScaled:PC2 0.017     1     0.227   0.635 0.635    
+    ## 10 richScaled:PC3 0.009     1     0.117   0.733 0.733    
+    ## 11 richScaled:PC4 0.083     1     1.08    0.301 0.301    
+    ## 12 Residuals      6.42     84    NA      NA     <NA>
 
 ``` r
-ancova_even
+ancova_even_all
 ```
 
-    ## # A tibble: 9 x 7
-    ##   Term              DF    SS meansq `F-value` p.value P        
-    ##   <chr>          <dbl> <dbl>  <dbl>     <dbl>   <dbl> <chr>    
-    ## 1 EvenScaled         1 1.40   1.40     18.7     0     <0.001***
-    ## 2 TRT                1 0.261  0.261     3.49    0.065 0.065    
-    ## 3 Block              3 6.60   2.20     29.4     0     <0.001***
-    ## 4 PC1                1 0.027  0.027     0.362   0.549 0.549    
-    ## 5 PC2                1 0.003  0.003     0.038   0.847 0.847    
-    ## 6 PC3                1 0.235  0.235     3.13    0.08  0.08     
-    ## 7 PC4                1 0.005  0.005     0.069   0.793 0.793    
-    ## 8 EvenScaled:TRT     1 0.086  0.086     1.15    0.287 0.287    
-    ## 9 Residuals         86 6.44   0.075    NA      NA     <NA>
+    ## # A tibble: 12 x 6
+    ##    Term              SS    DF `F-value` p.value P        
+    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ##  1 (Intercept)    9.18      1   119.      0     <0.001***
+    ##  2 EvenScaled     0.013     1     0.165   0.686 0.686    
+    ##  3 Block          6.62      3    28.7     0     <0.001***
+    ##  4 PC1            0.001     1     0.013   0.91  0.91     
+    ##  5 PC2            0.073     1     0.95    0.333 0.333    
+    ##  6 PC3            0.271     1     3.52    0.064 0.064    
+    ##  7 PC4            0.002     1     0.023   0.88  0.88     
+    ##  8 EvenScaled:PC1 0.005     1     0.067   0.796 0.796    
+    ##  9 EvenScaled:PC2 0.011     1     0.146   0.704 0.704    
+    ## 10 EvenScaled:PC3 0.007     1     0.087   0.769 0.769    
+    ## 11 EvenScaled:PC4 0.023     1     0.303   0.583 0.583    
+    ## 12 Residuals      6.46     84    NA      NA     <NA>
 
-OUT of curiousity I ran the fuller model within competition.
+With just PC2
+
+*Within* alone treatment
 
 ``` r
-comp_invSim2 <- lm(RelativeFitness ~ InvSimScaled + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
-                   filter(TRT != "Alone"))
+ancova_invSim_m <- lm(RelativeFitness ~ InvSimScaled + Block + InvSimScaled*PC2, RootFitAlpha)
 
-comp_invSim_res2 <- comp_invSim2 %>% 
-                        tidy() %>% 
-                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
-                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
-                        rename(`p_value` = `p.value`) %>% 
-                        tidy_p()
+ancova_invSim2 <- Anova(ancova_invSim_m, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
 
-comp_invSim_res2
+ancova_rich_m <- lm(RelativeFitness ~ richScaled + Block + richScaled*PC2, RootFitAlpha)
+
+ancova_rich2 <- Anova(ancova_rich_m, type = "III") %>% 
+  tidy( ) %>% 
+  tidy_more()
+
+ancova_even_m <- lm(RelativeFitness ~ EvenScaled + Block + EvenScaled*PC2, RootFitAlpha)
+
+ancova_even2 <- Anova(ancova_even_m, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invSim2
 ```
 
-    ## # A tibble: 9 x 6
-    ##   term              b    SE `t-statistic` p_value `p-value`
-    ##   <chr>         <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept)   0.674 0.058        11.7     0     <0.001***
-    ## 2 InvSimScaled -0.017 0.026        -0.671   0.504 0.504    
-    ## 3 PC1           0.018 0.044         0.414   0.68  0.68     
-    ## 4 PC2          -0.004 0.061        -0.073   0.942 0.942    
-    ## 5 PC3          -0.053 0.089        -0.594   0.554 0.554    
-    ## 6 PC4          -0.029 0.087        -0.337   0.737 0.737    
-    ## 7 Block2        0.102 0.071         1.43    0.158 0.158    
-    ## 8 Block3        0.789 0.075        10.6     0     <0.001***
-    ## 9 Block4        0.336 0.074         4.53    0     <0.001***
+    ## # A tibble: 6 x 6
+    ##   Term                SS    DF `F-value` p.value P        
+    ##   <chr>            <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)      9.65      1   126.      0     <0.001***
+    ## 2 InvSimScaled     0.01      1     0.136   0.713 0.713    
+    ## 3 Block            7.68      3    33.5     0     <0.001***
+    ## 4 PC2              0.005     1     0.062   0.804 0.804    
+    ## 5 InvSimScaled:PC2 0.005     1     0.063   0.802 0.802    
+    ## 6 Residuals        6.89     90    NA      NA     <NA>
 
 ``` r
-comp_rich2 <- lm(RelativeFitness ~ richScaled+ PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
-                   filter(TRT != "Alone"))
-
-comp_rich_res2 <- comp_rich2 %>% 
-                        tidy() %>% 
-                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
-                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
-                        rename(`p_value` = `p.value`) %>% 
-                        tidy_p()
-comp_rich_res2
+ancova_rich2
 ```
 
-    ## # A tibble: 9 x 6
-    ##   term             b    SE `t-statistic` p_value `p-value`
-    ##   <chr>        <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept)  0.675 0.058        11.7     0     <0.001***
-    ## 2 richScaled  -0.014 0.028        -0.502   0.617 0.617    
-    ## 3 PC1          0.016 0.044         0.373   0.71  0.71     
-    ## 4 PC2         -0.004 0.062        -0.064   0.949 0.949    
-    ## 5 PC3         -0.059 0.088        -0.671   0.505 0.505    
-    ## 6 PC4         -0.022 0.088        -0.255   0.799 0.799    
-    ## 7 Block2       0.098 0.071         1.38    0.174 0.174    
-    ## 8 Block3       0.787 0.075        10.4     0     <0.001***
-    ## 9 Block4       0.341 0.074         4.61    0     <0.001***
+    ## # A tibble: 6 x 6
+    ##   Term              SS    DF `F-value` p.value P        
+    ##   <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)    9.73      1   128.      0     <0.001***
+    ## 2 richScaled     0.005     1     0.066   0.798 0.798    
+    ## 3 Block          6.94      3    30.3     0     <0.001***
+    ## 4 PC2            0.007     1     0.098   0.755 0.755    
+    ## 5 richScaled:PC2 0.035     1     0.464   0.497 0.497    
+    ## 6 Residuals      6.86     90    NA      NA     <NA>
 
 ``` r
-comp_even2 <- lm(RelativeFitness ~ EvenScaled  + PC1 + PC2 + PC3 + PC4 + Block, RootFitAlpha %>% 
-                   filter(TRT != "Alone"))
-
-comp_even_res2 <- comp_even2 %>% 
-                        tidy() %>% 
-                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
-                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
-                        rename(`p_value` = `p.value`) %>% 
-                        tidy_p()
-comp_even_res2
+ancova_even2
 ```
 
-    ## # A tibble: 9 x 6
-    ##   term             b    SE `t-statistic` p_value `p-value`
-    ##   <chr>        <dbl> <dbl>         <dbl>   <dbl> <chr>    
-    ## 1 (Intercept)  0.679 0.057        11.8     0     <0.001***
-    ## 2 EvenScaled   0.001 0.027         0.053   0.958 0.958    
-    ## 3 PC1          0.014 0.044         0.318   0.751 0.751    
-    ## 4 PC2         -0.003 0.062        -0.048   0.962 0.962    
-    ## 5 PC3         -0.063 0.088        -0.71    0.481 0.481    
-    ## 6 PC4         -0.028 0.088        -0.32    0.75  0.75     
-    ## 7 Block2       0.096 0.071         1.35    0.182 0.182    
-    ## 8 Block3       0.775 0.074        10.5     0     <0.001***
-    ## 9 Block4       0.34  0.074         4.58    0     <0.001***
+    ## # A tibble: 6 x 6
+    ##   Term              SS    DF `F-value` p.value P        
+    ##   <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)    9.89      1   130.      0     <0.001***
+    ## 2 EvenScaled     0.035     1     0.457   0.501 0.501    
+    ## 3 Block          6.69      3    29.4     0     <0.001***
+    ## 4 PC2            0.004     1     0.053   0.819 0.819    
+    ## 5 EvenScaled:PC2 0.038     1     0.507   0.478 0.478    
+    ## 6 Residuals      6.83     90    NA      NA     <NA>
+
+By treatment
+
+``` r
+ancova_invSim_m <- lm(RelativeFitness ~ InvSimScaled*TRT + Block + InvSimScaled*PC2, RootFitAlpha)
+
+ancova_invSim2trt <- Anova(ancova_invSim_m, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_rich_m <- lm(RelativeFitness ~ richScaled*TRT + Block + richScaled*PC2, RootFitAlpha)
+
+ancova_rich2trt <- Anova(ancova_rich_m, type = "III") %>% 
+  tidy( ) %>% 
+  tidy_more()
+
+ancova_even_m <- lm(RelativeFitness ~ EvenScaled*TRT + Block + EvenScaled*PC2, RootFitAlpha)
+
+ancova_even2trt <- Anova(ancova_even_m, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invSim2trt
+```
+
+    ## # A tibble: 8 x 6
+    ##   Term                SS    DF `F-value` p.value P        
+    ##   <chr>            <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)      4.73      1    61.0     0     <0.001***
+    ## 2 InvSimScaled     0.002     1     0.031   0.86  0.86     
+    ## 3 TRT              0.058     1     0.746   0.39  0.39     
+    ## 4 Block            7.64      3    32.8     0     <0.001***
+    ## 5 PC2              0.012     1     0.153   0.697 0.697    
+    ## 6 InvSimScaled:TRT 0         1     0.003   0.955 0.955    
+    ## 7 InvSimScaled:PC2 0.001     1     0.007   0.932 0.932    
+    ## 8 Residuals        6.83     88    NA      NA     <NA>
+
+``` r
+ancova_rich2trt
+```
+
+    ## # A tibble: 8 x 6
+    ##   Term              SS    DF `F-value` p.value P        
+    ##   <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)    4.11      1    53.7     0     <0.001***
+    ## 2 richScaled     0.077     1     1.01    0.318 0.318    
+    ## 3 TRT            0.089     1     1.17    0.283 0.283    
+    ## 4 Block          6.81      3    29.6     0     <0.001***
+    ## 5 PC2            0.033     1     0.428   0.515 0.515    
+    ## 6 richScaled:TRT 0.067     1     0.875   0.352 0.352    
+    ## 7 richScaled:PC2 0.003     1     0.035   0.852 0.852    
+    ## 8 Residuals      6.74     88    NA      NA     <NA>
+
+``` r
+ancova_even2trt
+```
+
+    ## # A tibble: 8 x 6
+    ##   Term              SS    DF `F-value` p.value P        
+    ##   <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>    
+    ## 1 (Intercept)    4.08      1    54.0     0     <0.001***
+    ## 2 EvenScaled     0.16      1     2.12    0.149 0.149    
+    ## 3 TRT            0.117     1     1.55    0.216 0.216    
+    ## 4 Block          6.48      3    28.6     0     <0.001***
+    ## 5 PC2            0.03      1     0.393   0.532 0.532    
+    ## 6 EvenScaled:TRT 0.111     1     1.47    0.229 0.229    
+    ## 7 EvenScaled:PC2 0.002     1     0.022   0.883 0.883    
+    ## 8 Residuals      6.65     88    NA      NA     <NA>
 
 #### MANTEL test (supplimentary)
 
@@ -1350,11 +1943,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7622 
+    ##       Significance: 0.7716 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0728 0.0975 0.1170 0.1428 
+    ## 0.0750 0.0978 0.1187 0.1409 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1371,11 +1964,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.07 
+    ##       Significance: 0.0718 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0590 0.0764 0.0922 0.1108 
+    ## 0.0592 0.0783 0.0947 0.1109 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1392,11 +1985,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1336 
+    ##       Significance: 0.1276 
     ## 
     ## Upper quantiles of permutations (null model):
-    ##   90%   95% 97.5%   99% 
-    ## 0.083 0.106 0.128 0.150 
+    ##    90%    95%  97.5%    99% 
+    ## 0.0809 0.1063 0.1257 0.1497 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1413,18 +2006,42 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7625 
+    ##       Significance: 0.7599 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0747 0.0958 0.1158 0.1402 
+    ## 0.0731 0.0947 0.1151 0.1377 
     ## Permutation: free
     ## Number of permutations: 9999
 
-# Export ANCOVA tables
+# Export models
 
 ``` r
-#tables <- list("rich" = ancova_res_rich, "even" = ancova_res_even, "invSim" = ancova_res_sim)
+tables <- list(cntrl_even_res = cntrl_even_res, 
+all_even_res2 = all_even_res2, 
+cntrl_invSim_res = cntrl_invSim_res, 
+all_invSim_res2 = all_invSim_res2, 
+cntrl_rich_res = cntrl_rich_res, 
+all_rich_res2 = all_rich_res2, 
+ancova_even = ancova_even, 
+ancova_invSim = ancova_invSim, 
+ancova_rich = ancova_rich,
+comp_even_res2 = comp_even_res2, 
+comp_invSim_res2 = comp_invSim_res2, 
+comp_rich_res2 = comp_rich_res2,
+Even2_res = Even2_res, 
+Rich2_res = Rich2_res, 
+InvSim2_res = InvSim2_res,
+ancova_invSim_tres = ancova_invSim_tres,
+ancova_rich_tres = ancova_rich_tres,
+ancova_even_tres = ancova_even_tres,
+ancova_invSim_all = ancova_invSim_all,
+ancova_rich_all = ancova_rich_all,
+ancova_even_all = ancova_even_all,
+ancova_even2 = ancova_even2, 
+ancova_invSim2 = ancova_invSim2, 
+ancova_rich2 = ancova_rich2,
+ancova_even2trt = ancova_even2trt, ancova_invSim2trt = ancova_invSim2trt, ancova_rich2trt = ancova_rich2trt)
 
-#writexl::write_xlsx(tables, "ancova_tables.xlsx")
+writexl::write_xlsx(tables, "selection_tables.xlsx")
 ```

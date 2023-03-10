@@ -1,38 +1,27 @@
-RhizMicrobiome_GenusLevel
+Simplified Analysis
 ================
 Sara Colom
 2/8/2020
 
--   [Sample sizes](#sample-sizes)
-    -   [Table sample number by species and
-        treatment](#table-sample-number-by-species-and-treatment)
-    -   [Table number of maternal line per
-        species](#table-number-of-maternal-line-per-species)
--   [Load Libraries](#load-libraries)
--   [Read in Data](#read-in-data)
--   [Sample sizes](#sample-sizes-1)
-    -   [Alpha Diversity](#alpha-diversity)
-    -   [Test for differences](#test-for-differences)
--   [Linear mixed models](#linear-mixed-models)
--   [ANOVA Test for treatment within I. purpurea
-    (Table 1)](#anova-test-for-treatment-within-i-purpurea-table-1)
--   [Community Composition](#community-composition)
-    -   [Beta Diversity](#beta-diversity)
--   [PERMANOVA (Table 2)](#permanova-table-2)
--   [Correlations with root traits](#correlations-with-root-traits)
-    -   [Prep root data](#prep-root-data)
-    -   [Table 3. Within species (root traits and
-        alphadiv)](#table-3-within-species-root-traits-and-alphadiv)
-    -   [Plotting significant linear
-        associations](#plotting-significant-linear-associations)
-    -   [Linear mixed models (not
-        reported)](#linear-mixed-models-not-reported)
--   [Figure 1](#figure-1)
--   [Figure 2](#figure-2)
--   [ANCOVA](#ancova)
--   [Figure 3](#figure-3)
--   [MANTEL (Table 4)](#mantel-table-4)
--   [Export ANCOVA tables](#export-ancova-tables)
+# Objectives
+
+Evaluate microbial community diversity at the Genus level and its
+relationship with plant root architecture and plant fitness across and
+between stressful enviornments.
+
+We address the following specific research aims:
+
+-   **Aim 1:** Do measures of microbial communities vary with root
+    phenotypes? (e.g., root architecture, morphology, and size)
+-   **Aim 2:** Within a non stressful environment or control treatment
+    (i.e., no competition), does plant fitness vary by measures of
+    microbial community after adjusting for root architecture? Is there
+    evidence that plant fitness varies according to microbial community
+    by root architecture interaction?
+-   **Aim 3:** Question 2 extended–do these relationships change in
+    stressful environment? In other words, does belowground plant-plant
+    competition alter relationships with plant fitness and microbial
+    communities?
 
 ## Sample sizes
 
@@ -54,52 +43,19 @@ Sara Colom
 # Load Libraries
 
 ``` r
+library(tidyverse)
 library(phyloseq)
-library(ggplot2)
-library(ape)
 library(vegan)
-library(plyr)
-library(dplyr)
-library(scales)
-library(grid)
-library(reshape2)
-library(pegas)
-library(pgirmess)
-library(multcomp)
-library(multcompView)
-library(ggpubr)
-library(ggcorrplot)
-library(RColorBrewer)
 library(broom)
-library(ggthemes)
-library(corrplot)
-library(Hmisc)
-library(emmeans)
-library(lmerTest)
-library(interactions)
-library(jtools)
 library(MASS)
+library(ggpubr)
+library(grid)
 library(stringr)
+library(broom)
+library(car)
 
 source("miSeq.R")
 source("functions.R")
-
-# Aesthetics
-Tx<-theme(axis.text.y = element_text(size = 12),
-          axis.title.y = element_text(size = 20)) +
-          theme(axis.text.x = element_text(vjust = 1, hjust=1, angle=0, size = 20),
-          axis.title.x = element_text(angle=0, size = 12),
-          plot.title=element_text(size = 25,hjust=0))
-
-# Aesthetics
-Tx2<-theme(axis.text.y = element_text(size = 12),
-          axis.title.y = element_text(size = 12)) +
-          theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 25),
-          axis.title.x = element_text(size = 25),
-          plot.title=element_text(size = 25,hjust=0))
-
-GoldGrey <- c("#F1CE63", "#79706E")
-GreenBlue <- c("#59A14F", "#4E79A7")
 ```
 
 # Read in Data
@@ -124,11 +80,14 @@ alpha %>%
   count(Block)
 ```
 
-    ##   Block  n
-    ## 1     1 24
-    ## 2     2 25
-    ## 3     3 26
-    ## 4     4 25
+| Block |   n |
+|:------|----:|
+| 1     |  24 |
+| 2     |  25 |
+| 3     |  26 |
+| 4     |  25 |
+
+#### Samples of treatment within IP
 
 ``` r
 alpha %>% 
@@ -136,17 +95,15 @@ alpha %>%
   count(TRT)
 ```
 
-    ##     TRT  n
-    ## 1 Alone 27
-    ## 2 Inter 73
-
-#### Samples of treatment within IP
+| TRT   |   n |
+|:------|----:|
+| Alone |  27 |
+| Inter |  73 |
 
 ## Alpha Diversity
 
 ``` r
 # Visualize data distribution w Violin plots within I.purpurea
-
 
 p <- ggplot(alpha %>% filter(Species == "Ip"), aes(x = TRT, y = rich)) +
   geom_violin(trim = FALSE, aes(fill = TRT), alpha = 0.3) + 
@@ -190,187 +147,6 @@ ggarrange(p, q, t, v, common.legend = T, ncol = 2, nrow = 2)
 
 ![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-## Test for differences
-
-# Linear mixed models
-
-``` r
-# Test for treatment within I. purpurea
-
-
-RichLmm <- lmer(rich ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-
-InvLmm <- lmer(InvSimp ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-
-SimLmm <- lmer(sim ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-
-EvenLmm <- lmer(even ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-```
-
-    ## boundary (singular) fit: see help('isSingular')
-
-``` r
-anova(RichLmm)
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##        Sum Sq Mean Sq NumDF  DenDF F value   Pr(>F)   
-    ## TRT    1320.5  1320.5     1 87.801  1.4442 0.232690   
-    ## Block 13858.8  4619.6     3 26.431  5.0524 0.006744 **
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-ranova(RichLmm)
-```
-
-    ## ANOVA-like table for random-effects: Single term deletions
-    ## 
-    ## Model:
-    ## rich ~ TRT + Block + (1 | Block:ML)
-    ##                npar  logLik    AIC    LRT Df Pr(>Chisq)
-    ## <none>            7 -467.21 948.42                     
-    ## (1 | Block:ML)    6 -467.22 946.44 0.0238  1     0.8774
-
-``` r
-anova(InvLmm)
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##       Sum Sq Mean Sq NumDF  DenDF F value Pr(>F)  
-    ## TRT     0.27   0.273     1 82.613  0.0035 0.9533  
-    ## Block 721.76 240.588     3 24.544  3.0419 0.0479 *
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-ranova(InvLmm)
-```
-
-    ## ANOVA-like table for random-effects: Single term deletions
-    ## 
-    ## Model:
-    ## InvSimp ~ TRT + Block + (1 | Block:ML)
-    ##                npar  logLik    AIC    LRT Df Pr(>Chisq)
-    ## <none>            7 -354.94 723.88                     
-    ## (1 | Block:ML)    6 -355.46 722.92 1.0486  1     0.3058
-
-``` r
-anova(SimLmm)
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##           Sum Sq    Mean Sq NumDF  DenDF F value Pr(>F)
-    ## TRT   0.00002357 2.3571e-05     1 79.747  0.4399 0.5091
-    ## Block 0.00033833 1.1278e-04     3 22.261  2.1049 0.1283
-
-``` r
-ranova(SimLmm)
-```
-
-    ## ANOVA-like table for random-effects: Single term deletions
-    ## 
-    ## Model:
-    ## sim ~ TRT + Block + (1 | Block:ML)
-    ##                npar logLik     AIC    LRT Df Pr(>Chisq)
-    ## <none>            7 318.62 -623.24                     
-    ## (1 | Block:ML)    6 317.94 -623.89 1.3513  1      0.245
-
-``` r
-anova(EvenLmm)
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##           Sum Sq    Mean Sq NumDF DenDF F value   Pr(>F)   
-    ## TRT   2.2628e-07 2.2628e-07     1    95  1.1782 0.280475   
-    ## Block 2.9697e-06 9.8990e-07     3    95  5.1542 0.002408 **
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-ranova(EvenLmm)
-```
-
-    ## ANOVA-like table for random-effects: Single term deletions
-    ## 
-    ## Model:
-    ## even ~ TRT + Block + (1 | Block:ML)
-    ##                npar logLik     AIC LRT Df Pr(>Chisq)
-    ## <none>            7 591.89 -1169.8                  
-    ## (1 | Block:ML)    6 591.89 -1171.8   0  1          1
-
-# ANOVA Test for treatment within I. purpurea (Table 1)
-
-``` r
-alpha.purp <- alpha %>% filter(Species == "Ip")
-
-aov.Richness <- lm(rich ~ TRT + Block, alpha.purp)
-aov.simpsonInv <- lm(InvSimp ~ TRT + Block, alpha.purp)
-aov.simpson <- lm(sim ~ TRT + Block, alpha.purp)
-aov.evenness <- lm(even ~ TRT + Block, alpha.purp)
-aov.shannon <- lm(shan ~ TRT + Block, alpha.purp)
-
-
-#Call for the summary of that ANOVA, which will include P-values
-anova(aov.Richness)
-```
-
-    FALSE Analysis of Variance Table
-    FALSE 
-    FALSE Response: rich
-    FALSE           Df Sum Sq Mean Sq F value   Pr(>F)   
-    FALSE TRT        1    962   961.9  1.0381 0.310860   
-    FALSE Block      3  14694  4897.8  5.2858 0.002052 **
-    FALSE Residuals 95  88028   926.6                    
-    FALSE ---
-    FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-anova(aov.simpsonInv)
-```
-
-    FALSE Analysis of Variance Table
-    FALSE 
-    FALSE Response: InvSimp
-    FALSE           Df Sum Sq Mean Sq F value  Pr(>F)  
-    FALSE TRT        1    2.5    2.54  0.0288 0.86562  
-    FALSE Block      3 1031.6  343.85  3.9020 0.01122 *
-    FALSE Residuals 95 8371.5   88.12                  
-    FALSE ---
-    FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-anova(aov.simpson)
-```
-
-    FALSE Analysis of Variance Table
-    FALSE 
-    FALSE Response: sim
-    FALSE           Df    Sum Sq    Mean Sq F value  Pr(>F)  
-    FALSE TRT        1 0.0000171 1.7100e-05  0.2785 0.59889  
-    FALSE Block      3 0.0005091 1.6970e-04  2.7643 0.04617 *
-    FALSE Residuals 95 0.0058321 6.1391e-05                  
-    FALSE ---
-    FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-anova(aov.evenness)
-```
-
-    FALSE Analysis of Variance Table
-    FALSE 
-    FALSE Response: even
-    FALSE           Df     Sum Sq    Mean Sq F value   Pr(>F)   
-    FALSE TRT        1 1.9700e-07 1.9704e-07  1.0259 0.313685   
-    FALSE Block      3 2.9697e-06 9.8990e-07  5.1542 0.002408 **
-    FALSE Residuals 95 1.8245e-05 1.9206e-07                    
-    FALSE ---
-    FALSE Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-# No significant differences
-```
-
 # Community Composition
 
 ## Beta Diversity
@@ -408,29 +184,10 @@ colnames(SampData)[1] <- "Duplicates"
 
 SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
 
-physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData,by="Duplicates"))
+physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData, by="Duplicates"))
 ```
 
-# PERMANOVA (Table 2)
-
-``` r
-## All experiment, add variable treatment, then species
-sampledf <- data.frame(sample_data(physeq.scale))
-
-physeq.purp = subset_samples(physeq.scale, Species == "Ip")
-
-treatment <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(TRT)
-
-block <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(Block)
-
-output <- adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
-```
-
-# Correlations with root traits
+# Testing linear relationships between root architecture & microbial diversity
 
 ## Prep root data
 
@@ -438,7 +195,7 @@ output <- adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bra
 RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")])
 ```
 
-## Table 3. Within species (root traits and alphadiv)
+### Evaluate relationship between alpha diversity and root traits
 
 ``` r
 #summary(glht(SimpInvPC1, mcp(rank="Tukey")))
@@ -447,9 +204,9 @@ RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")
 ##################### SUBSET for I.purpurea #####################
 #################################################################
 
-
 RootAlphaPurp <- droplevels(RootAlphaObs %>% filter(Species == "Ip"))
 RootAlphaPurp$Comp <- sub(".*\\-", "", RootAlphaPurp$Combos)
+
 
 ### Linear regressions
 
@@ -660,18 +417,14 @@ summary(RichPC2)
 car::Anova(mod = lm(rich ~ PC2 + Block + TRT*PC2, RootAlphaPurp), type = "III")
 ```
 
-    ## Anova Table (Type III tests)
-    ## 
-    ## Response: rich
-    ##              Sum Sq Df   F value  Pr(>F)    
-    ## (Intercept) 1331420  1 1609.8076 < 2e-16 ***
-    ## PC2            3433  1    4.1509 0.04692 *  
-    ## Block          8117  3    3.2714 0.02865 *  
-    ## TRT             750  1    0.9064 0.34565    
-    ## PC2:TRT         416  1    0.5030 0.48150    
-    ## Residuals     41353 50                      
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+|             |       Sum Sq |  Df |      F value |    Pr(>F) |
+|:------------|-------------:|----:|-------------:|----------:|
+| (Intercept) | 1331419.7296 |   1 | 1609.8076381 | 0.0000000 |
+| PC2         |    3433.0814 |   1 |    4.1509079 | 0.0469222 |
+| Block       |    8117.0832 |   3 |    3.2714308 | 0.0286515 |
+| TRT         |     749.6520 |   1 |    0.9063975 | 0.3456519 |
+| PC2:TRT     |     415.9739 |   1 |    0.5029503 | 0.4815006 |
+| Residuals   |   41353.3797 |  50 |           NA |        NA |
 
 ``` r
 EvenPC2 <- lm(even ~ PC2 + Block + TRT , RootAlphaPurp) 
@@ -849,18 +602,14 @@ summary(SimpPC4)
 car::Anova(mod = lm(sim ~ PC4 + Block + TRT*PC4, RootAlphaPurp), type = "III")
 ```
 
-    ## Anova Table (Type III tests)
-    ## 
-    ## Response: sim
-    ##             Sum Sq Df    F value Pr(>F)    
-    ## (Intercept) 9.1182  1 1.5163e+05 <2e-16 ***
-    ## PC4         0.0000  1 1.9700e-01 0.6591    
-    ## Block       0.0003  3 1.4874e+00 0.2293    
-    ## TRT         0.0001  1 8.4520e-01 0.3623    
-    ## PC4:TRT     0.0000  1 7.9930e-01 0.3756    
-    ## Residuals   0.0030 50                      
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+|             |    Sum Sq |  Df |      F value |    Pr(>F) |
+|:------------|----------:|----:|-------------:|----------:|
+| (Intercept) | 9.1181664 |   1 | 1.516301e+05 | 0.0000000 |
+| PC4         | 0.0000118 |   1 | 1.969897e-01 | 0.6590766 |
+| Block       | 0.0002683 |   3 | 1.487436e+00 | 0.2292655 |
+| TRT         | 0.0000508 |   1 | 8.451539e-01 | 0.3623409 |
+| PC4:TRT     | 0.0000481 |   1 | 7.993077e-01 | 0.3755839 |
+| Residuals   | 0.0030067 |  50 |           NA |        NA |
 
 ``` r
 # Repeat & remove outlier
@@ -980,6 +729,258 @@ summary(EvenPC4)
     ## Multiple R-squared:  0.1283, Adjusted R-squared:  0.04289 
     ## F-statistic: 1.502 on 5 and 51 DF,  p-value: 0.2057
 
+## Make tables of results ABOVE with only root term in model and combine
+
+PC1
+
+``` r
+SimpInvPC1_res <- SimpInvPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`)
+
+
+
+SimpPC1_res <- SimpPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`)
+
+RichPC1_res <- RichPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`)  
+
+EvenPC1_res <- EvenPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`)  %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`) 
+
+microbe_root_lm_res_pc1 <- SimpInvPC1_res %>% 
+  bind_rows(
+  RichPC1_res
+  ) %>% 
+  bind_rows(
+    EvenPC1_res
+  ) %>% 
+  bind_rows(SimpPC1_res) 
+  
+microbe_root_lm_res_pc1 
+```
+
+| Microbial community metric | Root topology |
+|:---------------------------|:--------------|
+| Inverse Simpson Diversity  | 1.02 +/- 1.43 |
+| Sp. richness               | 3.38 +/- 4.65 |
+| Sp. evenness               | 0 +/- 0       |
+| Simpson Diversity          | 0 +/- 0       |
+
+PC2
+
+``` r
+SimpInvPC2_res <- SimpInvPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)
+
+SimpPC2_res <- SimpPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)  
+
+RichPC2_res <- RichPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)  
+
+EvenPC2_res <- EvenPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)  
+
+microbe_root_lm_res_pc2 <- SimpInvPC2_res %>% 
+  bind_rows(
+  RichPC2_res
+  ) %>% 
+  bind_rows(
+    EvenPC2_res
+  ) %>% 
+  bind_rows(SimpPC2_res) 
+  
+microbe_root_lm_res_pc2  
+```
+
+| Microbial community metric | Root architecture |
+|:---------------------------|:------------------|
+| Inverse Simpson Diversity  | -0.56 +/- 0.73    |
+| Sp. richness               | -5.73 +/- 2.22    |
+| Sp. evenness               | 0 +/- 0           |
+| Simpson Diversity          | 0 +/- 0           |
+
+PC3
+
+``` r
+SimpInvPC3_res <- SimpInvPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+SimpPC3_res <- SimpPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+RichPC3_res <- RichPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+EvenPC3_res <- EvenPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+microbe_root_lm_res_pc3 <- SimpInvPC3_res %>% 
+  bind_rows(
+  RichPC3_res
+  ) %>% 
+  bind_rows(
+    EvenPC3_res
+  ) %>% 
+  bind_rows(SimpPC3_res)
+  
+microbe_root_lm_res_pc3  
+```
+
+| Microbial community metric | Root size     |
+|:---------------------------|:--------------|
+| Inverse Simpson Diversity  | 0.53 +/- 0.89 |
+| Sp. richness               | 2 +/- 2.81    |
+| Sp. evenness               | 0 +/- 0       |
+| Simpson Diversity          | 0 +/- 0       |
+
+PC4
+
+``` r
+SimpInvPC4_res2 <- SimpInvPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`)    
+
+SimpPC4_res2 <- SimpPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`) 
+
+RichPC4_res2 <- RichPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`) 
+
+EvenPC4_res2 <- EvenPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`) 
+
+microbe_root_lm_res_pc4 <- SimpInvPC4_res2 %>% 
+  bind_rows(
+  RichPC4_res2
+  ) %>% 
+  bind_rows(
+    EvenPC4_res2
+  ) %>% 
+  bind_rows(SimpPC4_res2)
+  
+microbe_root_lm_res_pc4 
+```
+
+| Microbial community metric | Root morphology |
+|:---------------------------|:----------------|
+| Inverse Simpson Diversity  | 1.9 +/- 1.09    |
+| Sp. richness               | 3.5 +/- 3.52    |
+| Sp. evenness               | 0 +/- 0         |
+| Simpson Diversity          | 0 +/- 0         |
+
 ## Plotting significant linear associations
 
 ``` r
@@ -1008,121 +1009,17 @@ P2.even <- ggplot() +
   theme(legend.text = element_text(size = 12)) +
   theme(legend.position = "top") +
   guides(colour = guide_legend(override.aes = list(size = 3)))
-
-
-# Root morphology on species diversity Simpson metric
-
-P4.Sim <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC4, sim), alpha = 0.5, size = 3, color = "brown") +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC4, sim), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
-  theme_classic() +
-  ylab("Simpson") +
-  xlab("Root Morphology (PC4)") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
-```
-
-## Linear mixed models (not reported)
-
-``` r
-### Simpson
-SimpLMM <- lmer(sim ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
-```
-
-    ## boundary (singular) fit: see help('isSingular')
-
-``` r
-anova(SimpLMM)
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##           Sum Sq    Mean Sq NumDF DenDF F value  Pr(>F)  
-    ## TRT   0.00003472 3.4721e-05     1    95  0.5656 0.45388  
-    ## Block 0.00050911 1.6970e-04     3    95  2.7643 0.04617 *
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-ranova(SimpLMM)
-```
-
-    ## ANOVA-like table for random-effects: Single term deletions
-    ## 
-    ## Model:
-    ## sim ~ TRT + Block + (1 | ML)
-    ##          npar logLik     AIC         LRT Df Pr(>Chisq)
-    ## <none>      7 317.94 -621.89                          
-    ## (1 | ML)    6 317.94 -623.89 -4.5475e-13  1          1
-
-``` r
-### Inverse Simpson
-SimpInvLMM <- lmer(InvSimp ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
-```
-
-    ## boundary (singular) fit: see help('isSingular')
-
-``` r
-anova(SimpInvLMM)
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##        Sum Sq Mean Sq NumDF DenDF F value  Pr(>F)  
-    ## TRT      0.48    0.48     1    95  0.0055 0.94112  
-    ## Block 1031.56  343.85     3    95  3.9020 0.01122 *
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-ranova(SimpInvLMM)
-```
-
-    ## ANOVA-like table for random-effects: Single term deletions
-    ## 
-    ## Model:
-    ## InvSimp ~ TRT + Block + (1 | ML)
-    ##          npar  logLik    AIC LRT Df Pr(>Chisq)
-    ## <none>      7 -355.46 724.92                  
-    ## (1 | ML)    6 -355.46 722.92   0  1          1
-
-``` r
-### Inverse Simpson
-RichLMM <- lmer(rich ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
-anova(RichLMM)
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##        Sum Sq Mean Sq NumDF  DenDF F value   Pr(>F)   
-    ## TRT    1393.7  1393.7     1 91.101  1.5271 0.219729   
-    ## Block 14143.2  4714.4     3 92.228  5.1656 0.002407 **
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-ranova(RichLMM)
-```
-
-    ## ANOVA-like table for random-effects: Single term deletions
-    ## 
-    ## Model:
-    ## rich ~ TRT + Block + (1 | ML)
-    ##          npar  logLik    AIC     LRT Df Pr(>Chisq)
-    ## <none>      7 -467.16 948.31                      
-    ## (1 | ML)    6 -467.22 946.44 0.12747  1     0.7211
-
-``` r
-LeafData$Sample_ID <- paste(LeafData$Position, ifelse(grepl("Ihed", LeafData$ML), "H", "P"), sep="")
 ```
 
 ``` r
 # Calculate relative fitness
 # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
 
-MeanSeedNumber <- aggregate(SeedNumber ~ Trt + Species, Fitness, mean)
-
-colnames(MeanSeedNumber) <- c("Trt", "Species", "MeanSeedNumber")
+Fitness <- Fitness %>% 
+  group_by(Species, Trt) %>% 
+  mutate(mean_seend_num = mean(SeedNumber, na.rm = T)) %>% 
+  mutate(rel_fit = SeedNumber/mean_seend_num) %>% 
+  ungroup()
 
 Ipurp.Fit <- Fitness %>%
   filter(Species == "Ip")
@@ -1130,58 +1027,7 @@ Ipurp.Fit <- Fitness %>%
 Ipurp.Alpha <- alpha %>%
   filter(Species == "Ip")
 
-FitnessPurp <- merge(Ipurp.Fit, MeanSeedNumber, by=c("Trt", "Species"))
-FitnessPurp$RelativeFit <- FitnessPurp$SeedNumber/FitnessPurp$MeanSeedNumber
-FitnessPurp$Block <- as.factor(FitnessPurp$Block)
-
-FitnessPurp2 <- merge(FitnessPurp, LeafData)
-str(FitnessPurp2)
-```
-
-    ## 'data.frame':    385 obs. of  24 variables:
-    ##  $ Trt            : chr  "Alone" "Alone" "Alone" "Alone" ...
-    ##  $ Species        : chr  "Ip" "Ip" "Ip" "Ip" ...
-    ##  $ Position       : chr  "102" "114" "136" "138" ...
-    ##  $ Block          : Factor w/ 4 levels "1","2","3","4": 1 1 1 1 1 1 1 1 1 1 ...
-    ##  $ Order          : int  102 114 136 138 151 153 172 203 204 213 ...
-    ##  $ ML             : chr  "PA4.2Ip" "PA4.15Ip" "PA4.2Ip" "PA4.11Ip" ...
-    ##  $ UniqId         : chr  "102Ip" "114Ip" "136Ip" "138Ip" ...
-    ##  $ GerminationDate: chr  "43258" "43258" "43258" "43258" ...
-    ##  $ Comment1       : chr  NA NA NA NA ...
-    ##  $ Dead_plant     : chr  NA NA NA NA ...
-    ##  $ DeathCause     : logi  NA NA NA NA NA NA ...
-    ##  $ RootsHarvested : chr  "N" "N" "N" "N" ...
-    ##  $ SeedsCounted   : chr  "Y" "Y" "Y" "Y" ...
-    ##  $ Comp           : chr  NA NA NA NA ...
-    ##  $ Combos         : chr  NA NA NA NA ...
-    ##  $ Population     : chr  "PA4" "PA4" "PA4" "PA4" ...
-    ##  $ SeedNumber     : int  96 75 93 56 383 321 256 202 79 172 ...
-    ##  $ MeanSeedNumber : num  224 224 224 224 224 ...
-    ##  $ RelativeFit    : num  0.428 0.334 0.415 0.25 1.708 ...
-    ##  $ Block.1        : int  1 1 1 1 1 1 1 1 1 1 ...
-    ##  $ Leaf.Number    : int  6 5 6 7 9 10 11 7 7 8 ...
-    ##  $ Comment        : logi  NA NA NA NA NA NA ...
-    ##  $ X              : int  1 7 21 23 31 32 39 53 54 57 ...
-    ##  $ Sample_ID      : chr  "102P" "114P" "136P" "138P" ...
-
-``` r
-FitnessPurp2$Leaf.Number <- as.numeric(as.character(FitnessPurp2$Leaf.Number))
-
-SN1 <- lmer(SeedNumber~Trt + Block + Leaf.Number + Block:Trt + (1|ML), FitnessPurp2)
-anova(SN1) # Treatment is significant effect on plant seed number; Significant Treatment by Block effect
-```
-
-    ## Type III Analysis of Variance Table with Satterthwaite's method
-    ##              Sum Sq Mean Sq NumDF  DenDF  F value  Pr(>F)    
-    ## Trt           83491   83491     1 370.05   3.9783 0.04682 *  
-    ## Block        128423   42808     3 371.69   2.0398 0.10790    
-    ## Leaf.Number 2425524 2425524     1 374.69 115.5752 < 2e-16 ***
-    ## Trt:Block    164743   54914     3 371.54   2.6166 0.05082 .  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-ggplot(FitnessPurp, aes(Trt, RelativeFit, fill=Block)) +
+ggplot(Ipurp.Fit, aes(Trt, rel_fit, fill=Block)) +
   geom_boxplot() +
   scale_fill_brewer("Paired") +
   theme_classic() +
@@ -1192,86 +1038,32 @@ ggplot(FitnessPurp, aes(Trt, RelativeFit, fill=Block)) +
 ![](README_files/figure-gfm/Read%20in%20fitness%20data-1.png)<!-- -->
 
 ``` r
-# Remove size effects from fitness
-StdFitness <- FitnessPurp2[c("Trt", "Species", "Block", "ML", "RelativeFit", "Leaf.Number")] # Subset fitness data for variables of interest
-
-# Run one-way ANOVA to remove size effect--i.e., keep residuals
-StdFitness$RelativeFitness <- residuals(lm(RelativeFit ~ Leaf.Number, FitnessPurp2)) 
-
-# Compare residuals and non-standard values of fitness
-plot(StdFitness$RelativeFit, StdFitness$RelativeFitness)
-```
-
-![](README_files/figure-gfm/Read%20in%20fitness%20data-2.png)<!-- -->
-
-``` r
 # Average fitness by block, maternal line and treatment--we use NON standardized fitness (ie size effects not removed)
-FitAveraged = aggregate(RelativeFit ~ Block + Trt + ML, FitnessPurp, mean)
-colnames(FitAveraged) <- c("Block", "Trt", "ML", "RelativeFitness")
-FitAveraged$TRT <- FitAveraged$Trt
-dim(FitAveraged)
-```
-
-    ## [1] 76  5
-
-``` r
-head(FitAveraged)
-```
-
-    ##   Block   Trt       ML RelativeFitness   TRT
-    ## 1     1 Alone PA4.11Ip       0.4437172 Alone
-    ## 2     2 Alone PA4.11Ip       1.0435158 Alone
-    ## 3     3 Alone PA4.11Ip       1.0747321 Alone
-    ## 4     4 Alone PA4.11Ip       1.4627059 Alone
-    ## 5     1 Inter PA4.11Ip       0.6619616 Inter
-    ## 6     2 Inter PA4.11Ip       0.6103389 Inter
-
-``` r
-# Average size
-SizeAveraged <- aggregate(Leaf.Number ~ Block + Trt + ML + Species, LeafData,mean)
-colnames(SizeAveraged) <- c("Block", "Trt", "ML", "Species", "Size")
-
-SizeAveraged$TRT <- SizeAveraged$Trt
-dim(SizeAveraged)
-```
-
-    ## [1] 76  6
-
-``` r
-head(SizeAveraged)
-```
-
-    ##   Block   Trt       ML Species      Size   TRT
-    ## 1     1 Alone PA4.11Ip      Ip  9.000000 Alone
-    ## 2     2 Alone PA4.11Ip      Ip 11.000000 Alone
-    ## 3     3 Alone PA4.11Ip      Ip  8.000000 Alone
-    ## 4     4 Alone PA4.11Ip      Ip  5.000000 Alone
-    ## 5     1 Inter PA4.11Ip      Ip  7.545455 Inter
-    ## 6     2 Inter PA4.11Ip      Ip  7.500000 Inter
-
-``` r
-SizePurp <- SizeAveraged %>% filter(Species == "Ip")
+FitAveraged <- Ipurp.Fit %>% 
+  group_by(ML, Trt, Block) %>% 
+  mutate(rel_fit_mean = mean(rel_fit, na.rm = T)) %>% 
+  ungroup()
 ```
 
 ``` r
 ####  ####  ####  ####  ####  ####   ####
 #  Examine selection on microbiome first
 ####  ####  ####  ####  ####  ####   ####
-FitnessPurp$TRT <- FitnessPurp$Trt
-FitnessPurp$Combos <- as.character(FitnessPurp$Combos)
-FitnessPurp[which(FitnessPurp$TRT == "Alone"),]$Combos <- "none"
-FitnessPurp$Combos <- as.factor(FitnessPurp$Combos)
+FitAveraged$TRT <- FitAveraged$Trt
+FitAveraged$Combos <- as.character(FitAveraged$Combos)
+FitAveraged[which(FitAveraged$TRT == "Alone"),]$Combos <- "none"
+FitAveraged$Combos <- as.factor(FitAveraged$Combos)
 
-BrayFit <- merge(physeq.pcoa.df,FitAveraged)
+BrayFit <- merge(physeq.pcoa.df, FitAveraged)
 
 FitAlpha <- merge(FitAveraged, alpha)
 dim(FitAlpha)
 ```
 
-    ## [1] 97 13
+    ## [1] 158  27
 
 ``` r
-ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
+ggplot(FitAlpha, aes(TRT, rel_fit)) +
   geom_boxplot() +
   scale_fill_brewer("Paired") +
   theme_classic() +
@@ -1280,51 +1072,39 @@ ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
   facet_grid(~Block)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
 # Combine with root data
 
-RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML), FUN = mean) 
+RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]), by=list(RootData$Trt, RootData$ML), FUN = mean) 
 
 colnames(RootAveraged) <- c("Trt", "ML", "PC1", "PC2", "PC3", "PC4")
 head(RootAveraged)
 ```
 
-    ##     Trt         ML         PC1        PC2        PC3         PC4
-    ## 1 Alone   PA4.11Ip -0.69794646 -1.3274069  0.7756816 -0.75520608
-    ## 2 Inter   PA4.11Ip  0.43519578  0.6954043 -0.1859846  0.10761866
-    ## 3 Inter PA4.12Ihed  0.07075942 -0.9146971 -0.2814713 -0.01631047
-    ## 4 Alone   PA4.13Ip -2.28254650  1.4831488  0.9299528 -0.64140759
-    ## 5 Inter   PA4.13Ip  0.11317327 -0.1860671  0.1006711  0.43992946
-    ## 6 Alone   PA4.14Ip  0.70071833 -0.4492977  0.9728631 -0.41237743
+| Trt   | ML         |        PC1 |        PC2 |        PC3 |        PC4 |
+|:------|:-----------|-----------:|-----------:|-----------:|-----------:|
+| Alone | PA4.11Ip   | -0.6979465 | -1.3274069 |  0.7756816 | -0.7552061 |
+| Inter | PA4.11Ip   |  0.4351958 |  0.6954043 | -0.1859846 |  0.1076187 |
+| Inter | PA4.12Ihed |  0.0707594 | -0.9146971 | -0.2814713 | -0.0163105 |
+| Alone | PA4.13Ip   | -2.2825465 |  1.4831488 |  0.9299528 | -0.6414076 |
+| Inter | PA4.13Ip   |  0.1131733 | -0.1860671 |  0.1006711 |  0.4399295 |
+| Alone | PA4.14Ip   |  0.7007183 | -0.4492977 |  0.9728631 | -0.4123774 |
 
 ``` r
 RootFitAlpha <- merge(FitAlpha, RootAveraged)
 head(RootFitAlpha)
 ```
 
-    ##         ML   Trt Block   TRT RelativeFitness Sample_ID Species
-    ## 1 PA4.11Ip Alone     1 Alone       0.4437172      158P      Ip
-    ## 2 PA4.11Ip Alone     1 Alone       0.4437172       84P      Ip
-    ## 3 PA4.11Ip Alone     4 Alone       1.4627059      814P      Ip
-    ## 4 PA4.11Ip Alone     3 Alone       1.0747321      674P      Ip
-    ## 5 PA4.11Ip Inter     1 Inter       0.6619616      93AP      Ip
-    ## 6 PA4.11Ip Inter     1 Inter       0.6619616       21P      Ip
-    ##                    Combos rich  InvSimp       sim     shan        even
-    ## 1                    none  434 31.43535 0.9681887 4.534697 0.010448610
-    ## 2                    none  478 41.08728 0.9756616 4.753743 0.009945068
-    ## 3                    none  466 48.22287 0.9792630 4.791226 0.010281601
-    ## 4                    none  437 30.30030 0.9669970 4.491512 0.010278060
-    ## 5 PA 4.11 Ip-PA 4.15 Ihed  427 35.29942 0.9716709 4.593859 0.010758451
-    ## 6  PA 4.11 Ip-PA 4.3 Ihed  489 42.06259 0.9762259 4.752692 0.009719206
-    ##          PC1        PC2        PC3        PC4
-    ## 1 -0.6979465 -1.3274069  0.7756816 -0.7552061
-    ## 2 -0.6979465 -1.3274069  0.7756816 -0.7552061
-    ## 3 -0.6979465 -1.3274069  0.7756816 -0.7552061
-    ## 4 -0.6979465 -1.3274069  0.7756816 -0.7552061
-    ## 5  0.4351958  0.6954043 -0.1859846  0.1076187
-    ## 6  0.4351958  0.6954043 -0.1859846  0.1076187
+| ML       | Trt   | Species | Block | Combos | TRT   | Position | Order | UniqId | GerminationDate | Comment1 | Dead_plant | DeathCause | RootsHarvested | SeedsCounted | Comp | Population | SeedNumber | mean_seend_num |   rel_fit | rel_fit_mean | Sample_ID | rich |  InvSimp |       sim |     shan |      even |        PC1 |       PC2 |       PC3 |        PC4 |
+|:---------|:------|:--------|------:|:-------|:------|:---------|------:|:-------|:----------------|:---------|:-----------|:-----------|:---------------|:-------------|:-----|:-----------|-----------:|---------------:|----------:|-------------:|:----------|-----:|---------:|----------:|---------:|----------:|-----------:|----------:|----------:|-----------:|
+| PA4.11Ip | Alone | Ip      |     1 | none   | Alone | 138      |   138 | 138Ip  | 43258           | NA       | NA         | NA         | N              | Y            | NA   | PA4        |         56 |       224.2419 | 0.2497303 |    0.4437172 | 158P      |  434 | 31.43535 | 0.9681887 | 4.534697 | 0.0104486 | -0.6979465 | -1.327407 | 0.7756816 | -0.7552061 |
+| PA4.11Ip | Alone | Ip      |     1 | none   | Alone | 138      |   138 | 138Ip  | 43258           | NA       | NA         | NA         | N              | Y            | NA   | PA4        |         56 |       224.2419 | 0.2497303 |    0.4437172 | 84P       |  478 | 41.08728 | 0.9756616 | 4.753743 | 0.0099451 | -0.6979465 | -1.327407 | 0.7756816 | -0.7552061 |
+| PA4.11Ip | Alone | Ip      |     1 | none   | Alone | 99       |    99 | 99Ip   | 43258           | NA       | NA         | NA         | N              | Y            | NA   | PA4        |        143 |       224.2419 | 0.6377041 |    0.4437172 | 158P      |  434 | 31.43535 | 0.9681887 | 4.534697 | 0.0104486 | -0.6979465 | -1.327407 | 0.7756816 | -0.7552061 |
+| PA4.11Ip | Alone | Ip      |     1 | none   | Alone | 99       |    99 | 99Ip   | 43258           | NA       | NA         | NA         | N              | Y            | NA   | PA4        |        143 |       224.2419 | 0.6377041 |    0.4437172 | 84P       |  478 | 41.08728 | 0.9756616 | 4.753743 | 0.0099451 | -0.6979465 | -1.327407 | 0.7756816 | -0.7552061 |
+| PA4.11Ip | Alone | Ip      |     4 | none   | Alone | 942      |   942 | 942Ip  | NA              | DG       | NA         | NA         | N              | Y            | NA   | PA4        |        518 |       224.2419 | 2.3100050 |    1.4627059 | 814P      |  466 | 48.22287 | 0.9792630 | 4.791226 | 0.0102816 | -0.6979465 | -1.327407 | 0.7756816 | -0.7552061 |
+| PA4.11Ip | Alone | Ip      |     4 | none   | Alone | 851      |   851 | 851Ip  | 43264           | NA       | NA         | NA         | N              | Y            | NA   | PA4        |        111 |       224.2419 | 0.4950011 |    1.4627059 | 814P      |  466 | 48.22287 | 0.9792630 | 4.791226 | 0.0102816 | -0.6979465 | -1.327407 | 0.7756816 | -0.7552061 |
 
 ``` r
 # CombinE root,fitness/bray estimates
@@ -1377,572 +1157,437 @@ x.grob1 <- textGrob("Root architecture (PC2)",
 gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.05,units = 'in'), nrow=1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-# Figure 2
+## 7/29/2022
 
-``` r
-P4.Sim
-```
+-   Evaluate linear relationship of *I.purpurea* fitness and microbial
+    richness, inverse Simpson, and evenness within the control (*alone*)
+    treatment for each metric separately.
 
-    ## `geom_smooth()` using formula 'y ~ x'
+-   Evaluate if relationship above is impacted by treatment (evaluate
+    linear model on full data and add treatment by microbial diversity
+    metric/interaction)
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+-   Assess how *I.purpurea* fitness in control varies with the three
+    main microbial metrics while controlling for root architecture.
 
-``` r
-# Remove block effects from fitness
-RootFitAlpha$FitResidBlk <- resid(lm(RelativeFitness ~ Block, RootFitAlpha))
-
-RootFitAlpha$Comp <- sub(".*\\-", "", RootFitAlpha$Combos)
-```
-
-# ANCOVA
-
-Evaluate selection on microbiome community structure variables
-separatley. Use MASS for selection of best model.
+Prior to running models below, I will visualize the relationships
+between microbial community metrics and plant fitness and color by
+treatment.
 
 ``` r
 # Scale the microbial variables
-RootFitAlpha$richScaled<-scale(RootFitAlpha$rich)
-RootFitAlpha$SimScaled<-scale(RootFitAlpha$sim)
-RootFitAlpha$InvSimScaled<-scale(RootFitAlpha$InvSimp)
-RootFitAlpha$EvenScaled<-scale(RootFitAlpha$even)
+RootFitAlpha$richScaled <-scale(RootFitAlpha$rich)
+RootFitAlpha$SimScaled <-scale(RootFitAlpha$sim)
+RootFitAlpha$InvSimScaled <-scale(RootFitAlpha$InvSimp)
+RootFitAlpha$EvenScaled <-scale(RootFitAlpha$even)
 
-
-# ANCOVA MUltivariate Linear Regressions
-
-# Inverse Simpson diversity
-
-ANCOVA_sim <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + InvSimScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + InvSimScaled*Block, RootFitAlpha)) # Full model reported
-
-
-step <- stepAIC(ANCOVA_sim, direction = "backward", trace = FALSE)
-
-step$anova
+RootFitAlpha %>% 
+  dplyr::select(TRT, matches("Scaled"), rel_fit, Block) %>% 
+  pivot_longer(cols = richScaled:EvenScaled, names_to = "vars", values_to = "value") %>% 
+  ggplot() +
+  geom_point(aes(value, rel_fit, color = TRT)) +
+  geom_smooth(aes(value, rel_fit, color = TRT), method='lm', se = F) +
+  facet_wrap(~vars) +
+  theme_classic()
 ```
 
-    ## Stepwise Model Path 
-    ## Analysis of Deviance Table
-    ## 
-    ## Initial Model:
-    ## RelativeFitness ~ TRT + Block + TRT:Block + PC1 * TRT + PC2 * 
-    ##     TRT + PC3 * TRT + PC4 * TRT + InvSimScaled * TRT + PC1 * 
-    ##     Block + PC2 * Block + PC3 * Block + PC4 * Block + InvSimScaled * 
-    ##     Block
-    ## 
-    ## Final Model:
-    ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + InvSimScaled + 
-    ##     TRT:Block + TRT:PC3 + TRT:InvSimScaled + Block:PC1 + Block:PC3 + 
-    ##     Block:PC4
-    ## 
-    ## 
-    ##                   Step Df   Deviance Resid. Df Resid. Dev       AIC
-    ## 1                                           64   4.120048 -240.4081
-    ## 2          - Block:PC2  3 0.09205004        67   4.212098 -244.2648
-    ## 3 - Block:InvSimScaled  3 0.07728452        70   4.289383 -248.5011
-    ## 4            - TRT:PC4  1 0.00144092        71   4.290824 -250.4685
-    ## 5            - TRT:PC2  1 0.02656276        72   4.317387 -251.8699
-    ## 6            - TRT:PC1  1 0.06064622        73   4.378033 -252.5168
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+## Question 2
 
 ``` r
-model_sim <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + InvSimScaled + 
-    TRT:Block + TRT:PC3 + TRT:InvSimScaled + Block:PC1 + Block:PC3 + 
-    Block:PC4, RootFitAlpha
-)
+cntrl_invSim <- lm(rel_fit ~ InvSimScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
+cntrl_invsim_res <- cntrl_invSim %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
 
-# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
-ancova_res_sim <- car::Anova(model_sim, type="III") %>% 
-  tidy() %>%   # Report the type three sums of squares
-  tidy_more() %>% 
-  mutate(Term = str_replace(Term, "InvSimScaled", "Inverse Simpson")) %>% 
-  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
-  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
-  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
-  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
-  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
-  
-
-ancova_res_sim
+cntrl_invsim_res
 ```
 
-    ## # A tibble: 15 x 6
-    ##    Term                         SS    DF `F-value` p.value P         
-    ##    <chr>                     <dbl> <dbl>     <dbl>   <dbl> <chr>     
-    ##  1 (Intercept)               0.372     1     6.21    0.015 0.015 *   
-    ##  2 Treatment                 0.015     1     0.255   0.615 0.615     
-    ##  3 Block                     1.48      3     8.26    0     <0.001 ***
-    ##  4 Root topology             0.093     1     1.55    0.217 0.217     
-    ##  5 Root architecture         0.092     1     1.53    0.22  0.22      
-    ##  6 Root size                 0.144     1     2.41    0.125 0.125     
-    ##  7 Root morphology           0.038     1     0.628   0.431 0.431     
-    ##  8 Inverse Simpson           0.176     1     2.93    0.091 0.091     
-    ##  9 Treatment:Block           0.449     3     2.50    0.066 0.066     
-    ## 10 Treatment:Root size       0.161     1     2.68    0.106 0.106     
-    ## 11 Treatment:Inverse Simpson 0.201     1     3.35    0.071 0.071     
-    ## 12 Block:Root topology       0.519     3     2.89    0.041 0.041 *   
-    ## 13 Block:Root size           0.444     3     2.47    0.069 0.069     
-    ## 14 Block:Root morphology     0.918     3     5.10    0.003 0.003 **  
-    ## 15 Residuals                 4.38     73    NA      NA     <NA>
-
-Evaluate species richness on fitness
+| term             |      b |    SE | t-statistic | p_value | p-value   |
+|:-----------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)      |  0.367 | 0.201 |       1.827 |   0.076 | 0.076     |
+| InvSimScaled     |  0.061 | 0.141 |       0.433 |   0.668 | 0.668     |
+| PC2              | -0.033 | 0.084 |      -0.396 |   0.694 | 0.694     |
+| Block            |  0.196 | 0.070 |       2.784 |   0.008 | 0.008\*\* |
+| InvSimScaled:PC2 |  0.039 | 0.110 |       0.359 |   0.722 | 0.722     |
 
 ``` r
-ANCOVA_rich <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + richScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + richScaled*Block, RootFitAlpha)) # Full model reported
+cntrl_rich <- lm(rel_fit ~ richScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
-
-step <- stepAIC(ANCOVA_rich, direction = "backward", trace = FALSE)
-
-step$anova
+cntrl_rich_res <- cntrl_rich %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+cntrl_rich_res
 ```
 
-    ## Stepwise Model Path 
-    ## Analysis of Deviance Table
-    ## 
-    ## Initial Model:
-    ## RelativeFitness ~ TRT + Block + TRT:Block + PC1 * TRT + PC2 * 
-    ##     TRT + PC3 * TRT + PC4 * TRT + richScaled * TRT + PC1 * Block + 
-    ##     PC2 * Block + PC3 * Block + PC4 * Block + richScaled * Block
-    ## 
-    ## Final Model:
-    ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    ##     TRT:Block + TRT:richScaled + Block:PC1 + Block:PC3 + Block:PC4
-    ## 
-    ## 
-    ##                 Step Df    Deviance Resid. Df Resid. Dev       AIC
-    ## 1                                          64   3.984920 -243.6428
-    ## 2 - Block:richScaled  3 0.071168628        67   4.056089 -247.9257
-    ## 3        - Block:PC2  3 0.108938782        70   4.165027 -251.3548
-    ## 4          - TRT:PC4  1 0.005974457        71   4.171002 -253.2158
-    ## 5          - TRT:PC2  1 0.030023812        72   4.201026 -254.5201
-    ## 6          - TRT:PC3  1 0.040953922        73   4.241980 -255.5791
-    ## 7          - TRT:PC1  1 0.054596652        74   4.296576 -256.3386
+| term           |      b |    SE | t-statistic | p_value | p-value   |
+|:---------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)    |  0.340 | 0.200 |       1.700 |   0.097 | 0.097     |
+| richScaled     |  0.100 | 0.096 |       1.041 |   0.304 | 0.304     |
+| PC2            | -0.059 | 0.075 |      -0.789 |   0.435 | 0.435     |
+| Block          |  0.195 | 0.069 |       2.823 |   0.008 | 0.008\*\* |
+| richScaled:PC2 |  0.002 | 0.106 |       0.021 |   0.984 | 0.984     |
 
 ``` r
-model_rich <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    TRT:Block + TRT:richScaled + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha
-)
+cntrl_even <- lm(rel_fit ~ EvenScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
-
-# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
-ancova_res_rich <- car::Anova(model_rich, type="III") %>% 
-  tidy() %>%   # Report the type three sums of squares
-  tidy_more() %>% 
-  mutate(Term = str_replace(Term, "richScaled", "Species richness")) %>% 
-  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
-  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
-  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
-  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
-  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
-  
-
-ancova_res_rich
+cntrl_even_res <- cntrl_even %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+cntrl_even_res
 ```
 
-    ## # A tibble: 14 x 6
-    ##    Term                          SS    DF `F-value` p.value P       
-    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr>   
-    ##  1 (Intercept)                0.189     1     3.25    0.076 0.076   
-    ##  2 Treatment                  0.092     1     1.58    0.213 0.213   
-    ##  3 Block                      0.998     3     5.73    0.001 0.001 **
-    ##  4 Root topology              0.112     1     1.94    0.168 0.168   
-    ##  5 Root architecture          0.149     1     2.57    0.113 0.113   
-    ##  6 Root size                  0.042     1     0.728   0.396 0.396   
-    ##  7 Root morphology            0.028     1     0.479   0.491 0.491   
-    ##  8 Species richness           0.435     1     7.50    0.008 0.008 **
-    ##  9 Treatment:Block            0.364     3     2.09    0.109 0.109   
-    ## 10 Treatment:Species richness 0.401     1     6.90    0.01  0.01 *  
-    ## 11 Block:Root topology        0.493     3     2.83    0.044 0.044 * 
-    ## 12 Block:Root size            0.289     3     1.66    0.184 0.184   
-    ## 13 Block:Root morphology      0.962     3     5.52    0.002 0.002 **
-    ## 14 Residuals                  4.30     74    NA      NA     <NA>
+| term           |      b |    SE | t-statistic | p_value | p-value   |
+|:---------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)    |  0.353 | 0.200 |       1.761 |   0.086 | 0.086     |
+| EvenScaled     | -0.103 | 0.100 |      -1.033 |   0.308 | 0.308     |
+| PC2            | -0.059 | 0.070 |      -0.841 |   0.405 | 0.405     |
+| Block          |  0.189 | 0.069 |       2.747 |   0.009 | 0.009\*\* |
+| EvenScaled:PC2 |  0.030 | 0.146 |       0.206 |   0.838 | 0.838     |
 
-Evaluate species evenness on fitness
+## Question 3
+
+Examining if fitness varies by microbial diversity by treatment
+interaction.
 
 ``` r
-ANCOVA_even <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + EvenScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + EvenScaled*Block, RootFitAlpha)) # Full model reported
+ancova_invsim <- lm(rel_fit ~ InvSimScaled*TRT + Block*InvSimScaled + InvSimScaled*PC2 , RootFitAlpha)
 
-
-step <- stepAIC(ANCOVA_even, direction = "backward", trace = FALSE)
-
-step$anova
-```
-
-    ## Stepwise Model Path 
-    ## Analysis of Deviance Table
-    ## 
-    ## Initial Model:
-    ## RelativeFitness ~ TRT + Block + TRT:Block + PC1 * TRT + PC2 * 
-    ##     TRT + PC3 * TRT + PC4 * TRT + EvenScaled * TRT + PC1 * Block + 
-    ##     PC2 * Block + PC3 * Block + PC4 * Block + EvenScaled * Block
-    ## 
-    ## Final Model:
-    ## RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
-    ##     TRT:EvenScaled + Block:PC1 + Block:PC4
-    ## 
-    ## 
-    ##                 Step Df     Deviance Resid. Df Resid. Dev       AIC
-    ## 1                                           64   4.084392 -241.2512
-    ## 2 - Block:EvenScaled  3 0.0754439014        67   4.159836 -245.4758
-    ## 3        - Block:PC2  3 0.0964256567        70   4.256261 -249.2530
-    ## 4          - TRT:PC4  1 0.0008096981        71   4.257071 -251.2346
-    ## 5        - Block:PC3  3 0.1934621254        74   4.450533 -252.9236
-    ## 6          - TRT:PC3  1 0.0298015561        75   4.480335 -254.2763
-    ## 7          - TRT:PC2  1 0.0187048705        76   4.499040 -255.8722
-    ## 8          - TRT:PC1  1 0.0869858758        77   4.586026 -256.0146
-    ## 9        - TRT:Block  3 0.2570341442        80   4.843060 -256.7249
-
-``` r
-model_even <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
-    TRT:EvenScaled + Block:PC1 + Block:PC4, RootFitAlpha
-)
-
-
-# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
-ancova_res_even <- car::Anova(model_even, type="III") %>% 
-  tidy() %>%   # Report the type three sums of squares
-  tidy_more() %>% 
-  mutate(Term = str_replace(Term, "EvenScaled", "Species evenness")) %>%
-  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
-  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
-  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
-  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
-  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
-  
-
-ancova_res_even
-```
-
-    ## # A tibble: 12 x 6
-    ##    Term                          SS    DF `F-value` p.value P         
-    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr>     
-    ##  1 (Intercept)                2.50      1    41.4     0     <0.001 ***
-    ##  2 Treatment                  0.011     1     0.179   0.673 0.673     
-    ##  3 Block                      4.53      3    24.9     0     <0.001 ***
-    ##  4 Root topology              0.06      1     0.986   0.324 0.324     
-    ##  5 Root architecture          0.124     1     2.05    0.156 0.156     
-    ##  6 Root size                  0.224     1     3.71    0.058 0.058     
-    ##  7 Root morphology            0.11      1     1.82    0.181 0.181     
-    ##  8 Species evenness           0.513     1     8.48    0.005 0.005 **  
-    ##  9 Treatment:Species evenness 0.445     1     7.34    0.008 0.008 **  
-    ## 10 Block:Root topology        0.726     3     4.00    0.01  0.01 *    
-    ## 11 Block:Root morphology      1.08      3     5.93    0.001 0.001 **  
-    ## 12 Residuals                  4.84     80    NA      NA     <NA>
-
-Within treatment linear regression, regress sp. richness onto relative
-fitness
-
-``` r
-# Richness scaled and covariates
-
-lr_scaled_rich <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
-    tidy() %>% 
-    tidy_more2()
-
-
-lr_scaled_rich2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
-    tidy() %>% 
-    tidy_more2()
-
-
-lr_scaled_rich
-```
-
-    ## # A tibble: 18 x 6
-    ##    Term        estimate    SE `F-value` p.value P       
-    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>   
-    ##  1 (Intercept)   -4.42  3.33     -1.33    0.233 0.233   
-    ##  2 Block2         5.23  3.30      1.59    0.164 0.164   
-    ##  3 Block3         5.56  3.28      1.70    0.141 0.141   
-    ##  4 Block4         5.80  3.28      1.77    0.127 0.127   
-    ##  5 PC1           -0.598 0.359    -1.67    0.147 0.147   
-    ##  6 PC2           -0.053 0.048    -1.11    0.309 0.309   
-    ##  7 PC3            0.494 0.392     1.26    0.255 0.255   
-    ##  8 PC4           -5.24  3.62     -1.45    0.198 0.198   
-    ##  9 richScaled     0.138 0.063     2.20    0.07  0.07    
-    ## 10 Block2:PC1     0.537 0.336     1.60    0.161 0.161   
-    ## 11 Block3:PC1     1.12  0.355     3.15    0.02  0.02 *  
-    ## 12 Block4:PC1     0.169 0.365     0.464   0.659 0.659   
-    ## 13 Block2:PC3    -0.666 0.447    -1.49    0.187 0.187   
-    ## 14 Block3:PC3     0.175 0.419     0.418   0.691 0.691   
-    ## 15 Block4:PC3    -1.41  0.374    -3.77    0.009 0.009 **
-    ## 16 Block2:PC4     5.47  3.65      1.50    0.184 0.184   
-    ## 17 Block3:PC4     5.65  3.61      1.57    0.168 0.168   
-    ## 18 Block4:PC4     4.73  3.67      1.29    0.245 0.245
-
-``` r
-lr_scaled_rich2
-```
-
-    ## # A tibble: 18 x 6
-    ##    Term        estimate    SE `F-value` p.value P         
-    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>     
-    ##  1 (Intercept)    0.776 0.072    10.8     0     <0.001 ***
-    ##  2 Block2         0.027 0.086     0.309   0.759 0.759     
-    ##  3 Block3         0.712 0.086     8.28    0     <0.001 ***
-    ##  4 Block4         0.214 0.087     2.46    0.017 0.017 *   
-    ##  5 PC1           -0.154 0.119    -1.29    0.201 0.201     
-    ##  6 PC2           -0.046 0.058    -0.797   0.429 0.429     
-    ##  7 PC3           -0.129 0.141    -0.914   0.365 0.365     
-    ##  8 PC4            0.192 0.162     1.18    0.241 0.241     
-    ##  9 richScaled    -0.017 0.025    -0.655   0.515 0.515     
-    ## 10 Block2:PC1     0.061 0.133     0.456   0.65  0.65      
-    ## 11 Block3:PC1     0.207 0.134     1.54    0.129 0.129     
-    ## 12 Block4:PC1     0.331 0.135     2.45    0.018 0.018 *   
-    ## 13 Block2:PC3     0.277 0.169     1.64    0.107 0.107     
-    ## 14 Block3:PC3    -0.322 0.187    -1.72    0.09  0.09      
-    ## 15 Block4:PC3     0.007 0.174     0.043   0.966 0.966     
-    ## 16 Block2:PC4     0.097 0.213     0.457   0.65  0.65      
-    ## 17 Block3:PC4    -0.527 0.217    -2.43    0.018 0.018 *   
-    ## 18 Block4:PC4    -0.494 0.207    -2.38    0.021 0.021 *
-
-Raw value of richness simple LR
-
-``` r
-summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
-```
-
-    ## 
-    ## Call:
-    ## lm(formula = RelativeFitness ~ rich, data = RootFitAlpha %>% 
-    ##     filter(TRT == "Alone"))
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -0.5824 -0.3509 -0.1523  0.2511  1.0696 
-    ## 
-    ## Coefficients:
-    ##              Estimate Std. Error t value Pr(>|t|)
-    ## (Intercept) -1.313978   1.400070  -0.939    0.358
-    ## rich         0.004895   0.003069   1.595    0.125
-    ## 
-    ## Residual standard error: 0.4722 on 22 degrees of freedom
-    ## Multiple R-squared:  0.1037, Adjusted R-squared:  0.06291 
-    ## F-statistic: 2.544 on 1 and 22 DF,  p-value: 0.125
-
-``` r
-summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
-```
-
-    ## 
-    ## Call:
-    ## lm(formula = RelativeFitness ~ rich, data = RootFitAlpha %>% 
-    ##     filter(TRT != "Alone"))
-    ## 
-    ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.55517 -0.29823 -0.00738  0.21166  1.16446 
-    ## 
-    ## Coefficients:
-    ##              Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept) -0.322197   0.569532  -0.566   0.5734  
-    ## rich         0.002953   0.001275   2.317   0.0234 *
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 0.3523 on 71 degrees of freedom
-    ## Multiple R-squared:  0.07029,    Adjusted R-squared:  0.0572 
-    ## F-statistic: 5.368 on 1 and 71 DF,  p-value: 0.0234
-
-Within treatment linear regression, regress sp. evenness onto relative
-fitness
-
-``` r
-# Run full model
-lr_scaled_even <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
+ancova_invsim <- anova(ancova_invsim) %>% 
   tidy() %>% 
-  tidy_more2()
+  tidy_more()
 
-lr_scaled_even2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
-    Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
-    tidy() %>% 
-    tidy_more2()
+ancova_rich <- lm(rel_fit ~ richScaled*TRT + Block*richScaled + richScaled*PC2, RootFitAlpha)
 
-lr_scaled_even
+ancova_rich <- anova(ancova_rich) %>% 
+  tidy( ) %>% 
+  tidy_more()
+
+ancova_even <- lm(rel_fit ~ EvenScaled*TRT + Block*EvenScaled + EvenScaled*PC2, RootFitAlpha)
+
+ancova_even <- anova(ancova_even) %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invsim
 ```
 
-    ## # A tibble: 15 x 6
-    ##    Term        estimate    SE `F-value` p.value P    
-    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>
-    ##  1 (Intercept)   -0.324 3.51     -0.092   0.929 0.929
-    ##  2 Block2         1.19  3.52      0.337   0.744 0.744
-    ##  3 Block3         1.59  3.42      0.467   0.652 0.652
-    ##  4 Block4         1.11  3.42      0.324   0.754 0.754
-    ##  5 PC1           -0.215 0.47     -0.458   0.658 0.658
-    ##  6 PC2           -0.059 0.088    -0.668   0.521 0.521
-    ##  7 PC3           -0.072 0.236    -0.304   0.768 0.768
-    ##  8 PC4           -0.682 3.88     -0.175   0.865 0.865
-    ##  9 EvenScaled    -0.251 0.133    -1.88    0.092 0.092
-    ## 10 Block2:PC1     0.179 0.517     0.347   0.737 0.737
-    ## 11 Block3:PC1     0.456 0.528     0.864   0.41  0.41 
-    ## 12 Block4:PC1    -0.187 0.511    -0.367   0.722 0.722
-    ## 13 Block2:PC4     0.997 3.96      0.252   0.807 0.807
-    ## 14 Block3:PC4     0.516 3.97      0.13    0.9   0.9  
-    ## 15 Block4:PC4     0.24  3.97      0.06    0.953 0.953
+| Term               |  DF |     SS | meansq | F-value | p.value | P         |
+|:-------------------|----:|-------:|-------:|--------:|--------:|:----------|
+| InvSimScaled       |   1 |  0.990 |  0.990 |   1.504 |   0.222 | 0.222     |
+| TRT                |   1 |  0.277 |  0.277 |   0.421 |   0.517 | 0.517     |
+| Block              |   1 |  7.347 |  7.347 |  11.156 |   0.001 | 0.001\*\* |
+| PC2                |   1 |  1.338 |  1.338 |   2.032 |   0.156 | 0.156     |
+| InvSimScaled:TRT   |   1 |  0.000 |  0.000 |   0.000 |   0.988 | 0.988     |
+| InvSimScaled:Block |   1 |  2.603 |  2.603 |   3.953 |   0.049 | 0.049\*   |
+| InvSimScaled:PC2   |   1 |  0.240 |  0.240 |   0.364 |   0.547 | 0.547     |
+| Residuals          | 150 | 98.779 |  0.659 |      NA |      NA | NA        |
 
 ``` r
-lr_scaled_even2
+ancova_rich
 ```
 
-    ## # A tibble: 15 x 6
-    ##    Term        estimate    SE `F-value` p.value P         
-    ##    <chr>          <dbl> <dbl>     <dbl>   <dbl> <chr>     
-    ##  1 (Intercept)    0.767 0.078     9.85    0     <0.001 ***
-    ##  2 Block2         0.07  0.094     0.746   0.459 0.459     
-    ##  3 Block3         0.667 0.091     7.31    0     <0.001 ***
-    ##  4 Block4         0.223 0.093     2.40    0.02  0.02 *    
-    ##  5 PC1           -0.132 0.132    -1.00    0.321 0.321     
-    ##  6 PC2           -0.022 0.063    -0.348   0.729 0.729     
-    ##  7 PC3           -0.082 0.086    -0.959   0.342 0.342     
-    ##  8 PC4            0.188 0.175     1.07    0.288 0.288     
-    ##  9 EvenScaled     0.004 0.026     0.156   0.876 0.876     
-    ## 10 Block2:PC1     0.033 0.147     0.226   0.822 0.822     
-    ## 11 Block3:PC1     0.182 0.147     1.24    0.221 0.221     
-    ## 12 Block4:PC1     0.308 0.148     2.08    0.042 0.042 *   
-    ## 13 Block2:PC4     0.108 0.232     0.463   0.645 0.645     
-    ## 14 Block3:PC4    -0.468 0.235    -2.00    0.051 0.051     
-    ## 15 Block4:PC4    -0.487 0.225    -2.16    0.035 0.035 *
-
-Simple LR and raw value of evenness
+| Term             |  DF |      SS | meansq | F-value | p.value | P         |
+|:-----------------|----:|--------:|-------:|--------:|--------:|:----------|
+| richScaled       |   1 |   0.636 |  0.636 |   0.950 |   0.331 | 0.331     |
+| TRT              |   1 |   0.442 |  0.442 |   0.661 |   0.418 | 0.418     |
+| Block            |   1 |   7.203 |  7.203 |  10.761 |   0.001 | 0.001\*\* |
+| PC2              |   1 |   1.401 |  1.401 |   2.093 |   0.150 | 0.15      |
+| richScaled:TRT   |   1 |   0.283 |  0.283 |   0.423 |   0.516 | 0.516     |
+| richScaled:Block |   1 |   0.969 |  0.969 |   1.448 |   0.231 | 0.231     |
+| richScaled:PC2   |   1 |   0.238 |  0.238 |   0.355 |   0.552 | 0.552     |
+| Residuals        | 150 | 100.402 |  0.669 |      NA |      NA | NA        |
 
 ``` r
-summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
+ancova_even
 ```
 
-    ## 
-    ## Call:
-    ## lm(formula = RelativeFitness ~ even, data = RootFitAlpha %>% 
-    ##     filter(TRT == "Alone"))
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -0.6257 -0.3240 -0.1184  0.2570  1.0273 
-    ## 
-    ## Coefficients:
-    ##             Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept)    5.359      2.170    2.47   0.0218 *
-    ## even        -434.397    211.854   -2.05   0.0524 .
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 0.457 on 22 degrees of freedom
-    ## Multiple R-squared:  0.1604, Adjusted R-squared:  0.1223 
-    ## F-statistic: 4.204 on 1 and 22 DF,  p-value: 0.05242
+| Term             |  DF |     SS | meansq | F-value | p.value | P         |
+|:-----------------|----:|-------:|-------:|--------:|--------:|:----------|
+| EvenScaled       |   1 |  0.448 |  0.448 |   0.673 |   0.413 | 0.413     |
+| TRT              |   1 |  0.454 |  0.454 |   0.682 |   0.410 | 0.41      |
+| Block            |   1 |  7.154 |  7.154 |  10.746 |   0.001 | 0.001\*\* |
+| PC2              |   1 |  1.451 |  1.451 |   2.179 |   0.142 | 0.142     |
+| EvenScaled:TRT   |   1 |  0.536 |  0.536 |   0.805 |   0.371 | 0.371     |
+| EvenScaled:Block |   1 |  0.002 |  0.002 |   0.004 |   0.952 | 0.952     |
+| EvenScaled:PC2   |   1 |  1.660 |  1.660 |   2.493 |   0.116 | 0.116     |
+| Residuals        | 150 | 99.869 |  0.666 |      NA |      NA | NA        |
+
+### Revaluation controling for *ALL* root traits
+
+Add root traits as co-variates in the model and perform across
+treatments. Perfrom t-tests.
 
 ``` r
-summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
+all_invSim2 <- lm(rel_fit ~ InvSimScaled + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4 + Block, RootFitAlpha)
+
+all_invSim_res2 <- all_invSim2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+all_invSim_res2
 ```
 
-    ## 
-    ## Call:
-    ## lm(formula = RelativeFitness ~ even, data = RootFitAlpha %>% 
-    ##     filter(TRT != "Alone"))
-    ## 
-    ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.59190 -0.24316 -0.03449  0.20871  1.19081 
-    ## 
-    ## Coefficients:
-    ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)    3.393      0.926   3.664 0.000475 ***
-    ## even        -231.101     89.114  -2.593 0.011536 *  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 0.3492 on 71 degrees of freedom
-    ## Multiple R-squared:  0.08653,    Adjusted R-squared:  0.07366 
-    ## F-statistic: 6.725 on 1 and 71 DF,  p-value: 0.01154
-
-# Figure 3
-
-Plot results
-
-First create data frames of regression residuals after controlling for
-all other predictors in the model.
+| term             |      b |    SE | t-statistic | p_value | p-value   |
+|:-----------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)      |  0.498 | 0.167 |       2.983 |   0.003 | 0.003\*\* |
+| InvSimScaled     |  0.028 | 0.084 |       0.336 |   0.737 | 0.737     |
+| PC1              |  0.040 | 0.069 |       0.578 |   0.564 | 0.564     |
+| PC2              | -0.118 | 0.101 |      -1.162 |   0.247 | 0.247     |
+| PC3              |  0.057 | 0.192 |       0.296 |   0.768 | 0.768     |
+| PC4              |  0.067 | 0.151 |       0.440 |   0.660 | 0.66      |
+| Block            |  0.185 | 0.061 |       3.027 |   0.003 | 0.003\*\* |
+| InvSimScaled:PC1 | -0.086 | 0.080 |      -1.079 |   0.283 | 0.283     |
+| InvSimScaled:PC2 | -0.104 | 0.120 |      -0.864 |   0.389 | 0.389     |
+| InvSimScaled:PC3 | -0.020 | 0.205 |      -0.096 |   0.924 | 0.924     |
+| InvSimScaled:PC4 | -0.058 | 0.167 |      -0.347 |   0.729 | 0.729     |
 
 ``` r
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding evenness
+all_rich2 <- lm(rel_fit ~ richScaled + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4 + Block, RootFitAlpha)
 
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding evenness
-
-
-EvenScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(EvenScaled) 
-EvenScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(EvenScaled)
-
-even_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            EvenScaled = c(EvenScaled_alone,
-                                           EvenScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
+all_rich_res2 <- all_rich2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+all_rich_res2
 ```
+
+| term           |      b |    SE | t-statistic | p_value | p-value   |
+|:---------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)    |  0.498 | 0.169 |       2.950 |   0.004 | 0.004\*\* |
+| richScaled     |  0.047 | 0.072 |       0.659 |   0.511 | 0.511     |
+| PC1            |  0.070 | 0.068 |       1.022 |   0.308 | 0.308     |
+| PC2            | -0.056 | 0.097 |      -0.581 |   0.562 | 0.562     |
+| PC3            |  0.129 | 0.185 |       0.694 |   0.489 | 0.489     |
+| PC4            |  0.058 | 0.151 |       0.382 |   0.703 | 0.703     |
+| Block          |  0.179 | 0.062 |       2.885 |   0.005 | 0.005\*\* |
+| richScaled:PC1 | -0.053 | 0.071 |      -0.748 |   0.456 | 0.456     |
+| richScaled:PC2 | -0.012 | 0.118 |      -0.102 |   0.919 | 0.919     |
+| richScaled:PC3 | -0.136 | 0.164 |      -0.830 |   0.408 | 0.408     |
+| richScaled:PC4 |  0.100 | 0.150 |       0.666 |   0.507 | 0.507     |
 
 ``` r
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding richness
+all_even2 <- lm(rel_fit ~ EvenScaled  + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 + Block, RootFitAlpha)
 
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding richness
-
-richScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(richScaled) 
-richScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(richScaled)
-
-rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            richScaled = c(richScaled_alone,
-                                           richScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
+all_even_res2 <- all_even2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+all_even_res2
 ```
+
+| term           |      b |    SE | t-statistic | p_value | p-value   |
+|:---------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)    |  0.516 | 0.168 |       3.076 |   0.002 | 0.002\*\* |
+| EvenScaled     | -0.042 | 0.070 |      -0.607 |   0.545 | 0.545     |
+| PC1            |  0.082 | 0.068 |       1.216 |   0.226 | 0.226     |
+| PC2            | -0.039 | 0.092 |      -0.420 |   0.675 | 0.675     |
+| PC3            |  0.132 | 0.180 |       0.735 |   0.463 | 0.463     |
+| PC4            |  0.067 | 0.147 |       0.453 |   0.651 | 0.651     |
+| Block          |  0.176 | 0.061 |       2.856 |   0.005 | 0.005\*\* |
+| EvenScaled:PC1 |  0.007 | 0.073 |       0.096 |   0.923 | 0.923     |
+| EvenScaled:PC2 | -0.136 | 0.137 |      -0.996 |   0.321 | 0.321     |
+| EvenScaled:PC3 |  0.070 | 0.178 |       0.393 |   0.695 | 0.695     |
+| EvenScaled:PC4 | -0.235 | 0.158 |      -1.482 |   0.141 | 0.141     |
+
+Run F-tests on the models above.
 
 ``` r
-rich_p <- ggscatter(
-  rich_df_resid, x = "richScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Richness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
+library(car)
+
+ancova_invsim_all_roots <- Anova(all_invSim2, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_rich_all_roots <- Anova(all_rich2 , type = "III") %>% 
+  tidy( ) %>% 
+  tidy_more()
+
+
+ancova_even_all_roots <- Anova(all_even2, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invsim_all_roots
 ```
+
+| Term             |      SS |  DF | F-value | p.value | P         |
+|:-----------------|--------:|----:|--------:|--------:|:----------|
+| (Intercept)      |   6.064 |   1 |   8.901 |   0.003 | 0.003\*\* |
+| InvSimScaled     |   0.077 |   1 |   0.113 |   0.737 | 0.737     |
+| PC1              |   0.228 |   1 |   0.334 |   0.564 | 0.564     |
+| PC2              |   0.920 |   1 |   1.351 |   0.247 | 0.247     |
+| PC3              |   0.060 |   1 |   0.087 |   0.768 | 0.768     |
+| PC4              |   0.132 |   1 |   0.194 |   0.660 | 0.66      |
+| Block            |   6.244 |   1 |   9.165 |   0.003 | 0.003\*\* |
+| InvSimScaled:PC1 |   0.793 |   1 |   1.163 |   0.283 | 0.283     |
+| InvSimScaled:PC2 |   0.509 |   1 |   0.747 |   0.389 | 0.389     |
+| InvSimScaled:PC3 |   0.006 |   1 |   0.009 |   0.924 | 0.924     |
+| InvSimScaled:PC4 |   0.082 |   1 |   0.120 |   0.729 | 0.729     |
+| Residuals        | 100.146 | 147 |      NA |      NA | NA        |
 
 ``` r
-even_p <- ggscatter(
-  even_df_resid, x = "EvenScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Evenness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
+ancova_rich_all_roots
 ```
+
+| Term           |      SS |  DF | F-value | p.value | P         |
+|:---------------|--------:|----:|--------:|--------:|:----------|
+| (Intercept)    |   5.975 |   1 |   8.701 |   0.004 | 0.004\*\* |
+| richScaled     |   0.298 |   1 |   0.434 |   0.511 | 0.511     |
+| PC1            |   0.718 |   1 |   1.045 |   0.308 | 0.308     |
+| PC2            |   0.232 |   1 |   0.338 |   0.562 | 0.562     |
+| PC3            |   0.331 |   1 |   0.482 |   0.489 | 0.489     |
+| PC4            |   0.100 |   1 |   0.146 |   0.703 | 0.703     |
+| Block          |   5.715 |   1 |   8.324 |   0.005 | 0.005\*\* |
+| richScaled:PC1 |   0.384 |   1 |   0.559 |   0.456 | 0.456     |
+| richScaled:PC2 |   0.007 |   1 |   0.010 |   0.919 | 0.919     |
+| richScaled:PC3 |   0.473 |   1 |   0.689 |   0.408 | 0.408     |
+| richScaled:PC4 |   0.304 |   1 |   0.443 |   0.507 | 0.507     |
+| Residuals      | 100.934 | 147 |      NA |      NA | NA        |
 
 ``` r
-#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-AB <- ggarrange(rich_p, even_p, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14),
-                common.legend = T)
+ancova_even_all_roots
 ```
 
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
+| Term           |     SS |  DF | F-value | p.value | P         |
+|:---------------|-------:|----:|--------:|--------:|:----------|
+| (Intercept)    |  6.384 |   1 |   9.464 |   0.002 | 0.002\*\* |
+| EvenScaled     |  0.249 |   1 |   0.369 |   0.545 | 0.545     |
+| PC1            |  0.998 |   1 |   1.479 |   0.226 | 0.226     |
+| PC2            |  0.119 |   1 |   0.176 |   0.675 | 0.675     |
+| PC3            |  0.365 |   1 |   0.540 |   0.463 | 0.463     |
+| PC4            |  0.138 |   1 |   0.205 |   0.651 | 0.651     |
+| Block          |  5.501 |   1 |   8.155 |   0.005 | 0.005\*\* |
+| EvenScaled:PC1 |  0.006 |   1 |   0.009 |   0.923 | 0.923     |
+| EvenScaled:PC2 |  0.669 |   1 |   0.992 |   0.321 | 0.321     |
+| EvenScaled:PC3 |  0.104 |   1 |   0.155 |   0.695 | 0.695     |
+| EvenScaled:PC4 |  1.481 |   1 |   2.195 |   0.141 | 0.141     |
+| Residuals      | 99.165 | 147 |      NA |      NA | NA        |
+
+Investigating quadratic effects (i.e. nonlinear relationships.)
 
 ``` r
-# Common x title
-y.grob1 <- textGrob("Relative Fitness", 
-                   gp = gpar(col="black", fontsize = 25), rot = 90)
+RootFitAlpha <- RootFitAlpha %>% 
+  mutate(InvSimScaled2 = InvSimScaled*InvSimScaled,
+         richScaled2 = richScaled*richScaled,
+         EvenScaled2 = EvenScaled*EvenScaled)
 
-gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
+all_rich2 <- lm(rel_fit ~ InvSimScaled + InvSimScaled2 + InvSimScaled*TRT + Block + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4, RootFitAlpha)
+
+InvSim2_res <- all_rich2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+
+all_rich2 <- lm(rel_fit ~ richScaled + richScaled2 +richScaled*TRT + Block + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4, RootFitAlpha)
+
+Rich2_res <- all_rich2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+all_even2 <- lm(rel_fit ~ EvenScaled + EvenScaled2 + EvenScaled*TRT + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 + Block, RootFitAlpha)
+
+Even2_res <- all_even2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+InvSim2_res
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+| term                  |      b |    SE | t-statistic | p_value | p-value   |
+|:----------------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)           |  0.300 | 0.247 |       1.214 |   0.227 | 0.227     |
+| InvSimScaled          | -0.221 | 0.265 |      -0.834 |   0.406 | 0.406     |
+| InvSimScaled2         |  0.061 | 0.060 |       1.022 |   0.308 | 0.308     |
+| TRTInter              |  0.163 | 0.216 |       0.757 |   0.450 | 0.45      |
+| Block                 |  0.184 | 0.061 |       3.018 |   0.003 | 0.003\*\* |
+| PC1                   |  0.001 | 0.083 |       0.017 |   0.986 | 0.986     |
+| PC2                   | -0.117 | 0.106 |      -1.110 |   0.269 | 0.269     |
+| PC3                   |  0.097 | 0.198 |       0.490 |   0.625 | 0.625     |
+| PC4                   |  0.055 | 0.153 |       0.363 |   0.717 | 0.717     |
+| InvSimScaled:TRTInter |  0.244 | 0.282 |       0.867 |   0.387 | 0.387     |
+| InvSimScaled:PC1      | -0.160 | 0.099 |      -1.612 |   0.109 | 0.109     |
+| InvSimScaled:PC2      | -0.104 | 0.131 |      -0.790 |   0.431 | 0.431     |
+| InvSimScaled:PC3      | -0.024 | 0.213 |      -0.113 |   0.911 | 0.911     |
+| InvSimScaled:PC4      | -0.100 | 0.186 |      -0.538 |   0.592 | 0.592     |
 
-# MANTEL (Table 4)
+``` r
+Even2_res
+```
+
+| term                |      b |    SE | t-statistic | p_value | p-value   |
+|:--------------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)         |  0.383 | 0.278 |       1.376 |   0.171 | 0.171     |
+| EvenScaled          | -0.230 | 0.179 |      -1.285 |   0.201 | 0.201     |
+| EvenScaled2         | -0.050 | 0.055 |      -0.916 |   0.361 | 0.361     |
+| TRTInter            |  0.228 | 0.223 |       1.021 |   0.309 | 0.309     |
+| PC1                 |  0.032 | 0.084 |       0.387 |   0.699 | 0.699     |
+| PC2                 | -0.081 | 0.099 |      -0.816 |   0.416 | 0.416     |
+| PC3                 |  0.129 | 0.187 |       0.687 |   0.493 | 0.493     |
+| PC4                 |  0.111 | 0.150 |       0.743 |   0.459 | 0.459     |
+| Block               |  0.174 | 0.062 |       2.801 |   0.006 | 0.006\*\* |
+| EvenScaled:TRTInter |  0.259 | 0.219 |       1.179 |   0.240 | 0.24      |
+| EvenScaled:PC1      | -0.037 | 0.089 |      -0.418 |   0.677 | 0.677     |
+| EvenScaled:PC2      | -0.154 | 0.140 |      -1.100 |   0.273 | 0.273     |
+| EvenScaled:PC3      |  0.083 | 0.178 |       0.468 |   0.641 | 0.641     |
+| EvenScaled:PC4      | -0.212 | 0.183 |      -1.157 |   0.249 | 0.249     |
+
+``` r
+Rich2_res
+```
+
+| term                |      b |    SE | t-statistic | p_value | p-value   |
+|:--------------------|-------:|------:|------------:|--------:|:----------|
+| (Intercept)         |  0.259 | 0.289 |       0.894 |   0.373 | 0.373     |
+| richScaled          |  0.103 | 0.205 |       0.501 |   0.617 | 0.617     |
+| richScaled2         |  0.007 | 0.061 |       0.109 |   0.914 | 0.914     |
+| TRTInter            |  0.264 | 0.227 |       1.161 |   0.247 | 0.247     |
+| Block               |  0.184 | 0.064 |       2.862 |   0.005 | 0.005\*\* |
+| PC1                 |  0.011 | 0.086 |       0.125 |   0.901 | 0.901     |
+| PC2                 | -0.097 | 0.104 |      -0.928 |   0.355 | 0.355     |
+| PC3                 |  0.165 | 0.190 |       0.868 |   0.387 | 0.387     |
+| PC4                 |  0.075 | 0.158 |       0.472 |   0.638 | 0.638     |
+| richScaled:TRTInter | -0.067 | 0.251 |      -0.268 |   0.789 | 0.789     |
+| richScaled:PC1      | -0.048 | 0.102 |      -0.471 |   0.639 | 0.639     |
+| richScaled:PC2      |  0.013 | 0.125 |       0.105 |   0.916 | 0.916     |
+| richScaled:PC3      | -0.128 | 0.166 |      -0.770 |   0.443 | 0.443     |
+| richScaled:PC4      |  0.054 | 0.171 |       0.314 |   0.754 | 0.754     |
+
+#### MANTEL test (supplimentary)
 
 ``` r
 #  Here we use the Family mean values of root traits---this would indicate evidence for 'phenotypic selection' 
@@ -1952,11 +1597,11 @@ gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
   
 
   # Pull out Root traits of interest and save these to the Sampled data frame
-  SampledFit = merge(FitAveraged, sampledf, by = c("TRT", "ML", "Block"))
+  SampledFit = merge(FitAveraged, sampledf.Purp, by = c("TRT", "ML", "Block"))
 
 
 # Pull out Root traits of interest and save these to the Sampled data frame
-SampledRoots = merge(RootAlphaObs, sampledf)
+SampledRoots = merge(RootAlphaObs, sampledf.Purp)
 SampledRootsIp = subset(SampledRoots, Species == "Ip")
 
 OTU_table = OTU_table[row.names(OTU_table) %in% SampledRootsIp$Sample_ID,]
@@ -2019,11 +1664,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7637 
+    ##       Significance: 0.7605 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0746 0.0985 0.1171 0.1392 
+    ## 0.0736 0.0969 0.1162 0.1398 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2040,11 +1685,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0692 
+    ##       Significance: 0.0667 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0582 0.0761 0.0922 0.1129 
+    ## 0.0578 0.0756 0.0922 0.1151 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2061,11 +1706,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1299 
+    ##       Significance: 0.1289 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0814 0.1039 0.1238 0.1464 
+    ## 0.0821 0.1051 0.1255 0.1509 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -2082,18 +1727,26 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7635 
+    ##       Significance: 0.7644 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0754 0.0993 0.1169 0.1421 
+    ## 0.0752 0.1001 0.1206 0.1432 
     ## Permutation: free
     ## Number of permutations: 9999
 
-# Export ANCOVA tables
+# Export models
 
 ``` r
-tables <- list("rich" = ancova_res_rich, "even" = ancova_res_even, "invSim" = ancova_res_sim)
+tables <- list(
+  # Tables Question 2
+    cntrl_even_res = cntrl_even_res, 
+    cntrl_rich_res = cntrl_rich_res,
+    cntrl_invsim_res = cntrl_invsim_res,
+  # Tables Question 3
+    ancova_even = ancova_even, 
+    ancova_invsim = ancova_invsim, 
+    ancova_rich = ancova_rich)
 
-writexl::write_xlsx(tables, "ancova_tables.xlsx")
+writexl::write_xlsx(tables, "manuscript_tables.xlsx")
 ```

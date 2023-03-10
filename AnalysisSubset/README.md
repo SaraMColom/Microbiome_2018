@@ -1154,7 +1154,7 @@ RootFitAlpha$Comp <- sub(".*\\-", "", RootFitAlpha$Combos)
 # ANCOVA
 
 Evaluate selection on microbiome community structure variables
-separatley. Use MASS for selection of best model.
+separately. Use MASS for selection of best model.
 
 ``` r
 # Scale the microbial variables
@@ -1218,22 +1218,22 @@ ancova_res_sim
 ```
 
     ## # A tibble: 15 x 6
-    ##    Term                         SS    DF `F-value` p.value P      
-    ##    <chr>                     <dbl> <dbl>     <dbl>   <dbl> <chr>  
-    ##  1 (Intercept)               0.158     1     1.65    0.224 0.224  
-    ##  2 Treatment                 0.017     1     0.172   0.686 0.686  
-    ##  3 Block                     0.735     3     2.55    0.105 0.105  
-    ##  4 Root topology             0.024     1     0.254   0.623 0.623  
-    ##  5 Root architecture         0.004     1     0.042   0.841 0.841  
-    ##  6 Root size                 0.021     1     0.218   0.649 0.649  
-    ##  7 Root morphology           0.006     1     0.059   0.811 0.811  
-    ##  8 Inverse Simpson           0.036     1     0.372   0.553 0.553  
-    ##  9 Treatment:Block           0.306     3     1.06    0.402 0.402  
-    ## 10 Treatment:Root size       0.005     1     0.057   0.816 0.816  
-    ## 11 Treatment:Inverse Simpson 0.018     1     0.187   0.673 0.673  
-    ## 12 Block:Root topology       1.38      3     4.80    0.02  0.02 * 
-    ## 13 Block:Root size           1.24      3     4.31    0.028 0.028 *
-    ## 14 Block:Root morphology     0.442     3     1.53    0.257 0.257  
+    ##    Term                         SS    DF `F-value` p.value P     
+    ##    <chr>                     <dbl> <dbl>     <dbl>   <dbl> <chr> 
+    ##  1 (Intercept)               0.158     1     1.65    0.224 0.224 
+    ##  2 Treatment                 0.017     1     0.172   0.686 0.686 
+    ##  3 Block                     0.735     3     2.55    0.105 0.105 
+    ##  4 Root topology             0.024     1     0.254   0.623 0.623 
+    ##  5 Root architecture         0.004     1     0.042   0.841 0.841 
+    ##  6 Root size                 0.021     1     0.218   0.649 0.649 
+    ##  7 Root morphology           0.006     1     0.059   0.811 0.811 
+    ##  8 Inverse Simpson           0.036     1     0.372   0.553 0.553 
+    ##  9 Treatment:Block           0.306     3     1.06    0.402 0.402 
+    ## 10 Treatment:Root size       0.005     1     0.057   0.816 0.816 
+    ## 11 Treatment:Inverse Simpson 0.018     1     0.187   0.673 0.673 
+    ## 12 Block:Root topology       1.38      3     4.80    0.02  0.02* 
+    ## 13 Block:Root size           1.24      3     4.31    0.028 0.028*
+    ## 14 Block:Root morphology     0.442     3     1.53    0.257 0.257 
     ## 15 Residuals                 1.16     12    NA      NA     <NA>
 
 Evaluate species richness on fitness
@@ -1287,21 +1287,21 @@ ancova_res_rich
 ```
 
     ## # A tibble: 14 x 6
-    ##    Term                          SS    DF `F-value` p.value P      
-    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr>  
-    ##  1 (Intercept)                0.112     1     1.28    0.279 0.279  
-    ##  2 Treatment                  0.034     1     0.389   0.543 0.543  
-    ##  3 Block                      0.558     3     2.11    0.148 0.148  
-    ##  4 Root topology              0.036     1     0.407   0.535 0.535  
-    ##  5 Root architecture          0.004     1     0.046   0.834 0.834  
-    ##  6 Root size                  0.02      1     0.231   0.639 0.639  
-    ##  7 Root morphology            0.002     1     0.023   0.881 0.881  
-    ##  8 Species richness           0.039     1     0.44    0.519 0.519  
-    ##  9 Treatment:Block            0.325     3     1.23    0.338 0.338  
-    ## 10 Treatment:Species richness 0.003     1     0.032   0.861 0.861  
-    ## 11 Block:Root topology        1.29      3     4.88    0.017 0.017 *
-    ## 12 Block:Root size            1.03      3     3.92    0.034 0.034 *
-    ## 13 Block:Root morphology      0.487     3     1.85    0.189 0.189  
+    ##    Term                          SS    DF `F-value` p.value P     
+    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr> 
+    ##  1 (Intercept)                0.112     1     1.28    0.279 0.279 
+    ##  2 Treatment                  0.034     1     0.389   0.543 0.543 
+    ##  3 Block                      0.558     3     2.11    0.148 0.148 
+    ##  4 Root topology              0.036     1     0.407   0.535 0.535 
+    ##  5 Root architecture          0.004     1     0.046   0.834 0.834 
+    ##  6 Root size                  0.02      1     0.231   0.639 0.639 
+    ##  7 Root morphology            0.002     1     0.023   0.881 0.881 
+    ##  8 Species richness           0.039     1     0.44    0.519 0.519 
+    ##  9 Treatment:Block            0.325     3     1.23    0.338 0.338 
+    ## 10 Treatment:Species richness 0.003     1     0.032   0.861 0.861 
+    ## 11 Block:Root topology        1.29      3     4.88    0.017 0.017*
+    ## 12 Block:Root size            1.03      3     3.92    0.034 0.034*
+    ## 13 Block:Root morphology      0.487     3     1.85    0.189 0.189 
     ## 14 Residuals                  1.14     13    NA      NA     <NA>
 
 Evaluate species evenness on fitness
@@ -1355,19 +1355,19 @@ ancova_res_even
 ```
 
     ## # A tibble: 12 x 6
-    ##    Term                          SS    DF `F-value` p.value P       
-    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr>   
-    ##  1 (Intercept)                1.38      1    11.6     0.003 0.003 **
-    ##  2 Treatment                  0.065     1     0.543   0.47  0.47    
-    ##  3 Block                      1.06      3     2.96    0.058 0.058   
-    ##  4 Root topology              0.004     1     0.035   0.854 0.854   
-    ##  5 Root architecture          0.073     1     0.612   0.444 0.444   
-    ##  6 Root size                  0.069     1     0.578   0.456 0.456   
-    ##  7 Root morphology            0.171     1     1.43    0.246 0.246   
-    ##  8 Species evenness           0.374     1     3.14    0.093 0.093   
-    ##  9 Treatment:Species evenness 0.461     1     3.88    0.064 0.064   
-    ## 10 Block:Root topology        1.14      3     3.19    0.047 0.047 * 
-    ## 11 Block:Root morphology      0.355     3     0.995   0.416 0.416   
+    ##    Term                          SS    DF `F-value` p.value P      
+    ##    <chr>                      <dbl> <dbl>     <dbl>   <dbl> <chr>  
+    ##  1 (Intercept)                1.38      1    11.6     0.003 0.003**
+    ##  2 Treatment                  0.065     1     0.543   0.47  0.47   
+    ##  3 Block                      1.06      3     2.96    0.058 0.058  
+    ##  4 Root topology              0.004     1     0.035   0.854 0.854  
+    ##  5 Root architecture          0.073     1     0.612   0.444 0.444  
+    ##  6 Root size                  0.069     1     0.578   0.456 0.456  
+    ##  7 Root morphology            0.171     1     1.43    0.246 0.246  
+    ##  8 Species evenness           0.374     1     3.14    0.093 0.093  
+    ##  9 Treatment:Species evenness 0.461     1     3.88    0.064 0.064  
+    ## 10 Block:Root topology        1.14      3     3.19    0.047 0.047* 
+    ## 11 Block:Root morphology      0.355     3     0.995   0.416 0.416  
     ## 12 Residuals                  2.26     19    NA      NA     <NA>
 
 Within treatment linear regression, regress sp. richness onto relative

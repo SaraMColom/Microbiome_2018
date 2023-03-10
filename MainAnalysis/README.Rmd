@@ -1,12 +1,22 @@
 ---
-title: "RhizMicrobiome_GenusLevel"
+title: "Simplified Analysis"
 author: "Sara Colom"
 date: "2/8/2020"
 output: 
   github_document:
-    toc: true
+    toc: false
+    df_print: kable
 ---
 
+# Objectives
+
+Evaluate microbial community diversity at the Genus level and its relationship with plant root architecture and plant fitness across and between stressful enviornments.
+
+We address the following specific research aims:
+
+  - **Aim 1:** Do measures of microbial communities vary with root phenotypes? (e.g., root architecture, morphology, and size)
+  - **Aim 2:** Within a non stressful environment or control treatment (i.e., no competition), does plant fitness vary by measures of microbial community after adjusting for root architecture? Is there evidence that plant fitness varies according to microbial community by root architecture interaction?
+  - **Aim 3:** Question 2 extended--do these relationships change in stressful environment? In other words, does belowground plant-plant competition alter relationships with plant fitness and microbial communities?
 
 ## Sample sizes
 
@@ -32,53 +42,19 @@ output:
 # Load Libraries
 
 ```{r load_libs, include=T, warning=F, comment=F, message=F}
+library(tidyverse)
 library(phyloseq)
-library(ggplot2)
-library(ape)
 library(vegan)
-library(plyr)
-library(dplyr)
-library(scales)
-library(grid)
-library(reshape2)
-library(pegas)
-library(pgirmess)
-library(multcomp)
-library(multcompView)
-library(ggpubr)
-library(ggcorrplot)
-library(RColorBrewer)
 library(broom)
-library(ggthemes)
-library(corrplot)
-library(Hmisc)
-library(emmeans)
-library(lmerTest)
-library(interactions)
-library(jtools)
 library(MASS)
+library(ggpubr)
+library(grid)
 library(stringr)
+library(broom)
+library(car)
 
 source("miSeq.R")
 source("functions.R")
-
-# Aesthetics
-Tx<-theme(axis.text.y = element_text(size = 12),
-          axis.title.y = element_text(size = 20)) +
-          theme(axis.text.x = element_text(vjust = 1, hjust=1, angle=0, size = 20),
-          axis.title.x = element_text(angle=0, size = 12),
-          plot.title=element_text(size = 25,hjust=0))
-
-# Aesthetics
-Tx2<-theme(axis.text.y = element_text(size = 12),
-          axis.title.y = element_text(size = 12)) +
-          theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 25),
-          axis.title.x = element_text(size = 25),
-          plot.title=element_text(size = 25,hjust=0))
-
-GoldGrey <- c("#F1CE63", "#79706E")
-GreenBlue <- c("#59A14F", "#4E79A7")
-
 ```
 
 
@@ -119,7 +95,6 @@ alpha %>%
 ```{r, message = F, warning = F, comment = F}
 # Visualize data distribution w Violin plots within I.purpurea
 
-
 p <- ggplot(alpha %>% filter(Species == "Ip"), aes(x = TRT, y = rich)) +
   geom_violin(trim = FALSE, aes(fill = TRT), alpha = 0.3) + 
   geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize = 1, aes(color = TRT, fill = TRT)) +
@@ -158,60 +133,6 @@ v <- ggplot(alpha %>% filter(Species == "Ip"), aes(x = TRT, y = even)) +
   ylab("")
 
 ggarrange(p, q, t, v, common.legend = T, ncol = 2, nrow = 2)
-```
-
-## Test for differences
-
-
-
-# Linear mixed models
-
-```{r, LMM within species Not Reported}
-# Test for treatment within I. purpurea
-
-
-RichLmm <- lmer(rich ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-
-InvLmm <- lmer(InvSimp ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-
-SimLmm <- lmer(sim ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-
-EvenLmm <- lmer(even ~ TRT + Block + (1|Block:ML), alpha %>% filter(Species == "Ip"))
-
-anova(RichLmm)
-ranova(RichLmm)
-
-anova(InvLmm)
-ranova(InvLmm)
-
-anova(SimLmm)
-ranova(SimLmm)
-
-anova(EvenLmm)
-ranova(EvenLmm)
-```
-
-
-# ANOVA Test for treatment within I. purpurea (Table 1)
-
-```{r ANOVA Test for treatment within I. purpurea, warning=F,comment=F,message=F}
-
-alpha.purp <- alpha %>% filter(Species == "Ip")
-
-aov.Richness <- lm(rich ~ TRT + Block, alpha.purp)
-aov.simpsonInv <- lm(InvSimp ~ TRT + Block, alpha.purp)
-aov.simpson <- lm(sim ~ TRT + Block, alpha.purp)
-aov.evenness <- lm(even ~ TRT + Block, alpha.purp)
-aov.shannon <- lm(shan ~ TRT + Block, alpha.purp)
-
-
-#Call for the summary of that ANOVA, which will include P-values
-anova(aov.Richness)
-anova(aov.simpsonInv)
-anova(aov.simpson)
-anova(aov.evenness)
-
-# No significant differences
 ```
 
 # Community Composition
@@ -254,31 +175,10 @@ colnames(SampData)[1] <- "Duplicates"
 
 SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
 
-physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData,by="Duplicates"))
+physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData, by="Duplicates"))
 ```
 
-# PERMANOVA (Table 2)
-
-```{r adonis experimental data when all data combined, warning = F,comment = F,message = F}
-
-## All experiment, add variable treatment, then species
-sampledf <- data.frame(sample_data(physeq.scale))
-
-physeq.purp = subset_samples(physeq.scale, Species == "Ip")
-
-treatment <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(TRT)
-
-block <- sampledf %>% 
-  filter(Species == "Ip") %>% 
-  pull(Block)
-
-output <- adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bray")
-
-```
-
-# Correlations with root traits
+# Testing linear relationships between root architecture & microbial diversity
 
 ## Prep root data
 
@@ -286,9 +186,7 @@ output <- adonis(otu_table(physeq.purp) %>% t ~ treatment + block, method = "bra
 RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")])
 ```
 
-## Testing linear relationships between root architecture & microbial diversity
-
-### Table 3. Within species (root traits and alphadiv)
+### Evaluate relationship between alpha diversity and root traits
 
 ```{r Preliminary exam on roots within species}
 #summary(glht(SimpInvPC1, mcp(rank="Tukey")))
@@ -299,6 +197,7 @@ RootAlphaObs <- merge(alpha, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")
 
 RootAlphaPurp <- droplevels(RootAlphaObs %>% filter(Species == "Ip"))
 RootAlphaPurp$Comp <- sub(".*\\-", "", RootAlphaPurp$Combos)
+
 
 ### Linear regressions
 
@@ -358,9 +257,232 @@ summary(EvenPC4)
 ```
 
 
+## Make tables of results ABOVE with only root term in model and combine
+
+PC1
+```{r}
+SimpInvPC1_res <- SimpInvPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`)
+
+
+
+SimpPC1_res <- SimpPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`)
+
+RichPC1_res <- RichPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`)  
+
+EvenPC1_res <- EvenPC1 %>% 
+  tidy() %>% 
+  filter(term == "PC1") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`)  %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root topology`) 
+
+microbe_root_lm_res_pc1 <- SimpInvPC1_res %>% 
+  bind_rows(
+  RichPC1_res
+  ) %>% 
+  bind_rows(
+    EvenPC1_res
+  ) %>% 
+  bind_rows(SimpPC1_res) 
+  
+microbe_root_lm_res_pc1 
+```
+
+
+PC2
+```{r}
+SimpInvPC2_res <- SimpInvPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)
+
+SimpPC2_res <- SimpPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)  
+
+RichPC2_res <- RichPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)  
+
+EvenPC2_res <- EvenPC2 %>% 
+  tidy() %>% 
+  filter(term == "PC2") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root architecture`)  
+
+microbe_root_lm_res_pc2 <- SimpInvPC2_res %>% 
+  bind_rows(
+  RichPC2_res
+  ) %>% 
+  bind_rows(
+    EvenPC2_res
+  ) %>% 
+  bind_rows(SimpPC2_res) 
+  
+microbe_root_lm_res_pc2  
+```
+
+
+PC3
+
+```{r}
+SimpInvPC3_res <- SimpInvPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+SimpPC3_res <- SimpPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+RichPC3_res <- RichPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+EvenPC3_res <- EvenPC3 %>% 
+  tidy() %>% 
+  filter(term == "PC3") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root size`)    
+
+microbe_root_lm_res_pc3 <- SimpInvPC3_res %>% 
+  bind_rows(
+  RichPC3_res
+  ) %>% 
+  bind_rows(
+    EvenPC3_res
+  ) %>% 
+  bind_rows(SimpPC3_res)
+  
+microbe_root_lm_res_pc3  
+```
+
+
+PC4
+```{r}
+SimpInvPC4_res2 <- SimpInvPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`)    
+
+SimpPC4_res2 <- SimpPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Simpson Diversity") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`) 
+
+RichPC4_res2 <- RichPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Sp. richness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`) 
+
+EvenPC4_res2 <- EvenPC4 %>% 
+  tidy() %>% 
+  filter(term == "PC4") %>% 
+  mutate(`Microbial community metric` = "Sp. evenness") %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
+  relocate(`Microbial community metric`) %>%
+  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  dplyr::select(`Microbial community metric`, `Root morphology`) 
+
+microbe_root_lm_res_pc4 <- SimpInvPC4_res2 %>% 
+  bind_rows(
+  RichPC4_res2
+  ) %>% 
+  bind_rows(
+    EvenPC4_res2
+  ) %>% 
+  bind_rows(SimpPC4_res2)
+  
+microbe_root_lm_res_pc4 
+```
+
 ## Plotting significant linear associations 
 ```{r n}
-
 # Richness and root architecture
 P2.rich <- ggplot() +
   geom_point(data = RootAlphaPurp, aes(PC2, rich), alpha = 0.5, size = 3, color = "brown") +
@@ -387,48 +509,6 @@ P2.even <- ggplot() +
   theme(legend.position = "top") +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 
-
-# Root morphology on species diversity Simpson metric
-
-P4.Sim <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC4, sim), alpha = 0.5, size = 3, color = "brown") +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC4, sim), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
-  theme_classic() +
-  ylab("Simpson") +
-  xlab("Root Morphology (PC4)") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
-
-```
-
-
-## Linear mixed models (not reported)
-
-```{r}
-
-### Simpson
-SimpLMM <- lmer(sim ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
-anova(SimpLMM)
-ranova(SimpLMM)
-
-### Inverse Simpson
-SimpInvLMM <- lmer(InvSimp ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
-anova(SimpInvLMM)
-ranova(SimpInvLMM)
-
-### Inverse Simpson
-RichLMM <- lmer(rich ~ TRT + Block + (1|ML), alpha %>% filter(Species == "Ip")) 
-anova(RichLMM)
-ranova(RichLMM)
-
-```
-
-
-```{r Analyzing leaf data, warning=F,comment=F,message=F}
-LeafData$Sample_ID <- paste(LeafData$Position, ifelse(grepl("Ihed", LeafData$ML), "H", "P"), sep="")
 ```
 
 
@@ -436,9 +516,11 @@ LeafData$Sample_ID <- paste(LeafData$Position, ifelse(grepl("Ihed", LeafData$ML)
 # Calculate relative fitness
 # First calculate mean seed number by species and treatment---note* we only have seed output of I. purpurea
 
-MeanSeedNumber <- aggregate(SeedNumber ~ Trt + Species, Fitness, mean)
-
-colnames(MeanSeedNumber) <- c("Trt", "Species", "MeanSeedNumber")
+Fitness <- Fitness %>% 
+  group_by(Species, Trt) %>% 
+  mutate(mean_seend_num = mean(SeedNumber, na.rm = T)) %>% 
+  mutate(rel_fit = SeedNumber/mean_seend_num) %>% 
+  ungroup()
 
 Ipurp.Fit <- Fitness %>%
   filter(Species == "Ip")
@@ -446,68 +528,36 @@ Ipurp.Fit <- Fitness %>%
 Ipurp.Alpha <- alpha %>%
   filter(Species == "Ip")
 
-FitnessPurp <- merge(Ipurp.Fit, MeanSeedNumber, by=c("Trt", "Species"))
-FitnessPurp$RelativeFit <- FitnessPurp$SeedNumber/FitnessPurp$MeanSeedNumber
-FitnessPurp$Block <- as.factor(FitnessPurp$Block)
-
-FitnessPurp2 <- merge(FitnessPurp, LeafData)
-str(FitnessPurp2)
-FitnessPurp2$Leaf.Number <- as.numeric(as.character(FitnessPurp2$Leaf.Number))
-
-SN1 <- lmer(SeedNumber~Trt + Block + Leaf.Number + Block:Trt + (1|ML), FitnessPurp2)
-anova(SN1) # Treatment is significant effect on plant seed number; Significant Treatment by Block effect
-
-ggplot(FitnessPurp, aes(Trt, RelativeFit, fill=Block)) +
+ggplot(Ipurp.Fit, aes(Trt, rel_fit, fill=Block)) +
   geom_boxplot() +
   scale_fill_brewer("Paired") +
   theme_classic() +
   ylab("Relative Fitness") +
   ggtitle("Relative Fitness by Treatment and Block")
 
-# Remove size effects from fitness
-StdFitness <- FitnessPurp2[c("Trt", "Species", "Block", "ML", "RelativeFit", "Leaf.Number")] # Subset fitness data for variables of interest
-
-# Run one-way ANOVA to remove size effect--i.e., keep residuals
-StdFitness$RelativeFitness <- residuals(lm(RelativeFit ~ Leaf.Number, FitnessPurp2)) 
-
-# Compare residuals and non-standard values of fitness
-plot(StdFitness$RelativeFit, StdFitness$RelativeFitness)
-
 # Average fitness by block, maternal line and treatment--we use NON standardized fitness (ie size effects not removed)
-FitAveraged = aggregate(RelativeFit ~ Block + Trt + ML, FitnessPurp, mean)
-colnames(FitAveraged) <- c("Block", "Trt", "ML", "RelativeFitness")
-FitAveraged$TRT <- FitAveraged$Trt
-dim(FitAveraged)
-head(FitAveraged)
-
-# Average size
-SizeAveraged <- aggregate(Leaf.Number ~ Block + Trt + ML + Species, LeafData,mean)
-colnames(SizeAveraged) <- c("Block", "Trt", "ML", "Species", "Size")
-
-SizeAveraged$TRT <- SizeAveraged$Trt
-dim(SizeAveraged)
-head(SizeAveraged)
-
-SizePurp <- SizeAveraged %>% filter(Species == "Ip")
+FitAveraged <- Ipurp.Fit %>% 
+  group_by(ML, Trt, Block) %>% 
+  mutate(rel_fit_mean = mean(rel_fit, na.rm = T)) %>% 
+  ungroup()
 ```
 
 
 ```{r, fig.height = 12, fig.width = 16}
-
 ####  ####  ####  ####  ####  ####   ####
 #  Examine selection on microbiome first
 ####  ####  ####  ####  ####  ####   ####
-FitnessPurp$TRT <- FitnessPurp$Trt
-FitnessPurp$Combos <- as.character(FitnessPurp$Combos)
-FitnessPurp[which(FitnessPurp$TRT == "Alone"),]$Combos <- "none"
-FitnessPurp$Combos <- as.factor(FitnessPurp$Combos)
+FitAveraged$TRT <- FitAveraged$Trt
+FitAveraged$Combos <- as.character(FitAveraged$Combos)
+FitAveraged[which(FitAveraged$TRT == "Alone"),]$Combos <- "none"
+FitAveraged$Combos <- as.factor(FitAveraged$Combos)
 
-BrayFit <- merge(physeq.pcoa.df,FitAveraged)
+BrayFit <- merge(physeq.pcoa.df, FitAveraged)
 
 FitAlpha <- merge(FitAveraged, alpha)
 dim(FitAlpha)
 
-ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
+ggplot(FitAlpha, aes(TRT, rel_fit)) +
   geom_boxplot() +
   scale_fill_brewer("Paired") +
   theme_classic() +
@@ -518,15 +568,13 @@ ggplot(FitAlpha, aes(TRT, RelativeFitness)) +
 
 # Combine with root data
 
-RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]),by=list(RootData$Trt, RootData$ML), FUN = mean) 
+RootAveraged <- aggregate(list(RootData[c("PC1", "PC2", "PC3", "PC4")]), by=list(RootData$Trt, RootData$ML), FUN = mean) 
 
 colnames(RootAveraged) <- c("Trt", "ML", "PC1", "PC2", "PC3", "PC4")
 head(RootAveraged)
 
 RootFitAlpha <- merge(FitAlpha, RootAveraged)
 head(RootFitAlpha)
-
-
 
 # CombinE root,fitness/bray estimates
 RootFitBray <- merge(BrayFit, RootAveraged)
@@ -572,279 +620,210 @@ x.grob1 <- textGrob("Root architecture (PC2)",
                    gp = gpar(col="black", fontsize = 25), rot = 0)
 
 gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.05,units = 'in'), nrow=1))
-
 ```
 
 
-# Figure 2
-```{r}
-P4.Sim
-```
+## 7/29/2022
 
 
-```{r}
+- Evaluate linear relationship of _I.purpurea_ fitness and microbial richness, inverse Simpson, and evenness within the control (_alone_) treatment for each metric separately.
 
-# Remove block effects from fitness
-RootFitAlpha$FitResidBlk <- resid(lm(RelativeFitness ~ Block, RootFitAlpha))
+- Evaluate if relationship above is impacted by treatment (evaluate linear model on full data and add treatment by microbial diversity metric/interaction)
 
-RootFitAlpha$Comp <- sub(".*\\-", "", RootFitAlpha$Combos)
+- Assess how _I.purpurea_ fitness in control varies with the three main microbial metrics while controlling for root architecture.
 
-```
 
-# ANCOVA
-
-Evaluate selection on microbiome community structure variables separatley. Use MASS for selection of best model.
+Prior to running models below, I will visualize the relationships between microbial community metrics and plant fitness and color by treatment.
 
 ```{r}
 # Scale the microbial variables
-RootFitAlpha$richScaled<-scale(RootFitAlpha$rich)
-RootFitAlpha$SimScaled<-scale(RootFitAlpha$sim)
-RootFitAlpha$InvSimScaled<-scale(RootFitAlpha$InvSimp)
-RootFitAlpha$EvenScaled<-scale(RootFitAlpha$even)
+RootFitAlpha$richScaled <-scale(RootFitAlpha$rich)
+RootFitAlpha$SimScaled <-scale(RootFitAlpha$sim)
+RootFitAlpha$InvSimScaled <-scale(RootFitAlpha$InvSimp)
+RootFitAlpha$EvenScaled <-scale(RootFitAlpha$even)
 
-
-# ANCOVA MUltivariate Linear Regressions
-
-# Inverse Simpson diversity
-
-ANCOVA_sim <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + InvSimScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + InvSimScaled*Block, RootFitAlpha)) # Full model reported
-
-
-step <- stepAIC(ANCOVA_sim, direction = "backward", trace = FALSE)
-
-step$anova
-
-
-
-model_sim <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + InvSimScaled + 
-    TRT:Block + TRT:PC3 + TRT:InvSimScaled + Block:PC1 + Block:PC3 + 
-    Block:PC4, RootFitAlpha
-)
-
-
-# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
-ancova_res_sim <- car::Anova(model_sim, type="III") %>% 
-  tidy() %>%   # Report the type three sums of squares
-  tidy_more() %>% 
-  mutate(Term = str_replace(Term, "InvSimScaled", "Inverse Simpson")) %>% 
-  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
-  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
-  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
-  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
-  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
-  
-
-ancova_res_sim
+RootFitAlpha %>% 
+  dplyr::select(TRT, matches("Scaled"), rel_fit, Block) %>% 
+  pivot_longer(cols = richScaled:EvenScaled, names_to = "vars", values_to = "value") %>% 
+  ggplot() +
+  geom_point(aes(value, rel_fit, color = TRT)) +
+  geom_smooth(aes(value, rel_fit, color = TRT), method='lm', se = F) +
+  facet_wrap(~vars) +
+  theme_classic()
 ```
 
 
-Evaluate species richness on fitness
+## Question 2
+
 ```{r}
+cntrl_invSim <- lm(rel_fit ~ InvSimScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
-ANCOVA_rich <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + richScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + richScaled*Block, RootFitAlpha)) # Full model reported
+cntrl_invsim_res <- cntrl_invSim %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
 
+cntrl_invsim_res
 
-step <- stepAIC(ANCOVA_rich, direction = "backward", trace = FALSE)
+cntrl_rich <- lm(rel_fit ~ richScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
-step$anova
+cntrl_rich_res <- cntrl_rich %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+cntrl_rich_res
 
+cntrl_even <- lm(rel_fit ~ EvenScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
 
-
-model_rich <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    TRT:Block + TRT:richScaled + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha
-)
-
-
-# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
-ancova_res_rich <- car::Anova(model_rich, type="III") %>% 
-  tidy() %>%   # Report the type three sums of squares
-  tidy_more() %>% 
-  mutate(Term = str_replace(Term, "richScaled", "Species richness")) %>% 
-  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
-  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
-  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
-  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
-  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
-  
-
-ancova_res_rich
-
+cntrl_even_res <- cntrl_even %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+cntrl_even_res
 ```
 
+## Question 3
 
-Evaluate species evenness on fitness
-```{r}
-ANCOVA_even <-(lm(RelativeFitness ~ TRT + Block + TRT:Block + PC1*TRT + PC2*TRT + PC3*TRT + PC4*TRT + EvenScaled*TRT + PC1*Block + PC2*Block + PC3*Block + PC4*Block + EvenScaled*Block, RootFitAlpha)) # Full model reported
-
-
-step <- stepAIC(ANCOVA_even, direction = "backward", trace = FALSE)
-
-step$anova
-
-
-
-model_even <-lm(RelativeFitness ~ TRT + Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
-    TRT:EvenScaled + Block:PC1 + Block:PC4, RootFitAlpha
-)
-
-
-# anova(model) # Type I sum of sqaures--sequence order matters, interactions not accounted
-ancova_res_even <- car::Anova(model_even, type="III") %>% 
-  tidy() %>%   # Report the type three sums of squares
-  tidy_more() %>% 
-  mutate(Term = str_replace(Term, "EvenScaled", "Species evenness")) %>%
-  mutate(Term = str_replace(Term, "PC1", "Root topology")) %>% 
-  mutate(Term = str_replace(Term, "PC2", "Root architecture")) %>% 
-  mutate(Term = str_replace(Term, "PC3", "Root size")) %>% 
-  mutate(Term = str_replace(Term, "PC4", "Root morphology")) %>% 
-  mutate(Term = str_replace(Term, "TRT", "Treatment")) 
-  
-
-ancova_res_even
-
-```
-
-Within treatment linear regression, regress sp. richness onto relative fitness
+Examining if fitness varies by microbial diversity by treatment interaction.
 
 ```{r}
+ancova_invsim <- lm(rel_fit ~ InvSimScaled*TRT + Block*InvSimScaled + InvSimScaled*PC2 , RootFitAlpha)
 
-# Richness scaled and covariates
-
-lr_scaled_rich <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
-    tidy() %>% 
-    tidy_more2()
-
-
-lr_scaled_rich2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + richScaled + 
-    Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
-    tidy() %>% 
-    tidy_more2()
-
-
-lr_scaled_rich
-
-lr_scaled_rich2
-```
-
-Raw value of richness simple LR
-
-```{r}
-summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
-
-summary(lm(RelativeFitness ~ rich, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
-```
-
-
-Within treatment linear regression, regress sp. evenness onto relative fitness
-
-```{r}
-# Run full model
-lr_scaled_even <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) %>%  # Alone
+ancova_invsim <- anova(ancova_invsim) %>% 
   tidy() %>% 
-  tidy_more2()
+  tidy_more()
 
-lr_scaled_even2 <- summary(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + EvenScaled + 
-    Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) %>%  # Competition
-    tidy() %>% 
-    tidy_more2()
+ancova_rich <- lm(rel_fit ~ richScaled*TRT + Block*richScaled + richScaled*PC2, RootFitAlpha)
 
-lr_scaled_even
+ancova_rich <- anova(ancova_rich) %>% 
+  tidy( ) %>% 
+  tidy_more()
 
-lr_scaled_even2
+ancova_even <- lm(rel_fit ~ EvenScaled*TRT + Block*EvenScaled + EvenScaled*PC2, RootFitAlpha)
+
+ancova_even <- anova(ancova_even) %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invsim
+ancova_rich
+ancova_even
 ```
 
 
-Simple LR and raw value of evenness
-```{r}
-summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT == "Alone"))) # Alone
+### Revaluation controling for _ALL_ root traits
 
-summary(lm(RelativeFitness ~ even, RootFitAlpha %>% filter(TRT != "Alone"))) # Alone
-```
-
-# Figure 3
-
-Plot results
-
-First create data frames of regression residuals after controlling for all other predictors in the model.
-```{r}
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding evenness
-
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 + 
-  Block:PC1 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding evenness
-
-
-EvenScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(EvenScaled) 
-EvenScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(EvenScaled)
-
-even_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            EvenScaled = c(EvenScaled_alone,
-                                           EvenScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
-```
+Add root traits as co-variates in the model and perform across treatments. Perfrom t-tests.
 
 ```{r}
-alone_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT == "Alone"))) # Collect residuals excluding richness
+all_invSim2 <- lm(rel_fit ~ InvSimScaled + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4 + Block, RootFitAlpha)
 
-comp_res_fit <- resid(lm(RelativeFitness ~ Block + PC1 + PC2 + PC3 + PC4 
-    + Block:PC1 + Block:PC3 + Block:PC4, RootFitAlpha %>% filter(TRT != "Alone"))) # Collect residuals excluding richness
+all_invSim_res2 <- all_invSim2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
 
-richScaled_alone <- RootFitAlpha %>%  filter(TRT == "Alone") %>% pull(richScaled) 
-richScaled_comp <- RootFitAlpha %>%  filter(TRT != "Alone") %>% pull(richScaled)
+all_invSim_res2
 
-rich_df_resid <- data.frame(fitness = c(alone_res_fit, comp_res_fit), 
-                            richScaled = c(richScaled_alone,
-                                           richScaled_comp),
-                            TRT = c(rep("alone", length(alone_res_fit)), rep("competition", length(comp_res_fit))))
+all_rich2 <- lm(rel_fit ~ richScaled + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4 + Block, RootFitAlpha)
+
+all_rich_res2 <- all_rich2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+all_rich_res2
+
+all_even2 <- lm(rel_fit ~ EvenScaled  + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 + Block, RootFitAlpha)
+
+all_even_res2 <- all_even2 %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+all_even_res2
 ```
 
+
+Run F-tests on the models above.
+```{r}
+library(car)
+
+ancova_invsim_all_roots <- Anova(all_invSim2, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_rich_all_roots <- Anova(all_rich2 , type = "III") %>% 
+  tidy( ) %>% 
+  tidy_more()
+
+
+ancova_even_all_roots <- Anova(all_even2, type = "III") %>% 
+  tidy() %>% 
+  tidy_more()
+
+ancova_invsim_all_roots
+ancova_rich_all_roots
+ancova_even_all_roots
+```
+
+
+Investigating quadratic effects (i.e. nonlinear relationships.)
 
 ```{r}
-rich_p <- ggscatter(
-  rich_df_resid, x = "richScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Richness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
+RootFitAlpha <- RootFitAlpha %>% 
+  mutate(InvSimScaled2 = InvSimScaled*InvSimScaled,
+         richScaled2 = richScaled*richScaled,
+         EvenScaled2 = EvenScaled*EvenScaled)
+
+all_rich2 <- lm(rel_fit ~ InvSimScaled + InvSimScaled2 + InvSimScaled*TRT + Block + InvSimScaled*PC1 + InvSimScaled*PC2 + InvSimScaled*PC3 + InvSimScaled*PC4, RootFitAlpha)
+
+InvSim2_res <- all_rich2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+
+all_rich2 <- lm(rel_fit ~ richScaled + richScaled2 +richScaled*TRT + Block + richScaled*PC1 + richScaled*PC2 + richScaled*PC3 + richScaled*PC4, RootFitAlpha)
+
+Rich2_res <- all_rich2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+all_even2 <- lm(rel_fit ~ EvenScaled + EvenScaled2 + EvenScaled*TRT + EvenScaled*PC1 + EvenScaled*PC2 + EvenScaled*PC3 + EvenScaled*PC4 + Block, RootFitAlpha)
+
+Even2_res <- all_even2 %>%
+  tidy() %>% 
+  rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+InvSim2_res
+Even2_res
+Rich2_res
 ```
 
-```{r}
-even_p <- ggscatter(
-  even_df_resid, x = "EvenScaled", y = "fitness",
-  color = "TRT", add = "reg.line", size = 2, alpha = 0.5
-  ) +
-  scale_color_manual("Treatment", values = c("brown", "darkgreen")) +
-  xlab("Sp. Evenness") +
-  ylab("") +
-  theme(axis.text = element_text(color = "black", size = 12)) +
-  theme(axis.title = element_text(color = "black", size = 18)) +
-  theme(legend.text = element_text(size = 12)) 
-```
-
-```{r}
-#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-AB <- ggarrange(rich_p, even_p, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14),
-                common.legend = T)
-
-
-# Common x title
-y.grob1 <- textGrob("Relative Fitness", 
-                   gp = gpar(col="black", fontsize = 25), rot = 90)
-
-gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
-```
-
-
-# MANTEL  (Table 4)
+#### MANTEL test (supplimentary)
 ```{r}  
-
 #  Here we use the Family mean values of root traits---this would indicate evidence for 'phenotypic selection' 
 
   # Load matrix Bray distances of OTU abundance
@@ -852,11 +831,11 @@ gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, left = y.grob1), nrow=1)
   
 
   # Pull out Root traits of interest and save these to the Sampled data frame
-  SampledFit = merge(FitAveraged, sampledf, by = c("TRT", "ML", "Block"))
+  SampledFit = merge(FitAveraged, sampledf.Purp, by = c("TRT", "ML", "Block"))
 
 
 # Pull out Root traits of interest and save these to the Sampled data frame
-SampledRoots = merge(RootAlphaObs, sampledf)
+SampledRoots = merge(RootAlphaObs, sampledf.Purp)
 SampledRootsIp = subset(SampledRoots, Species == "Ip")
 
 OTU_table = OTU_table[row.names(OTU_table) %in% SampledRootsIp$Sample_ID,]
@@ -935,11 +914,19 @@ OTU_pc4
 ```
 
 
-# Export ANCOVA tables
+# Export models
 
 ```{r}
-tables <- list("rich" = ancova_res_rich, "even" = ancova_res_even, "invSim" = ancova_res_sim)
+tables <- list(
+  # Tables Question 2
+    cntrl_even_res = cntrl_even_res, 
+    cntrl_rich_res = cntrl_rich_res,
+    cntrl_invsim_res = cntrl_invsim_res,
+  # Tables Question 3
+    ancova_even = ancova_even, 
+    ancova_invsim = ancova_invsim, 
+    ancova_rich = ancova_rich)
 
-writexl::write_xlsx(tables, "ancova_tables.xlsx")
+writexl::write_xlsx(tables, "manuscript_tables.xlsx")
 ```
 
