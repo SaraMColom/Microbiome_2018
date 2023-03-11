@@ -204,7 +204,7 @@ RootAlphaPurp$Comp <- sub(".*\\-", "", RootAlphaPurp$Combos)
 SimpPC1 <- lm(sim ~ PC1 + Block + TRT, RootAlphaPurp) 
 summary(SimpPC1)
 
-SimpInvPC1 <- lm(InvSimp ~ PC1 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC1 <- lm(InvSimp ~ PC1  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC1)
 
 RichPC1 <- lm(rich ~ PC1 + Block + TRT, RootAlphaPurp) 
@@ -216,7 +216,7 @@ summary(EvenPC1)
 SimpPC2 <- lm(sim ~ PC2 + Block + TRT, RootAlphaPurp) 
 summary(SimpPC2)
 
-SimpInvPC2 <- lm(InvSimp ~ PC2 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC2 <- lm(InvSimp ~ PC2  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC2)
 
 RichPC2 <- lm(rich ~ PC2 + Block + TRT, RootAlphaPurp) 
@@ -229,7 +229,7 @@ summary(EvenPC2)
 SimpPC3 <- lm(sim ~ PC3 + Block + TRT, RootAlphaPurp) 
 summary(SimpPC3)
 
-SimpInvPC3 <- lm(InvSimp ~ PC3 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC3 <- lm(InvSimp ~ PC3  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC3)
 
 RichPC3 <- lm(rich ~ PC3 + Block + TRT, RootAlphaPurp) 
@@ -238,15 +238,14 @@ summary(RichPC3)
 EvenPC3 <- lm(even ~ PC3 + Block + TRT , RootAlphaPurp) 
 summary(EvenPC3)
 
-SimpPC4 <- lm(sim ~ PC4 + Block + TRT, RootAlphaPurp) 
+SimpPC4 <- lm(sim ~ PC4 + Block + TRT, RootAlphaPurp %>% filter(PC4 > -2.5)) 
 summary(SimpPC4)
-car::Anova(mod = lm(sim ~ PC4 + Block + TRT*PC4, RootAlphaPurp), type = "III")
 
 # Repeat & remove outlier
 SimpPC4_out <- lm(sim ~ PC4 + Block + TRT, RootAlphaPurp %>% filter(sim > 0.94)) 
 summary(SimpPC4_out)
 
-SimpInvPC4 <- lm(InvSimp ~ PC4 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC4 <- lm(InvSimp ~ PC4  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC4)
 
 RichPC4 <- lm(rich ~ PC4 + Block + TRT, RootAlphaPurp) 
@@ -312,7 +311,6 @@ microbe_root_lm_res_pc1 <- SimpInvPC1_res %>%
   ) %>% 
   bind_rows(SimpPC1_res) 
   
-microbe_root_lm_res_pc1 
 ```
 
 
@@ -367,7 +365,6 @@ microbe_root_lm_res_pc2 <- SimpInvPC2_res %>%
   ) %>% 
   bind_rows(SimpPC2_res) 
   
-microbe_root_lm_res_pc2  
 ```
 
 
@@ -422,8 +419,7 @@ microbe_root_lm_res_pc3 <- SimpInvPC3_res %>%
     EvenPC3_res
   ) %>% 
   bind_rows(SimpPC3_res)
-  
-microbe_root_lm_res_pc3  
+
 ```
 
 
@@ -478,15 +474,29 @@ microbe_root_lm_res_pc4 <- SimpInvPC4_res2 %>%
   ) %>% 
   bind_rows(SimpPC4_res2)
   
-microbe_root_lm_res_pc4 
 ```
 
+# Table 1.
+
+```{r}
+table_1 <- microbe_root_lm_res_pc1 %>% 
+  left_join(microbe_root_lm_res_pc2, by = "Microbial community metric") %>% 
+  left_join(microbe_root_lm_res_pc3, by = "Microbial community metric") %>% 
+  left_join(microbe_root_lm_res_pc4, by = "Microbial community metric")
+
+table_1
+```
+
+
+
 ## Plotting significant linear associations 
+
+Species richness and evenness vs Root architecture (PC2)
 ```{r n}
 # Richness and root architecture
 P2.rich <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC2, rich), alpha = 0.5, size = 3, color = "brown") +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, rich), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
+  geom_point(data = RootAlphaPurp, aes(PC2, rich), alpha = 0.5, size = 4, color = "#C4961A") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, rich), fullrange = TRUE, color = "#4E84C4", size = 1.2, fill = "#DCDCDC") +
   theme_classic() +
   ylab("Richness") +
   xlab("") +
@@ -498,8 +508,8 @@ P2.rich <- ggplot() +
 
 # Evenness and root architecture
 P2.even <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC2, even), alpha = 0.5, size = 3, color = "brown") +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, even), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
+  geom_point(data = RootAlphaPurp, aes(PC2, even), alpha = 0.5, size = 4, color = "#C4961A") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, even), fullrange = TRUE, color = "#4E84C4", size = 1.2, fill = "#DCDCDC") +
   theme_classic() +
   ylab("Evenness") +
   xlab("") +
@@ -509,6 +519,37 @@ P2.even <- ggplot() +
   theme(legend.position = "top") +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 
+```
+
+```{r}
+# Richness and root architecture
+P4.sim <- ggplot() +
+  geom_point(data = RootAlphaPurp, aes(PC4, sim), alpha = 0.5, size = 3, color = "#C4961A") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC4, sim), fullrange = TRUE, color = "#4E84C4", size = 1.2, fill = "#DCDCDC") +
+  theme_classic() +
+  ylab("simpson Diversity") +
+  xlab("") +
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
+
+```
+
+
+# Figure 1
+
+```{r, fig.height = 8, fig.width = 16}
+#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
+AB <- ggarrange(P2.rich, P2.even, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14))
+
+
+# Common x title
+x.grob1 <- textGrob("Root architecture (PC2)", 
+                   gp = gpar(col="black", fontsize = 25), rot = 0)
+
+gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.05,units = 'in'), nrow=1))
 ```
 
 
@@ -608,19 +649,7 @@ PC4_Box=ggplot(RootAveraged, aes(x = "", y = PC4)) +
   coord_flip()
 ```
 
-# Figure 1
 
-```{r}
-#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-AB <- ggarrange(P2.rich, P2.even, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14))
-
-
-# Common x title
-x.grob1 <- textGrob("Root architecture (PC2)", 
-                   gp = gpar(col="black", fontsize = 25), rot = 0)
-
-gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.05,units = 'in'), nrow=1))
-```
 
 
 ## 7/29/2022

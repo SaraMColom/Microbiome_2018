@@ -238,36 +238,32 @@ summary(SimpPC1)
     ## F-statistic: 1.574 on 5 and 51 DF,  p-value: 0.1841
 
 ``` r
-SimpInvPC1 <- lm(InvSimp ~ PC1 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC1 <- lm(InvSimp ~ PC1  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC1)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = InvSimp ~ PC1 + Comp + TRT + Block, data = RootAlphaPurp)
+    ## lm(formula = InvSimp ~ PC1 + TRT + Block, data = RootAlphaPurp)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -14.0281  -6.9591   0.3038   6.3289  18.8379 
+    ## -17.7242  -6.0203   0.0454   5.7859  21.1897 
     ## 
-    ## Coefficients: (1 not defined because of singularities)
-    ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)       42.7370     4.3928   9.729 6.18e-13 ***
-    ## PC1                1.0167     1.4322   0.710   0.4812    
-    ## CompPA 4.12 Ihed  -2.5142     3.6273  -0.693   0.4916    
-    ## CompPA 4.15 Ihed  -0.2098     3.6612  -0.057   0.9545    
-    ## CompPA 4.2 Ihed   -9.5479     4.1700  -2.290   0.0265 *  
-    ## CompPA 4.3 Ihed   -3.6759     4.0327  -0.912   0.3666    
-    ## TRTInter               NA         NA      NA       NA    
-    ## Block2            -1.2232    11.8157  -0.104   0.9180    
-    ## Block3            -5.0956    12.3933  -0.411   0.6828    
-    ## Block4            -2.9551     2.9900  -0.988   0.3280    
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   43.458      4.429   9.811 2.46e-13 ***
+    ## PC1            1.396      1.440   0.970    0.337    
+    ## TRTInter      -3.528      2.828  -1.248    0.218    
+    ## Block2        -3.544     11.870  -0.299    0.766    
+    ## Block3        -7.712     12.457  -0.619    0.539    
+    ## Block4        -2.575      3.017  -0.854    0.397    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.233 on 48 degrees of freedom
-    ## Multiple R-squared:  0.2126, Adjusted R-squared:  0.08133 
-    ## F-statistic:  1.62 on 8 and 48 DF,  p-value: 0.1441
+    ## Residual standard error: 9.372 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1379, Adjusted R-squared:  0.05334 
+    ## F-statistic: 1.631 on 5 and 51 DF,  p-value: 0.1686
 
 ``` r
 RichPC1 <- lm(rich ~ PC1 + Block + TRT, RootAlphaPurp) 
@@ -354,36 +350,32 @@ summary(SimpPC2)
     ## F-statistic: 1.741 on 5 and 51 DF,  p-value: 0.1421
 
 ``` r
-SimpInvPC2 <- lm(InvSimp ~ PC2 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC2 <- lm(InvSimp ~ PC2  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC2)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = InvSimp ~ PC2 + Comp + TRT + Block, data = RootAlphaPurp)
+    ## lm(formula = InvSimp ~ PC2 + TRT + Block, data = RootAlphaPurp)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -13.8113  -6.6027  -0.0319   5.2411  20.5597 
+    ## -16.9556  -5.8042   0.3685   5.7251  23.5566 
     ## 
-    ## Coefficients: (1 not defined because of singularities)
-    ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)       38.8561     3.3502  11.598 1.59e-15 ***
-    ## PC2               -0.5592     0.7312  -0.765   0.4481    
-    ## CompPA 4.12 Ihed  -1.9226     3.6054  -0.533   0.5963    
-    ## CompPA 4.15 Ihed   0.6735     3.6180   0.186   0.8531    
-    ## CompPA 4.2 Ihed   -8.6322     4.2973  -2.009   0.0502 .  
-    ## CompPA 4.3 Ihed   -2.4873     4.0792  -0.610   0.5449    
-    ## TRTInter               NA         NA      NA       NA    
-    ## Block2             6.6866     5.4195   1.234   0.2233    
-    ## Block3             4.2155     3.7854   1.114   0.2710    
-    ## Block4            -1.6399     3.7052  -0.443   0.6600    
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  38.1076     3.3574  11.350 1.44e-15 ***
+    ## PC2          -0.7761     0.7266  -1.068    0.290    
+    ## TRTInter     -2.3302     2.8422  -0.820    0.416    
+    ## Block2        7.3541     5.3112   1.385    0.172    
+    ## Block3        5.1111     3.6930   1.384    0.172    
+    ## Block4       -0.7544     3.7059  -0.204    0.839    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.225 on 48 degrees of freedom
-    ## Multiple R-squared:  0.2139, Adjusted R-squared:  0.08286 
-    ## F-statistic: 1.632 on 8 and 48 DF,  p-value: 0.1405
+    ## Residual standard error: 9.354 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1412, Adjusted R-squared:  0.05699 
+    ## F-statistic: 1.677 on 5 and 51 DF,  p-value: 0.1571
 
 ``` r
 RichPC2 <- lm(rich ~ PC2 + Block + TRT, RootAlphaPurp) 
@@ -483,36 +475,32 @@ summary(SimpPC3)
     ## F-statistic: 1.636 on 5 and 51 DF,  p-value: 0.1673
 
 ``` r
-SimpInvPC3 <- lm(InvSimp ~ PC3 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC3 <- lm(InvSimp ~ PC3  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC3)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = InvSimp ~ PC3 + Comp + TRT + Block, data = RootAlphaPurp)
+    ## lm(formula = InvSimp ~ PC3 + TRT + Block, data = RootAlphaPurp)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -13.3897  -7.2801   0.0318   5.5277  19.0761 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -18.376  -5.062   0.571   5.679  21.215 
     ## 
-    ## Coefficients: (1 not defined because of singularities)
-    ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)       39.8540     2.8711  13.881   <2e-16 ***
-    ## PC3                0.5259     0.8919   0.590   0.5582    
-    ## CompPA 4.12 Ihed  -1.5109     3.7682  -0.401   0.6902    
-    ## CompPA 4.15 Ihed   0.3203     3.5946   0.089   0.9294    
-    ## CompPA 4.2 Ihed   -8.9321     4.2637  -2.095   0.0415 *  
-    ## CompPA 4.3 Ihed   -2.7888     4.0417  -0.690   0.4935    
-    ## TRTInter               NA         NA      NA       NA    
-    ## Block2             6.6726     5.4507   1.224   0.2269    
-    ## Block3             3.6502     3.6522   0.999   0.3226    
-    ## Block4            -3.4573     2.9385  -1.177   0.2452    
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  39.5095     2.8733  13.751   <2e-16 ***
+    ## PC3           0.7704     0.8710   0.885    0.381    
+    ## TRTInter     -2.4525     2.8500  -0.861    0.394    
+    ## Block2        7.5555     5.3762   1.405    0.166    
+    ## Block3        4.1443     3.5324   1.173    0.246    
+    ## Block4       -3.3207     2.9698  -1.118    0.269    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.247 on 48 degrees of freedom
-    ## Multiple R-squared:   0.21,  Adjusted R-squared:  0.07836 
-    ## F-statistic: 1.595 on 8 and 48 DF,  p-value: 0.1513
+    ## Residual standard error: 9.386 on 51 degrees of freedom
+    ## Multiple R-squared:  0.1352, Adjusted R-squared:  0.05046 
+    ## F-statistic: 1.595 on 5 and 51 DF,  p-value: 0.1783
 
 ``` r
 RichPC3 <- lm(rich ~ PC3 + Block + TRT, RootAlphaPurp) 
@@ -571,45 +559,33 @@ summary(EvenPC3)
     ## F-statistic: 1.441 on 5 and 51 DF,  p-value: 0.2256
 
 ``` r
-SimpPC4 <- lm(sim ~ PC4 + Block + TRT, RootAlphaPurp) 
+SimpPC4 <- lm(sim ~ PC4 + Block + TRT, RootAlphaPurp %>% filter(PC4 > -2.5)) 
 summary(SimpPC4)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = sim ~ PC4 + Block + TRT, data = RootAlphaPurp)
+    ## lm(formula = sim ~ PC4 + Block + TRT, data = RootAlphaPurp %>% 
+    ##     filter(PC4 > -2.5))
     ## 
     ## Residuals:
     ##       Min        1Q    Median        3Q       Max 
-    ## -0.020413 -0.004944  0.001874  0.005665  0.012687 
+    ## -0.017808 -0.004329  0.001752  0.004489  0.011494 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  0.9764140  0.0024003 406.792  < 2e-16 ***
-    ## PC4          0.0024831  0.0009036   2.748  0.00827 ** 
-    ## Block2       0.0012787  0.0046058   0.278  0.78242    
-    ## Block3       0.0006558  0.0029679   0.221  0.82601    
-    ## Block4      -0.0047031  0.0025559  -1.840  0.07158 .  
-    ## TRTInter    -0.0028974  0.0023099  -1.254  0.21544    
+    ## (Intercept)  0.9747183  0.0022599 431.301   <2e-16 ***
+    ## PC4          0.0008700  0.0009766   0.891    0.377    
+    ## Block2       0.0035872  0.0042850   0.837    0.407    
+    ## Block3       0.0016687  0.0027578   0.605    0.548    
+    ## Block4      -0.0021782  0.0024706  -0.882    0.382    
+    ## TRTInter    -0.0026443  0.0021322  -1.240    0.221    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.007739 on 51 degrees of freedom
-    ## Multiple R-squared:  0.2259, Adjusted R-squared:   0.15 
-    ## F-statistic: 2.976 on 5 and 51 DF,  p-value: 0.01969
-
-``` r
-car::Anova(mod = lm(sim ~ PC4 + Block + TRT*PC4, RootAlphaPurp), type = "III")
-```
-
-|             |    Sum Sq |  Df |      F value |    Pr(>F) |
-|:------------|----------:|----:|-------------:|----------:|
-| (Intercept) | 9.1181664 |   1 | 1.516301e+05 | 0.0000000 |
-| PC4         | 0.0000118 |   1 | 1.969897e-01 | 0.6590766 |
-| Block       | 0.0002683 |   3 | 1.487436e+00 | 0.2292655 |
-| TRT         | 0.0000508 |   1 | 8.451539e-01 | 0.3623409 |
-| PC4:TRT     | 0.0000481 |   1 | 7.993077e-01 | 0.3755839 |
-| Residuals   | 0.0030067 |  50 |           NA |        NA |
+    ## Residual standard error: 0.007102 on 49 degrees of freedom
+    ## Multiple R-squared:  0.1002, Adjusted R-squared:  0.008383 
+    ## F-statistic: 1.091 on 5 and 49 DF,  p-value: 0.3771
 
 ``` r
 # Repeat & remove outlier
@@ -642,36 +618,32 @@ summary(SimpPC4_out)
     ## F-statistic: 1.136 on 5 and 50 DF,  p-value: 0.3537
 
 ``` r
-SimpInvPC4 <- lm(InvSimp ~ PC4 + Comp + TRT + Block, RootAlphaPurp) 
+SimpInvPC4 <- lm(InvSimp ~ PC4  + TRT + Block, RootAlphaPurp) 
 summary(SimpInvPC4)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = InvSimp ~ PC4 + Comp + TRT + Block, data = RootAlphaPurp)
+    ## lm(formula = InvSimp ~ PC4 + TRT + Block, data = RootAlphaPurp)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -13.1982  -7.7521   0.3428   6.3656  21.7090 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -17.400  -7.413   1.142   5.415  24.360 
     ## 
-    ## Coefficients: (1 not defined because of singularities)
-    ##                  Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)       41.6988     2.8055  14.863   <2e-16 ***
-    ## PC4                1.9003     1.0889   1.745   0.0873 .  
-    ## CompPA 4.12 Ihed  -2.0636     3.5041  -0.589   0.5587    
-    ## CompPA 4.15 Ihed   0.2956     3.4983   0.084   0.9330    
-    ## CompPA 4.2 Ihed   -8.0009     4.1457  -1.930   0.0595 .  
-    ## CompPA 4.3 Ihed   -1.7723     3.9605  -0.448   0.6565    
-    ## TRTInter               NA         NA      NA       NA    
-    ## Block2             3.0685     5.5619   0.552   0.5837    
-    ## Block3             2.1513     3.5765   0.602   0.5503    
-    ## Block4            -4.8794     2.9836  -1.635   0.1085    
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   41.834      2.810  14.886   <2e-16 ***
+    ## PC4            2.259      1.058   2.135   0.0376 *  
+    ## TRTInter      -2.298      2.705  -0.850   0.3995    
+    ## Block2         3.120      5.393   0.579   0.5654    
+    ## Block3         2.319      3.475   0.667   0.5076    
+    ## Block4        -5.023      2.993  -1.678   0.0994 .  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9 on 48 degrees of freedom
-    ## Multiple R-squared:  0.2518, Adjusted R-squared:  0.1271 
-    ## F-statistic: 2.019 on 8 and 48 DF,  p-value: 0.06403
+    ## Residual standard error: 9.062 on 51 degrees of freedom
+    ## Multiple R-squared:  0.194,  Adjusted R-squared:  0.115 
+    ## F-statistic: 2.456 on 5 and 51 DF,  p-value: 0.04547
 
 ``` r
 RichPC4 <- lm(rich ~ PC4 + Block + TRT, RootAlphaPurp) 
@@ -784,16 +756,7 @@ microbe_root_lm_res_pc1 <- SimpInvPC1_res %>%
     EvenPC1_res
   ) %>% 
   bind_rows(SimpPC1_res) 
-  
-microbe_root_lm_res_pc1 
 ```
-
-| Microbial community metric | Root topology |
-|:---------------------------|:--------------|
-| Inverse Simpson Diversity  | 1.02 +/- 1.43 |
-| Sp. richness               | 3.38 +/- 4.65 |
-| Sp. evenness               | 0 +/- 0       |
-| Simpson Diversity          | 0 +/- 0       |
 
 PC2
 
@@ -846,16 +809,7 @@ microbe_root_lm_res_pc2 <- SimpInvPC2_res %>%
     EvenPC2_res
   ) %>% 
   bind_rows(SimpPC2_res) 
-  
-microbe_root_lm_res_pc2  
 ```
-
-| Microbial community metric | Root architecture |
-|:---------------------------|:------------------|
-| Inverse Simpson Diversity  | -0.56 +/- 0.73    |
-| Sp. richness               | -5.73 +/- 2.22    |
-| Sp. evenness               | 0 +/- 0           |
-| Simpson Diversity          | 0 +/- 0           |
 
 PC3
 
@@ -908,16 +862,7 @@ microbe_root_lm_res_pc3 <- SimpInvPC3_res %>%
     EvenPC3_res
   ) %>% 
   bind_rows(SimpPC3_res)
-  
-microbe_root_lm_res_pc3  
 ```
-
-| Microbial community metric | Root size     |
-|:---------------------------|:--------------|
-| Inverse Simpson Diversity  | 0.53 +/- 0.89 |
-| Sp. richness               | 2 +/- 2.81    |
-| Sp. evenness               | 0 +/- 0       |
-| Simpson Diversity          | 0 +/- 0       |
 
 PC4
 
@@ -970,24 +915,35 @@ microbe_root_lm_res_pc4 <- SimpInvPC4_res2 %>%
     EvenPC4_res2
   ) %>% 
   bind_rows(SimpPC4_res2)
-  
-microbe_root_lm_res_pc4 
 ```
 
-| Microbial community metric | Root morphology |
-|:---------------------------|:----------------|
-| Inverse Simpson Diversity  | 1.9 +/- 1.09    |
-| Sp. richness               | 3.5 +/- 3.52    |
-| Sp. evenness               | 0 +/- 0         |
-| Simpson Diversity          | 0 +/- 0         |
+# Table 1.
+
+``` r
+table_1 <- microbe_root_lm_res_pc1 %>% 
+  left_join(microbe_root_lm_res_pc2, by = "Microbial community metric") %>% 
+  left_join(microbe_root_lm_res_pc3, by = "Microbial community metric") %>% 
+  left_join(microbe_root_lm_res_pc4, by = "Microbial community metric")
+
+table_1
+```
+
+| Microbial community metric | Root topology | Root architecture | Root size     | Root morphology |
+|:---------------------------|:--------------|:------------------|:--------------|:----------------|
+| Inverse Simpson Diversity  | 1.4 +/- 1.44  | -0.78 +/- 0.73    | 0.77 +/- 0.87 | 2.26 +/- 1.06   |
+| Sp. richness               | 3.38 +/- 4.65 | -5.73 +/- 2.22    | 2 +/- 2.81    | 3.5 +/- 3.52    |
+| Sp. evenness               | 0 +/- 0       | 0 +/- 0           | 0 +/- 0       | 0 +/- 0         |
+| Simpson Diversity          | 0 +/- 0       | 0 +/- 0           | 0 +/- 0       | 0 +/- 0         |
 
 ## Plotting significant linear associations
+
+Species richness and evenness vs Root architecture (PC2)
 
 ``` r
 # Richness and root architecture
 P2.rich <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC2, rich), alpha = 0.5, size = 3, color = "brown") +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, rich), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
+  geom_point(data = RootAlphaPurp, aes(PC2, rich), alpha = 0.5, size = 4, color = "#C4961A") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, rich), fullrange = TRUE, color = "#4E84C4", size = 1.2, fill = "#DCDCDC") +
   theme_classic() +
   ylab("Richness") +
   xlab("") +
@@ -999,8 +955,8 @@ P2.rich <- ggplot() +
 
 # Evenness and root architecture
 P2.even <- ggplot() +
-  geom_point(data = RootAlphaPurp, aes(PC2, even), alpha = 0.5, size = 3, color = "brown") +
-  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, even), fullrange = TRUE, color = "black", size = 1.2, fill = "#DCDCDC") +
+  geom_point(data = RootAlphaPurp, aes(PC2, even), alpha = 0.5, size = 4, color = "#C4961A") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC2, even), fullrange = TRUE, color = "#4E84C4", size = 1.2, fill = "#DCDCDC") +
   theme_classic() +
   ylab("Evenness") +
   xlab("") +
@@ -1010,6 +966,41 @@ P2.even <- ggplot() +
   theme(legend.position = "top") +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
+
+``` r
+# Richness and root architecture
+P4.sim <- ggplot() +
+  geom_point(data = RootAlphaPurp, aes(PC4, sim), alpha = 0.5, size = 3, color = "#C4961A") +
+  geom_smooth(data = RootAlphaPurp, method = "lm", aes(PC4, sim), fullrange = TRUE, color = "#4E84C4", size = 1.2, fill = "#DCDCDC") +
+  theme_classic() +
+  ylab("simpson Diversity") +
+  xlab("") +
+  theme(axis.text = element_text(color = "black", size = 12)) +
+  theme(axis.title = element_text(color = "black", size = 18)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
+```
+
+# Figure 1
+
+``` r
+#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
+AB <- ggarrange(P2.rich, P2.even, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14))
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
+
+``` r
+# Common x title
+x.grob1 <- textGrob("Root architecture (PC2)", 
+                   gp = gpar(col="black", fontsize = 25), rot = 0)
+
+gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.05,units = 'in'), nrow=1))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
 # Calculate relative fitness
@@ -1072,7 +1063,7 @@ ggplot(FitAlpha, aes(TRT, rel_fit)) +
   facet_grid(~Block)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
 # Combine with root data
@@ -1139,26 +1130,6 @@ PC4_Box=ggplot(RootAveraged, aes(x = "", y = PC4)) +
   coord_flip()
 ```
 
-# Figure 1
-
-``` r
-#ggarrange(P2.rich,P2.even,P4.Sim,P4.simIn,nrow=2,ncol=2)
-AB <- ggarrange(P2.rich, P2.even, labels = "AUTO", hjust = -7, vjust = 1.5,font.label = list(size = 14))
-```
-
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-
-``` r
-# Common x title
-x.grob1 <- textGrob("Root architecture (PC2)", 
-                   gp = gpar(col="black", fontsize = 25), rot = 0)
-
-gridExtra::grid.arrange(gridExtra::arrangeGrob(AB, bottom = x.grob1, padding = unit(0.05,units = 'in'), nrow=1))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-
 ## 7/29/2022
 
 -   Evaluate linear relationship of *I.purpurea* fitness and microbial
@@ -1195,7 +1166,7 @@ RootFitAlpha %>%
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ## Question 2
 
@@ -1664,11 +1635,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7605 
+    ##       Significance: 0.7696 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0736 0.0969 0.1162 0.1398 
+    ## 0.0727 0.0949 0.1146 0.1393 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1685,11 +1656,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0667 
+    ##       Significance: 0.0706 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0578 0.0756 0.0922 0.1151 
+    ## 0.0584 0.0771 0.0925 0.1111 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1706,11 +1677,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1289 
+    ##       Significance: 0.1257 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0821 0.1051 0.1255 0.1509 
+    ## 0.0803 0.1042 0.1241 0.1510 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1727,11 +1698,11 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7644 
+    ##       Significance: 0.7562 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0752 0.1001 0.1206 0.1432 
+    ## 0.0733 0.0982 0.1185 0.1423 
     ## Permutation: free
     ## Number of permutations: 9999
 
