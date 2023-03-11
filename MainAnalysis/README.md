@@ -406,19 +406,6 @@ summary(RichPC2)
     ## F-statistic: 3.491 on 5 and 51 DF,  p-value: 0.008644
 
 ``` r
-car::Anova(mod = lm(rich ~ PC2 + Block + TRT*PC2, RootAlphaPurp), type = "III")
-```
-
-|             |       Sum Sq |  Df |      F value |    Pr(>F) |
-|:------------|-------------:|----:|-------------:|----------:|
-| (Intercept) | 1331419.7296 |   1 | 1609.8076381 | 0.0000000 |
-| PC2         |    3433.0814 |   1 |    4.1509079 | 0.0469222 |
-| Block       |    8117.0832 |   3 |    3.2714308 | 0.0286515 |
-| TRT         |     749.6520 |   1 |    0.9063975 | 0.3456519 |
-| PC2:TRT     |     415.9739 |   1 |    0.5029503 | 0.4815006 |
-| Residuals   |   41353.3797 |  50 |           NA |        NA |
-
-``` r
 EvenPC2 <- lm(even ~ PC2 + Block + TRT , RootAlphaPurp) 
 summary(EvenPC2) 
 ```
@@ -712,10 +699,9 @@ SimpInvPC1_res <- SimpInvPC1 %>%
   mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>% 
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root topology`)
-
 
 
 SimpPC1_res <- SimpPC1 %>% 
@@ -723,9 +709,11 @@ SimpPC1_res <- SimpPC1 %>%
   filter(term == "PC1") %>% 
   mutate(`Microbial community metric` = "Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
-  relocate(`Microbial community metric`) %>% 
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  relocate(`Microbial community metric`)  %>% 
+  mutate(b = b*1000,
+         SE = SE*1000) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+  mutate("Root topology" = paste(b, "e^3", " +/- ", SE, "e^3", sep = "")) %>% 
   dplyr::select(`Microbial community metric`, `Root topology`)
 
 RichPC1_res <- RichPC1 %>% 
@@ -734,7 +722,7 @@ RichPC1_res <- RichPC1 %>%
   mutate(`Microbial community metric` = "Sp. richness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>% 
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root topology`)  
 
@@ -744,8 +732,10 @@ EvenPC1_res <- EvenPC1 %>%
   mutate(`Microbial community metric` = "Sp. evenness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`)  %>% 
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root topology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  mutate(b = b*1000000,
+         SE = SE*1000000) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+  mutate("Root topology" = paste(b, "e^6", " +/- ", SE, "e^6", sep = "")) %>% 
   dplyr::select(`Microbial community metric`, `Root topology`) 
 
 microbe_root_lm_res_pc1 <- SimpInvPC1_res %>% 
@@ -767,7 +757,7 @@ SimpInvPC2_res <- SimpInvPC2 %>%
   mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>% 
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root architecture`)
 
@@ -777,8 +767,10 @@ SimpPC2_res <- SimpPC2 %>%
   mutate(`Microbial community metric` = "Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>% 
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+    mutate(b = b*10000,
+           SE = SE*10000) %>% 
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+    mutate("Root architecture" = paste(b, "e^4", " +/- ", SE, "e^4", sep = "")) %>% 
   dplyr::select(`Microbial community metric`, `Root architecture`)  
 
 RichPC2_res <- RichPC2 %>% 
@@ -787,7 +779,7 @@ RichPC2_res <- RichPC2 %>%
   mutate(`Microbial community metric` = "Sp. richness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root architecture`)  
 
@@ -796,9 +788,11 @@ EvenPC2_res <- EvenPC2 %>%
   filter(term == "PC2") %>% 
   mutate(`Microbial community metric` = "Sp. evenness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
-  relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root architecture" = paste(b, "+/-", SE, sep = " ")) %>% 
+  relocate(`Microbial community metric`) %>% 
+    mutate(b = b*100000,
+           SE = SE*100000) %>% 
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+    mutate("Root architecture" = paste(b, "e^5", " +/- ", SE, "e^5", sep = "")) %>% 
   dplyr::select(`Microbial community metric`, `Root architecture`)  
 
 microbe_root_lm_res_pc2 <- SimpInvPC2_res %>% 
@@ -820,7 +814,7 @@ SimpInvPC3_res <- SimpInvPC3 %>%
   mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root size`)    
 
@@ -829,9 +823,11 @@ SimpPC3_res <- SimpPC3 %>%
   filter(term == "PC3") %>% 
   mutate(`Microbial community metric` = "Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
-  relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  relocate(`Microbial community metric`)%>% 
+    mutate(b = b*10000,
+           SE = SE*10000) %>% 
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+    mutate("Root size" = paste(b, "e^4", " +/- ", SE, "e^4", sep = "")) %>% 
   dplyr::select(`Microbial community metric`, `Root size`)    
 
 RichPC3_res <- RichPC3 %>% 
@@ -840,7 +836,7 @@ RichPC3_res <- RichPC3 %>%
   mutate(`Microbial community metric` = "Sp. richness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root size`)    
 
@@ -849,9 +845,11 @@ EvenPC3_res <- EvenPC3 %>%
   filter(term == "PC3") %>% 
   mutate(`Microbial community metric` = "Sp. evenness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
-  relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root size" = paste(b, "+/-", SE, sep = " ")) %>% 
+  relocate(`Microbial community metric`) %>% 
+    mutate(b = b*100000,
+           SE = SE*100000) %>% 
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+    mutate("Root size" = paste(b, "e^5", " +/- ", SE, "e^5", sep = ""))%>% 
   dplyr::select(`Microbial community metric`, `Root size`)    
 
 microbe_root_lm_res_pc3 <- SimpInvPC3_res %>% 
@@ -873,7 +871,7 @@ SimpInvPC4_res2 <- SimpInvPC4 %>%
   mutate(`Microbial community metric` = "Inverse Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root morphology`)    
 
@@ -882,9 +880,11 @@ SimpPC4_res2 <- SimpPC4 %>%
   filter(term == "PC4") %>% 
   mutate(`Microbial community metric` = "Simpson Diversity") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
-  relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  relocate(`Microbial community metric`) %>% 
+    mutate(b = b*10000,
+           SE = SE*10000) %>% 
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+    mutate("Root morphology" = paste(b, "e^4", " +/- ", SE, "e^4", sep = "")) %>% 
   dplyr::select(`Microbial community metric`, `Root morphology`) 
 
 RichPC4_res2 <- RichPC4 %>% 
@@ -893,7 +893,7 @@ RichPC4_res2 <- RichPC4 %>%
   mutate(`Microbial community metric` = "Sp. richness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
   relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
+  mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
   mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
   dplyr::select(`Microbial community metric`, `Root morphology`) 
 
@@ -902,9 +902,11 @@ EvenPC4_res2 <- EvenPC4 %>%
   filter(term == "PC4") %>% 
   mutate(`Microbial community metric` = "Sp. evenness") %>% 
   rename(b = estimate, SE = `std.error`, `t-statistic` = statistic, `p_value` = `p.value`) %>% 
-  relocate(`Microbial community metric`) %>%
-  mutate(across(where(is.numeric), function(x) round(x, 2))) %>% 
-  mutate("Root morphology" = paste(b, "+/-", SE, sep = " ")) %>% 
+  relocate(`Microbial community metric`) %>% 
+    mutate(b = b*100000,
+           SE = SE*100000) %>% 
+    mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+    mutate("Root morphology" = paste(b, "e^5", " +/- ", SE, "e^5", sep = ""))%>% 
   dplyr::select(`Microbial community metric`, `Root morphology`) 
 
 microbe_root_lm_res_pc4 <- SimpInvPC4_res2 %>% 
@@ -919,6 +921,16 @@ microbe_root_lm_res_pc4 <- SimpInvPC4_res2 %>%
 
 # Table 1.
 
+Table 1 Results of separate linear regression between different metrics
+(ɑ-Diversity Metric) of the rhizosphere microbiome (Inverse Simpson,
+Simpson, Richness and Evenness) and four root traits (Root topology,
+Root architecture, Root size and Root morphology) examined in I.
+purpurea. ɑ-Diversity metrics were treated as response variables for
+each root trait, and Block and competition treatment (Treatment) were
+included in the final modelǂ as fixed main effects. Linear regression
+coefficient slopes (𝛣) are reported with ± 1 standard error. P \< 0.05
+*; P \<0.01 **; P \<0.001***; P =0.09 ^
+
 ``` r
 table_1 <- microbe_root_lm_res_pc1 %>% 
   left_join(microbe_root_lm_res_pc2, by = "Microbial community metric") %>% 
@@ -928,12 +940,12 @@ table_1 <- microbe_root_lm_res_pc1 %>%
 table_1
 ```
 
-| Microbial community metric | Root topology | Root architecture | Root size     | Root morphology |
-|:---------------------------|:--------------|:------------------|:--------------|:----------------|
-| Inverse Simpson Diversity  | 1.4 +/- 1.44  | -0.78 +/- 0.73    | 0.77 +/- 0.87 | 2.26 +/- 1.06   |
-| Sp. richness               | 3.38 +/- 4.65 | -5.73 +/- 2.22    | 2 +/- 2.81    | 3.5 +/- 3.52    |
-| Sp. evenness               | 0 +/- 0       | 0 +/- 0           | 0 +/- 0       | 0 +/- 0         |
-| Simpson Diversity          | 0 +/- 0       | 0 +/- 0           | 0 +/- 0       | 0 +/- 0         |
+| Microbial community metric | Root topology           | Root architecture      | Root size             | Root morphology       |
+|:---------------------------|:------------------------|:-----------------------|:----------------------|:----------------------|
+| Inverse Simpson Diversity  | 1.396 +/- 1.44          | -0.776 +/- 0.727       | 0.77 +/- 0.871        | 2.259 +/- 1.058       |
+| Sp. richness               | 3.379 +/- 4.65          | -5.734 +/- 2.223       | 1.998 +/- 2.81        | 3.503 +/- 3.518       |
+| Sp. evenness               | -6.197e^6 +/- 66.198e^6 | 7.252e^5 +/- 3.19e^5   | 0.284e^5 +/- 3.999e^5 | 2.615e^5 +/- 5.018e^5 |
+| Simpson Diversity          | 1.447e^3 +/- 1.258e^3   | -9.071e^4 +/- 6.315e^4 | 9.578e^4 +/- 7.577e^4 | 8.7e^4 +/- 9.766e^4   |
 
 ## Plotting significant linear associations
 
@@ -1635,11 +1647,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7696 
+    ##       Significance: 0.7674 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0727 0.0949 0.1146 0.1393 
+    ## 0.0754 0.0989 0.1176 0.1435 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1656,11 +1668,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0706 
+    ##       Significance: 0.0692 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0584 0.0771 0.0925 0.1111 
+    ## 0.0585 0.0770 0.0914 0.1096 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1677,11 +1689,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1257 
+    ##       Significance: 0.1272 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0803 0.1042 0.1241 0.1510 
+    ## 0.0796 0.1061 0.1260 0.1509 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1698,11 +1710,11 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7562 
+    ##       Significance: 0.7754 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0733 0.0982 0.1185 0.1423 
+    ## 0.0753 0.0976 0.1154 0.1433 
     ## Permutation: free
     ## Number of permutations: 9999
 
