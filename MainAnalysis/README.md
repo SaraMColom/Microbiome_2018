@@ -1183,6 +1183,17 @@ RootFitAlpha %>%
 ## Question 2
 
 ``` r
+cntrl_Sim <- lm(rel_fit ~ SimScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
+
+cntrl_sim_res <- cntrl_Sim %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+
 cntrl_invSim <- lm(rel_fit ~ InvSimScaled*PC2 + Block, RootFitAlpha %>% 
                    filter(TRT == "Alone"))
 
@@ -1252,6 +1263,13 @@ Examining if fitness varies by microbial diversity by treatment
 interaction.
 
 ``` r
+ancova_sim <- lm(rel_fit ~ SimScaled*TRT + Block*SimScaled + SimScaled*PC2 , RootFitAlpha)
+
+ancova_sim <- anova(ancova_sim) %>% 
+  tidy() %>% 
+  tidy_more()
+
+
 ancova_invsim <- lm(rel_fit ~ InvSimScaled*TRT + Block*InvSimScaled + InvSimScaled*PC2 , RootFitAlpha)
 
 ancova_invsim <- anova(ancova_invsim) %>% 
@@ -1647,11 +1665,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7603 
+    ##       Significance: 0.7545 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0736 0.0958 0.1182 0.1411 
+    ## 0.0724 0.0956 0.1147 0.1384 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1668,11 +1686,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0679 
+    ##       Significance: 0.0714 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0570 0.0763 0.0926 0.1109 
+    ## 0.0587 0.0779 0.0940 0.1107 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1689,11 +1707,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1201 
+    ##       Significance: 0.1244 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0783 0.1026 0.1255 0.1501 
+    ## 0.0801 0.1049 0.1232 0.1497 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1714,7 +1732,7 @@ OTU_pc4
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0763 0.0996 0.1218 0.1435 
+    ## 0.0744 0.0986 0.1186 0.1436 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1727,9 +1745,11 @@ tables <- list(
     cntrl_even_res = cntrl_even_res, 
     cntrl_rich_res = cntrl_rich_res,
     cntrl_invsim_res = cntrl_invsim_res,
+    cntrl_sim_res = cntrl_sim_res,
   # Tables Question 3
     ancova_even = ancova_even, 
-    ancova_invsim = ancova_invsim, 
+    ancova_invsim = ancova_invsim,
+    ancova_sim = ancova_sim,
     ancova_rich = ancova_rich)
 
 writexl::write_xlsx(tables, "manuscript_tables.xlsx")

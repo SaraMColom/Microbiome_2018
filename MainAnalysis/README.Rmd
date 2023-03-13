@@ -703,6 +703,18 @@ RootFitAlpha %>%
 ## Question 2
 
 ```{r}
+
+cntrl_Sim <- lm(rel_fit ~ SimScaled*PC2 + Block, RootFitAlpha %>% 
+                   filter(TRT == "Alone"))
+
+cntrl_sim_res <- cntrl_Sim %>% 
+                        tidy() %>% 
+                        rename(b = estimate, SE = `std.error`, `t-statistic` = statistic) %>% 
+                        mutate(across(where(is.numeric), function(x) round(x, 3))) %>% 
+                        rename(`p_value` = `p.value`) %>% 
+                        tidy_p()
+
+
 cntrl_invSim <- lm(rel_fit ~ InvSimScaled*PC2 + Block, RootFitAlpha %>% 
                    filter(TRT == "Alone"))
 
@@ -743,6 +755,13 @@ cntrl_even_res
 Examining if fitness varies by microbial diversity by treatment interaction.
 
 ```{r}
+ancova_sim <- lm(rel_fit ~ SimScaled*TRT + Block*SimScaled + SimScaled*PC2 , RootFitAlpha)
+
+ancova_sim <- anova(ancova_sim) %>% 
+  tidy() %>% 
+  tidy_more()
+
+
 ancova_invsim <- lm(rel_fit ~ InvSimScaled*TRT + Block*InvSimScaled + InvSimScaled*PC2 , RootFitAlpha)
 
 ancova_invsim <- anova(ancova_invsim) %>% 
@@ -970,9 +989,11 @@ tables <- list(
     cntrl_even_res = cntrl_even_res, 
     cntrl_rich_res = cntrl_rich_res,
     cntrl_invsim_res = cntrl_invsim_res,
+    cntrl_sim_res = cntrl_sim_res,
   # Tables Question 3
     ancova_even = ancova_even, 
-    ancova_invsim = ancova_invsim, 
+    ancova_invsim = ancova_invsim,
+    ancova_sim = ancova_sim,
     ancova_rich = ancova_rich)
 
 writexl::write_xlsx(tables, "manuscript_tables.xlsx")
