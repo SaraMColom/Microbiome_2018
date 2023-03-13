@@ -1647,11 +1647,11 @@ OTU_pc1
     ## mantel(xdis = Bray, ydis = PC1.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7674 
+    ##       Significance: 0.7603 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0754 0.0989 0.1176 0.1435 
+    ## 0.0736 0.0958 0.1182 0.1411 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1668,11 +1668,11 @@ OTU_pc2
     ## mantel(xdis = Bray, ydis = PC2.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.06836 
-    ##       Significance: 0.0692 
+    ##       Significance: 0.0679 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0585 0.0770 0.0914 0.1096 
+    ## 0.0570 0.0763 0.0926 0.1109 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1689,11 +1689,11 @@ OTU_pc3
     ## mantel(xdis = Bray, ydis = PC3.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: 0.07133 
-    ##       Significance: 0.1272 
+    ##       Significance: 0.1201 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0796 0.1061 0.1260 0.1509 
+    ## 0.0783 0.1026 0.1255 0.1501 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1710,11 +1710,11 @@ OTU_pc4
     ## mantel(xdis = Bray, ydis = PC4.dist, method = "spearman", permutations = 9999,      na.rm = TRUE) 
     ## 
     ## Mantel statistic r: -0.04189 
-    ##       Significance: 0.7754 
+    ##       Significance: 0.767 
     ## 
     ## Upper quantiles of permutations (null model):
     ##    90%    95%  97.5%    99% 
-    ## 0.0753 0.0976 0.1154 0.1433 
+    ## 0.0763 0.0996 0.1218 0.1435 
     ## Permutation: free
     ## Number of permutations: 9999
 
@@ -1723,6 +1723,7 @@ OTU_pc4
 ``` r
 tables <- list(
   # Tables Question 2
+    table_1 = table_1,
     cntrl_even_res = cntrl_even_res, 
     cntrl_rich_res = cntrl_rich_res,
     cntrl_invsim_res = cntrl_invsim_res,

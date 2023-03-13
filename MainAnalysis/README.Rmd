@@ -966,6 +966,7 @@ OTU_pc4
 ```{r}
 tables <- list(
   # Tables Question 2
+    table_1 = table_1,
     cntrl_even_res = cntrl_even_res, 
     cntrl_rich_res = cntrl_rich_res,
     cntrl_invsim_res = cntrl_invsim_res,
