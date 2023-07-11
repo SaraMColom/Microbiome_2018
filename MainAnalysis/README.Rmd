@@ -147,7 +147,7 @@ physeq.bray <- phyloseq::distance(physeq = physeq.scale, method = "bray")
 # # # # # # # # # # # # # # # # # # # # # 
 
 physeq.Purp <- subset_samples(physeq.scale, Species == "Ip")
-sampledf.Purp<- data.frame(sample_data(physeq.Purp))
+sampledf.Purp <- data.frame(sample_data(physeq.Purp))
 
 # Calculate bray curtis for I.purpurea samples only
 physeq.Purp.bray <- phyloseq::distance(physeq = physeq.Purp, method = "bray")
@@ -177,6 +177,64 @@ SampData <- subset(SampData, SampData$TRT == "Inter"|SampData$TRT == "Alone")
 
 physeq.pcoa.df <- droplevels(merge(physeq.pcoa.vectors, SampData, by="Duplicates"))
 ```
+
+
+```{r}
+set.seed(123)
+NMS <-
+  metaMDS(physeq.Purp.bray,
+          distance = "bray",
+          k = 2,
+          maxit = 999, 
+          trymax = 500,
+          wascores = TRUE)
+```
+
+
+```{r}
+NMS_points <- NMS$points
+
+# Add sample info to points data
+
+NMS_points <- NMS_points %>% 
+  bind_cols(
+    sampledf.Purp
+  )
+```
+
+Merge root data & NMS results
+
+```{r}
+NMS_points <- merge(NMS_points, RootData[c("Sample_ID", "PC1", "PC2", "PC3", "PC4")])
+```
+
+
+
+
+```{r}
+scatterplot3d::scatterplot3d(
+  NMS_points$MDS1,
+  NMS_points$MDS2,
+  NMS_points$PC2
+)
+```
+
+
+
+```{r}
+NMS_points <- NMS_points %>% 
+  mutate(PC2_cat = case_when(
+    PC2 < -2 ~ "Low",
+    PC2 >= -2 & PC2 < 1.5 ~ "Medium",
+    PC2 >= 1.5 ~ "High"
+  )) %>% 
+  mutate(PC2_cat = factor(PC2_cat, c("Low", "Medium", "High")))
+
+ggplot(NMS_points, aes(MDS1, MDS2, group = PC2_cat, color = PC2_cat)) +
+  geom_point(size = 2) +
+  theme_classic()
+```
+
 
 # Testing linear relationships between root architecture & microbial diversity
 
